@@ -30,8 +30,8 @@
             </router-link>
           </li>
           <li class="nav-item">
-            <router-link to="/events" class="nav-link nav-link-custom" active-class="active">
-              <span class="nav-text">Events</span>
+            <router-link to="/Events" class="nav-link nav-link-custom" active-class="active">
+              <span class="nav-text">Announcements</span> 
               <div class="nav-glow"></div>
             </router-link>
           </li>
@@ -310,7 +310,7 @@ onMounted(() => {
     radial-gradient(circle at 10% 50%, rgba(220, 53, 69, 0.03) 0%, transparent 50%),
     radial-gradient(circle at 90% 50%, rgba(0, 212, 255, 0.03) 0%, transparent 50%);
   animation: navbackgroundShift 15s ease-in-out infinite alternate;
-  pointer-events: none;
+  pointer-Announcements: none;
 }
 
 /* Brand Styling */
