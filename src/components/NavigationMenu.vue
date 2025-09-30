@@ -31,7 +31,7 @@
           </li>
           <li class="nav-item">
             <router-link to="/events" class="nav-link nav-link-custom" active-class="active">
-              <span class="nav-text">Events</span>
+              <span class="nav-text">Announcement</span>
               <div class="nav-glow"></div>
             </router-link>
           </li>
