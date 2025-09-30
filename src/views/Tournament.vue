@@ -117,8 +117,6 @@
 import { ref, computed, onMounted } from 'vue'
 
 // Reactive data
-const selectedStatus = ref('all')
-const selectedPrizeRange = ref('all')
 const isLoading = ref(true)
 const isRefreshing = ref(false)
 const columns = ref([])
@@ -150,98 +148,10 @@ const tournaments = ref([
     }
 ])
 
-// Computed properties
-const filteredTournaments = computed(() => {
-    return tournaments.value.filter(tournament => {
-        const statusMatch = selectedStatus.value === 'all' || tournament.status === selectedStatus.value
-        const prizeMatch = selectedPrizeRange.value === 'all' ||
-            (selectedPrizeRange.value === 'high' && tournament.prizePool >= 10000) ||
-            (selectedPrizeRange.value === 'medium' && tournament.prizePool >= 1000 && tournament.prizePool < 10000) ||
-            (selectedPrizeRange.value === 'low' && tournament.prizePool < 1000)
-
-        return statusMatch && prizeMatch
-    })
-})
 
 const activeTournaments = computed(() => tournaments.value.filter(t => t.status === 'active' || t.status === 'registration').length)
-const totalWarriors = computed(() => tournaments.value.reduce((sum, t) => sum + t.participants, 0))
-const totalRewards = computed(() => tournaments.value.reduce((sum, t) => sum + t.prizePool, 0))
-const completedTournaments = computed(() => tournaments.value.filter(t => t.status === 'completed').length)
 
 // Methods
-const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' }
-    return new Date(dateString).toLocaleDateString(undefined, options)
-}
-
-const getProgressPercentage = (tournament) => {
-    return Math.round((tournament.participants / tournament.maxParticipants) * 100)
-}
-
-const getTournamentCardClass = (status) => {
-    const classes = {
-        'active': 'tournament-card-active',
-        'registration': 'tournament-card-registration',
-        'completed': 'tournament-card-completed'
-    }
-    return classes[status] || ''
-}
-
-const getStatusBadgeClass = (status) => {
-    const classes = {
-        'registration': 'bg-success',
-        'active': 'bg-danger',
-        'completed': 'bg-secondary'
-    }
-    return classes[status] || 'bg-secondary'
-}
-
-const getTypeBadgeClass = (type) => {
-    const classes = {
-        'championship': 'bg-warning text-dark',
-        'blitz': 'bg-info',
-        'swiss': 'bg-primary',
-        'knockout': 'bg-danger',
-        'round-robin': 'bg-purple'
-    }
-    return classes[type] || 'bg-secondary'
-}
-
-const getProgressBarClass = (status) => {
-    const classes = {
-        'registration': 'bg-gradient-success',
-        'active': 'bg-gradient-danger',
-        'completed': 'bg-gradient-secondary'
-    }
-    return classes[status] || 'bg-gradient-warning'
-}
-
-const getActionButtonClass = (status) => {
-    const classes = {
-        'registration': 'btn-success btn-glow',
-        'active': 'btn-danger btn-glow',
-        'completed': 'btn-secondary'
-    }
-    return classes[status] || 'btn-primary btn-glow'
-}
-
-const getActionButtonIcon = (status) => {
-    const icons = {
-        'registration': 'fas fa-sword',
-        'active': 'fas fa-eye',
-        'completed': 'fas fa-trophy'
-    }
-    return icons[status] || 'fas fa-play'
-}
-
-const getActionButtonText = (status) => {
-    const texts = {
-        'registration': 'Join Battle',
-        'active': 'Watch Live',
-        'completed': 'View Results'
-    }
-    return texts[status] || 'View Details'
-}
 
 const getRowClass = (index) => {
     if (index === 0) return 'champion-row'
@@ -250,32 +160,6 @@ const getRowClass = (index) => {
     return ''
 }
 
-const getRankIcon = (index) => {
-    const icons = ['fas fa-crown text-warning', 'fas fa-medal text-silver', 'fas fa-award text-bronze']
-    return icons[index] || ''
-}
-
-const getRankClass = (index) => {
-    if (index === 0) return 'text-warning fw-bold'
-    if (index === 1) return 'text-silver fw-bold'
-    if (index === 2) return 'text-bronze fw-bold'
-    return ''
-}
-
-const resetFilters = () => {
-    selectedStatus.value = 'all'
-    selectedPrizeRange.value = 'all'
-}
-
-const handleTournamentAction = (tournament) => {
-    console.log(`Action for tournament: ${tournament.name}`)
-    // Handle tournament-specific actions
-}
-
-const showTournamentDetails = (tournament) => {
-    console.log(`Show details for: ${tournament.name}`)
-    // Show tournament details modal
-}
 
 const refreshStandings = async () => {
     isRefreshing.value = true

@@ -8,13 +8,13 @@
         <div class="row align-items-center min-vh-100">
           <div class="col-lg-8 col-xl-6 mx-auto text-center">
             <div class="hero-content py-5">
-              
+
               <h1 class="hero-title mb-4">
-                <span class="chess-icon">♔</span> 
+                <span class="chess-icon">♔</span>
                 <span class="text-glow">IISER TVM Chess Club</span>
               </h1>
               <p class="hero-subtitle mb-5">
-                Master the art of Sacrifice. Join our elite community of chess 
+                Master the art of Sacrifice. Join our elite community of chess
                 players and elevate your game beyond mortal limits.
               </p>
               <div class="hero-buttons d-flex gap-4 justify-content-center flex-wrap">
@@ -30,7 +30,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- Floating Chess Pieces -->
       <div class="floating-pieces">
         <div class="chess-piece piece-1">♛</div>
@@ -45,13 +45,13 @@
     <section class="features-section py-5">
       <div class="container">
         <div class="section-header text-center mb-5">
-          
+
           <h2 class="section-title mb-4">Dominate the Board</h2>
           <p class="section-subtitle">
             Experience the perfect fusion of tactical brilliance, strategic mastery.
           </p>
         </div>
-        
+
         <div class="row g-4">
           <div class="col-lg-4 col-md-6">
             <div class="feature-card h-100">
@@ -67,7 +67,7 @@
               </div>
             </div>
           </div>
-          
+
           <div class="col-lg-4 col-md-6">
             <div class="feature-card h-100">
               <div class="card-glow"></div>
@@ -77,13 +77,12 @@
                 </div>
                 <h4 class="card-title mb-3">Elite Tournaments</h4>
                 <p class="card-text">
-                  Battle in high-stakes tournaments where only the strongest survive. 
-                  
+                  Battle in high-stakes tournaments where only the strongest survive.
                 </p>
               </div>
             </div>
           </div>
-          
+
           <div class="col-lg-4 col-md-6 mx-auto mx-lg-0">
             <div class="feature-card h-100">
               <div class="card-glow"></div>
@@ -150,7 +149,7 @@
             <div class="event-card h-100">
               <div class="card-header">
                 <div class="event-type">
-                  👑 ITSAV 
+                  👑 ITSAV
                 </div>
               </div>
               <div class="card-body p-4">
@@ -159,8 +158,8 @@
                   <i class="fas fa-calendar-alt me-2"></i>October, 2025
                 </div>
                 <p class="card-text">
-                  The ultimate test of chess supremacy. Battle of 4 teams in a 5v5 conquest. Winner takes the crown. 
-                  
+                  The ultimate test of chess supremacy. Battle of 4 teams in a 5v5 conquest. Winner takes the crown.
+
                 </p>
                 <router-link to="/tournament" class="btn btn-danger btn-glow">
                   Join The Tournament
@@ -168,11 +167,10 @@
               </div>
             </div>
           </div>
-          
+
         </div>
       </div>
     </section>
-
     <!-- CTA Section -->
     <section class="cta-section py-5 position-relative overflow-hidden">
       <div class="cta-bg"></div>
@@ -181,12 +179,12 @@
           <div class="col-lg-8 mx-auto text-center">
             <div class="cta-content">
               <h2 class="cta-title mb-4">
-                Join now
+                Become a Member now
               </h2>
               <p class="cta-subtitle mb-5">
                 Your journey into chess mastery begins with a single move.
               </p>
-              <button class="btn btn-cta btn-lg px-5 py-3" data-bs-toggle="modal" data-bs-target="#joinModal">
+              <button class="btn btn-cta btn-lg px-5 py-3" @click="loginWithGoogle">
                 <i class="fas fa-chess-king me-2"></i>Join the Club
                 <div class="btn-shine"></div>
               </button>
@@ -196,46 +194,46 @@
       </div>
     </section>
 
-    <!-- Join Modal -->
-    <div class="modal fade" id="joinModal" tabindex="-1" aria-labelledby="joinModalLabel" aria-hidden="true">
-      <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content dark-modal">
-          <div class="modal-header">
-            <h5 class="modal-title" id="joinModalLabel">
-              <i class="fas fa-chess-king me-2"></i>Enter the Brotherhood
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-          </div>
-          <div class="modal-body p-4">
-            <form>
-              <div class="mb-4">
-                <label for="memberName" class="form-label">Your Name</label>
-                <input type="text" class="form-control dark-input" id="memberName" required>
-              </div>
-              <div class="mb-4">
-                <label for="memberEmail" class="form-label">Email Address</label>
-                <input type="email" class="form-control dark-input" id="memberEmail" required>
-              </div>
-              <div class="d-grid">
-                <button type="submit" class="btn btn-warning btn-glow btn-lg">
-                  <i class="fas fa-crown me-2"></i>Regester
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-    </div>
+
   </div>
 </template>
 
 <script setup>
-import { onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 
+import { auth, provider } from '@/firebase'
+import { signInWithPopup, signOut } from 'firebase/auth'
+
+const errorMessage = ref('')
+const userEmail = ref('')
+
+// Google Sign-In
+const loginWithGoogle = async () => {
+  errorMessage.value = ''
+  try {
+    const result = await signInWithPopup(auth, provider)
+    const user = result.user
+    console.log(user.email.endsWith('@iisertvm.ac.in'))
+    // Restrict only IISER TVM emails
+    if (!user.email.endsWith('@iisertvm.ac.in')) {
+      alert('Only IISER TVM emails are allowed.')
+      errorMessage.value = 'Only IISER TVM emails are allowed.'
+      await signOut(auth) // log them out immediately
+      return
+    }
+
+    userEmail.value = user.email
+    alert(`Welcome ${user.displayName || user.email}!`)
+
+  } catch (error) {
+    console.error(error)
+    errorMessage.value = 'Login failed. Please try again.'
+  }
+}
+// Page effects
 onMounted(() => {
   document.title = 'IISER-TVM Chess Club'
-  
-  // Add some interactive effects
+
   const pieces = document.querySelectorAll('.chess-piece')
   pieces.forEach((piece, index) => {
     piece.style.animationDelay = `${index * 2}s`
@@ -264,7 +262,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     linear-gradient(45deg, transparent 40%, rgba(255, 193, 7, 0.03) 50%, transparent 60%),
     linear-gradient(-45deg, transparent 40%, rgba(220, 53, 69, 0.03) 50%, transparent 60%);
   animation: backgroundShift 20s ease-in-out infinite alternate;
@@ -276,9 +274,9 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image: 
-    repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(255,255,255,0.01) 50px, rgba(255,255,255,0.01) 100px),
-    repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255,255,255,0.01) 50px, rgba(255,255,255,0.01) 100px);
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(255, 255, 255, 0.01) 50px, rgba(255, 255, 255, 0.01) 100px),
+    repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255, 255, 255, 0.01) 50px, rgba(255, 255, 255, 0.01) 100px);
   opacity: 0.3;
 }
 
@@ -331,11 +329,37 @@ onMounted(() => {
   animation: float 15s linear infinite;
 }
 
-.piece-1 { top: 20%; left: 10%; animation-duration: 20s; }
-.piece-2 { top: 60%; right: 15%; animation-duration: 25s; animation-direction: reverse; }
-.piece-3 { top: 80%; left: 20%; animation-duration: 18s; }
-.piece-4 { top: 30%; right: 25%; animation-duration: 22s; animation-direction: reverse; }
-.piece-5 { top: 70%; left: 70%; animation-duration: 16s; }
+.piece-1 {
+  top: 20%;
+  left: 10%;
+  animation-duration: 20s;
+}
+
+.piece-2 {
+  top: 60%;
+  right: 15%;
+  animation-duration: 25s;
+  animation-direction: reverse;
+}
+
+.piece-3 {
+  top: 80%;
+  left: 20%;
+  animation-duration: 18s;
+}
+
+.piece-4 {
+  top: 30%;
+  right: 25%;
+  animation-duration: 22s;
+  animation-direction: reverse;
+}
+
+.piece-5 {
+  top: 70%;
+  left: 70%;
+  animation-duration: 16s;
+}
 
 /* Buttons */
 .btn-glow {
@@ -372,7 +396,7 @@ onMounted(() => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   transition: left 0.6s ease;
 }
 
@@ -503,7 +527,7 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
+  background:
     radial-gradient(circle at 20% 30%, rgba(255, 193, 7, 0.1) 0%, transparent 50%),
     radial-gradient(circle at 80% 70%, rgba(220, 53, 69, 0.1) 0%, transparent 50%);
 }
@@ -586,18 +610,37 @@ onMounted(() => {
 
 /* Animations */
 @keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.1; }
-  50% { transform: translateY(-30px) rotate(180deg); opacity: 0.3; }
+
+  0%,
+  100% {
+    transform: translateY(0px) rotate(0deg);
+    opacity: 0.1;
+  }
+
+  50% {
+    transform: translateY(-30px) rotate(180deg);
+    opacity: 0.3;
+  }
 }
 
 @keyframes titleGlow {
-  0% { text-shadow: 0 0 20px rgba(255, 193, 7, 0.5); }
-  100% { text-shadow: 0 0 40px rgba(255, 193, 7, 0.8), 0 0 60px rgba(220, 53, 69, 0.3); }
+  0% {
+    text-shadow: 0 0 20px rgba(255, 193, 7, 0.5);
+  }
+
+  100% {
+    text-shadow: 0 0 40px rgba(255, 193, 7, 0.8), 0 0 60px rgba(220, 53, 69, 0.3);
+  }
 }
 
 @keyframes backgroundShift {
-  0% { transform: translateX(-5px); }
-  100% { transform: translateX(5px); }
+  0% {
+    transform: translateX(-5px);
+  }
+
+  100% {
+    transform: translateX(5px);
+  }
 }
 
 /* Responsive */
@@ -605,23 +648,23 @@ onMounted(() => {
   .hero-title {
     font-size: 2.8rem;
   }
-  
+
   .hero-subtitle {
     font-size: 1.1rem;
   }
-  
+
   .section-title {
     font-size: 2.2rem;
   }
-  
+
   .cta-title {
     font-size: 2.5rem;
   }
-  
+
   .chess-piece {
     font-size: 2rem;
   }
-  
+
   .stat-number {
     font-size: 3rem;
   }
@@ -631,12 +674,12 @@ onMounted(() => {
   .hero-title {
     font-size: 2.2rem;
   }
-  
+
   .hero-buttons {
     flex-direction: column;
     align-items: center;
   }
-  
+
   .hero-buttons .btn {
     width: 100%;
     max-width: 280px;
