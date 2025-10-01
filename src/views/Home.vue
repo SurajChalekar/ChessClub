@@ -22,8 +22,8 @@
                   <i class="fas fa-trophy me-2"></i>Tournaments
                   <div class="btn-shine"></div>
                 </router-link>
-                <router-link to="/events" class="btn btn-outline-neon btn-lg px-5 py-3">
-                  <i class="fas fa-calendar-alt me-2"></i>View Events
+                <router-link to="/anouncements" class="btn btn-outline-neon btn-lg px-5 py-3">
+                  <i class="fas fa-calendar-alt me-2"></i>View Anouncements
                 </router-link>
               </div>
             </div>

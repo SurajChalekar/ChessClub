@@ -9,9 +9,9 @@ const routes = [
     component: HomeView
   },
   {
-    path: '/events',
-    name: 'Anouncements',
-    component: () => import('../views/Events.vue')
+    path: '/anouncements',
+    name: 'anouncements',
+    component: () => import('../views/Anouncements.vue')
   },
   {
     path: '/tournament',
