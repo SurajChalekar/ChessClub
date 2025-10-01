@@ -105,6 +105,34 @@
                 </div>
               </div>
             </div>
+
+            <!-- Checkmate/Stalemate Dialog -->
+            <div v-if="isCheckmate || isStalemate" class="game-end-overlay">
+              <div class="game-end-dialog">
+                <div class="game-end-icon">
+                  <i v-if="isCheckmate" class="fas fa-trophy"></i>
+                  <i v-if="isStalemate" class="fas fa-handshake"></i>
+                </div>
+                <h2 class="game-end-title">
+                  <span v-if="isCheckmate">Checkmate!</span>
+                  <span v-if="isStalemate">Stalemate!</span>
+                </h2>
+                <p class="game-end-subtitle">
+                  <span v-if="isCheckmate && winner === 'white'">♔ White Wins!</span>
+                  <span v-if="isCheckmate && winner === 'black'">♚ Black Wins!</span>
+                  <span v-if="isStalemate">It's a Draw!</span>
+                </p>
+                <div class="game-end-buttons">
+                  <button @click="resetPuzzle" class="btn btn-light btn-lg">
+                    <i class="fas fa-redo me-2"></i>Play Again
+                  </button>
+                  <button @click="nextPuzzle" class="btn btn-warning btn-lg">
+                    <i class="fas fa-arrow-right me-2"></i>Next Puzzle
+                  </button>
+                </div>
+              </div>
+            </div>
+
             <!-- Puzzle Controls Section -->
             <div class="controls-section mt-4">
               <div class="puzzle-controls">
@@ -130,6 +158,7 @@
     </section>
   </div>
 </template>
+
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 
@@ -145,6 +174,9 @@ const gameHistory = ref([])
 const isGameActive = ref(true)
 const isWhiteInCheck = ref(false)
 const isBlackInCheck = ref(false)
+const isCheckmate = ref(false)
+const isStalemate = ref(false)
+const winner = ref(null)
 const enPassantTarget = ref(null) // Square where en passant capture is possible
 const showPromotionDialog = ref(false)
 const promotionSquare = ref(null)
@@ -224,6 +256,9 @@ const initializeBoard = () => {
   isGameActive.value = true
   isWhiteInCheck.value = false
   isBlackInCheck.value = false
+  isCheckmate.value = false
+  isStalemate.value = false
+  winner.value = null
   enPassantTarget.value = null
   showPromotionDialog.value = false
   promotionSquare.value = null
@@ -337,6 +372,73 @@ const isKingInCheck = (isWhite) => {
   const kingIndex = findKingPosition(isWhite)
   if (kingIndex === -1) return false
   return isSquareUnderAttack(kingIndex, !isWhite)
+}
+
+const hasLegalMoves = (isWhite) => {
+  // Check if the player has any legal moves
+  for (let i = 0; i < 64; i++) {
+    const piece = boardSquares.value[i]?.piece
+    if (!piece) continue
+    
+    const pieceIsWhite = isWhitePiece(piece)
+    if (pieceIsWhite !== isWhite) continue
+    
+    const moves = getPossibleMoves(i)
+    if (moves.length > 0) {
+      return true
+    }
+  }
+  return false
+}
+
+const checkGameEnd = () => {
+  const whiteInCheck = isKingInCheck(true)
+  const blackInCheck = isKingInCheck(false)
+  
+  isWhiteInCheck.value = whiteInCheck
+  isBlackInCheck.value = blackInCheck
+  
+  // Check if current player has legal moves
+  const currentPlayerIsWhite = currentTurn.value === 'white'
+  const hasLegal = hasLegalMoves(currentPlayerIsWhite)
+  
+  if (!hasLegal) {
+    if (currentPlayerIsWhite && whiteInCheck) {
+      // White is checkmated
+      isCheckmate.value = true
+      winner.value = 'black'
+      isGameActive.value = false
+      statusMessage.value = '♚ Checkmate! Black wins!'
+      statusClass.value = 'alert-danger'
+      statusIcon.value = 'fas fa-trophy'
+    } else if (!currentPlayerIsWhite && blackInCheck) {
+      // Black is checkmated
+      isCheckmate.value = true
+      winner.value = 'white'
+      isGameActive.value = false
+      statusMessage.value = '♔ Checkmate! White wins!'
+      statusClass.value = 'alert-danger'
+      statusIcon.value = 'fas fa-trophy'
+    } else {
+      // Stalemate
+      isStalemate.value = true
+      isGameActive.value = false
+      statusMessage.value = '🤝 Stalemate! Draw!'
+      statusClass.value = 'alert-warning'
+      statusIcon.value = 'fas fa-handshake'
+    }
+  } else {
+    // Game continues - show check status
+    if (whiteInCheck) {
+      statusMessage.value += ' - White King in Check! ♔'
+      statusClass.value = 'alert-warning'
+      statusIcon.value = 'fas fa-exclamation-triangle'
+    } else if (blackInCheck) {
+      statusMessage.value += ' - Black King in Check! ♚'
+      statusClass.value = 'alert-warning'
+      statusIcon.value = 'fas fa-exclamation-triangle'
+    }
+  }
 }
 
 const wouldMoveCauseCheck = (fromIndex, toIndex, isWhite) => {
@@ -807,20 +909,8 @@ const makeMove = (fromIndex, toIndex) => {
   // Switch turns
   currentTurn.value = currentTurn.value === 'white' ? 'black' : 'white'
   
-  // Check for check after the move
-  isWhiteInCheck.value = isKingInCheck(true)
-  isBlackInCheck.value = isKingInCheck(false)
-  
-  // Add check notification to status message
-  if (isWhiteInCheck.value) {
-    statusMessage.value += ' - White King in Check! ♔'
-    statusClass.value = 'alert-warning'
-    statusIcon.value = 'fas fa-exclamation-triangle'
-  } else if (isBlackInCheck.value) {
-    statusMessage.value += ' - Black King in Check! ♚'
-    statusClass.value = 'alert-warning'
-    statusIcon.value = 'fas fa-exclamation-triangle'
-  }
+  // Check for checkmate or stalemate
+  checkGameEnd()
 }
 
 const handleSquareClick = (index) => {
@@ -923,17 +1013,8 @@ const promotePawn = (piece) => {
   // Switch turns
   currentTurn.value = currentTurn.value === 'white' ? 'black' : 'white'
   
-  // Check for check after promotion
-  isWhiteInCheck.value = isKingInCheck(true)
-  isBlackInCheck.value = isKingInCheck(false)
-  
-  if (isWhiteInCheck.value) {
-    statusMessage.value += ' - White King in Check! ♔'
-    statusClass.value = 'alert-warning'
-  } else if (isBlackInCheck.value) {
-    statusMessage.value += ' - Black King in Check! ♚'
-    statusClass.value = 'alert-warning'
-  }
+  // Check for checkmate or stalemate after promotion
+  checkGameEnd()
 }
 
 onMounted(() => {
@@ -946,6 +1027,112 @@ onMounted(() => {
 </script>
 
 <style scoped>
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.game-end-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  animation: fadeIn 0.5s ease-in-out;
+  backdrop-filter: blur(6px);
+}
+
+.game-end-dialog {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(15px);
+  border-radius: 1.25rem;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  box-shadow: 0 15px 50px rgba(0,0,0,0.6);
+  animation: scaleIn 0.5s ease;
+}
+
+.game-end-icon {
+  font-size: 4.5rem;
+  margin-bottom: 1rem;
+  color: #fff;
+  text-shadow: 0 6px 15px rgba(0,0,0,0.5);
+  animation: bounce 1.5s ease-in-out infinite;
+}
+
+.game-end-title {
+  font-size: 2.2rem;
+  font-weight: 800;
+  margin-bottom: 0.75rem;
+  color: #fff;
+}
+
+.game-end-subtitle {
+  font-size: 1.2rem;
+  color: rgba(255,255,255,0.9);
+  margin-bottom: 2rem;
+}
+
+.game-end-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.game-end-buttons .btn {
+  background: linear-gradient(135deg, #fa3239 0%, #fd592c 100%);
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.game-end-buttons .btn:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+}
+@keyframes scaleIn {
+  from {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
 .move-indicator {
   position: absolute;
   width: 30%;
@@ -982,74 +1169,73 @@ onMounted(() => {
     box-shadow: inset 0 0 0 5px #ff5252;
   }
 }
-
 .promotion-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.8);
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: fadeIn 0.3s ease-in-out;
+  backdrop-filter: blur(6px);
+  animation: fadeIn 0.3s ease;
 }
 
 .promotion-dialog {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 2rem;
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(12px);
+  padding: 2rem 2.5rem;
   border-radius: 1rem;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-  animation: slideUp 0.3s ease-out;
+  text-align: center;
+  animation: slideUp 0.35s ease;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
 }
 
 .promotion-dialog h3 {
-  color: white;
-  font-size: 1.5rem;
-  font-weight: bold;
+  font-size: 1.6rem;
+  font-weight: 700;
   margin-bottom: 1.5rem;
+  color: #fff;
 }
 
 .promotion-pieces {
   display: flex;
-  gap: 1rem;
+  gap: 1.2rem;
   justify-content: center;
 }
 
 .promotion-btn {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 0.75rem;
-  padding: 1.5rem 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
+  background: rgba(255,255,255,0.12);
+  border: 2px solid rgba(255,255,255,0.25);
+  border-radius: 0.9rem;
+  padding: 1rem;
+  min-width: 85px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  min-width: 90px;
+  gap: 0.6rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .promotion-btn:hover {
-  background: rgba(255, 255, 255, 0.25);
-  transform: translateY(-5px) scale(1.05);
-  box-shadow: 0 5px 20px rgba(255, 255, 255, 0.3);
+  transform: translateY(-5px) scale(1.08);
+  background: rgba(255,255,255,0.2);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
 }
 
 .promotion-piece {
-  font-size: 3rem;
+  font-size: 2.8rem;
   user-select: none;
+  color: #fff;
+  text-shadow: 0 4px 10px rgba(0,0,0,0.4);
 }
 
 .promotion-btn span {
-  color: white;
+  color: rgba(255,255,255,0.95);
   font-weight: 600;
   font-size: 0.9rem;
 }
-
 @keyframes fadeIn {
   from {
     opacity: 0;
