@@ -181,6 +181,80 @@ const enPassantTarget = ref(null) // Square where en passant capture is possible
 const showPromotionDialog = ref(false)
 const promotionSquare = ref(null)
 const promotionColor = ref(null)
+const currentSolutionIndex = ref(0) // index into current puzzle solution array
+
+// Convert index (0..63) to algebraic like "e4"
+const indexToAlgebraic = (index) => {
+  if (index < 0 || index > 63) return null
+  const file = files[index % 8]
+  const rank = 8 - Math.floor(index / 8)
+  return `${file}${rank}`
+}
+
+// Convert algebraic square like "e4" to index (0..63)
+const algebraicToIndex = (alg) => {
+  if (!/^([a-h][1-8])$/.test(alg)) return -1
+  const file = alg[0]
+  const rank = parseInt(alg[1], 10)
+  const col = files.indexOf(file)
+  const row = 8 - rank
+  return getIndexFromSquare(row, col)
+}
+
+// Parse a UCI move string like "e2e4" into { from, to } (indices) or null
+const uciToIndices = (uci) => {
+  if (!uci || !/^[a-h][1-8][a-h][1-8]$/.test(uci)) return null
+  const fromAlg = uci.slice(0, 2)
+  const toAlg = uci.slice(2, 4)
+  const from = algebraicToIndex(fromAlg)
+  const to = algebraicToIndex(toAlg)
+  if (from === -1 || to === -1) return null
+  return { from, to }
+}
+
+// Reset solution index for the puzzle
+const resetSolutionIndex = () => {
+  currentSolutionIndex.value = 0
+}
+const currentSolutionMoves = computed(() => currentPuzzleData.value?.solution || [])
+// Evaluate a just-made move against the current solution step.
+// fromIndex and toIndex are numeric indices (0..63).
+const evaluateSolutionMove = (fromIndex, toIndex) => {
+  const puzzle = currentPuzzleData.value
+  if (!puzzle || !puzzle.solution || puzzle.solution.length === 0) return
+
+  const sol = puzzle.solution
+  if (currentSolutionIndex.value >= sol.length) return
+
+  const expected = sol[currentSolutionIndex.value]
+  const playerMove = convertToLAN(fromIndex, toIndex)
+
+  if (playerMove === expected) {
+    statusMessage.value = '✅ Correct move!'
+    statusClass.value = 'alert-success'
+    statusIcon.value = 'fas fa-check-circle'
+
+    currentSolutionIndex.value++
+
+    // Auto-play opponent move if exists
+    if (currentSolutionIndex.value < sol.length) {
+      const oppMove = sol[currentSolutionIndex.value]
+      const [oppFrom, oppTo] = parseLAN(oppMove)
+
+      setTimeout(() => {
+        makeMove(oppFrom, oppTo, true) // true = auto move
+        currentSolutionIndex.value++
+            // After opponent move, set turn back to White
+        currentTurn.value = 'white'
+      }, 400)
+    }
+
+  } else {
+    statusMessage.value = `❌ Wrong move! Expected ${expected}`
+    statusClass.value = 'alert-danger'
+    statusIcon.value = 'fas fa-ban'
+  }
+}
 
 // Castling rights tracking
 const castlingRights = ref({
@@ -221,7 +295,7 @@ const fenToBoardArray = (fen) => {
 const initializeBoard = () => {
   const puzzle = currentPuzzleData.value
   if (!puzzle) return // <-- prevents errors if puzzle not loaded yet
-
+  
   // Initialize the 8x8 board squares
   boardSquares.value = []
   for (let i = 0; i < 64; i++) {
@@ -230,6 +304,7 @@ const initializeBoard = () => {
       selected: false
     })
   }
+  console.log(puzzle)
 
   // Reset game state
   currentTurn.value = 'white'
@@ -255,7 +330,9 @@ const initializeBoard = () => {
     blackKingsideRookMoved: false,
     blackQueensideRookMoved: false
   }
+  resetSolutionIndex()
 }
+
 watch(puzzles, (newVal) => {
   if (newVal.length > 0) {
     initializeBoard()
@@ -785,137 +862,124 @@ const updateCastlingRights = (fromIndex, piece) => {
     if (fromIndex === 0) castlingRights.value.blackQueensideRookMoved = true
   }
 }
+const convertToLAN = (fromIndex, toIndex) => {
+  const files = "abcdefgh"
+  const fromRow = Math.floor(fromIndex / 8)
+  const fromCol = fromIndex % 8
+  const toRow = Math.floor(toIndex / 8)
+  const toCol = toIndex % 8
+  return `${files[fromCol]}${8 - fromRow}${files[toCol]}${8 - toRow}`
+}
 
-const makeMove = (fromIndex, toIndex) => {
-  const piece = boardSquares.value[fromIndex].piece
-  const capturedPiece = boardSquares.value[toIndex].piece
-  
-  // Find if this is a castling move
-  const moveData = validMoves.value.find(move => move.index === toIndex)
-  
-  // Verify the move doesn't leave own king in check (should already be filtered, but double-check)
+const parseLAN = (move) => {
+  const files = "abcdefgh"
+  const fromCol = files.indexOf(move[0])
+  const fromRow = 8 - parseInt(move[1])
+  const toCol = files.indexOf(move[2])
+  const toRow = 8 - parseInt(move[3])
+  return [fromRow * 8 + fromCol, toRow * 8 + toCol]
+}
+
+// Track puzzle progress
+const solutionIndex = ref(0) // starts at 0
+const solutionMoves = ref([]) // filled when puzzle loads
+const makeMove = (fromIndex, toIndex, isAuto = false) => {
+  const piece = boardSquares.value[fromIndex]?.piece
+  if (!piece) return
+
+  const capturedPiece = boardSquares.value[toIndex]?.piece
   const isWhite = isWhitePiece(piece)
-  if (wouldMoveCauseCheck(fromIndex, toIndex, isWhite)) {
+
+  // Check if move leaves king in check (skip for auto moves)
+  if (!isAuto && wouldMoveCauseCheck(fromIndex, toIndex, isWhite)) {
     statusMessage.value = '⚠️ Illegal move! This would leave your king in check.'
     statusClass.value = 'alert-danger'
     statusIcon.value = 'fas fa-ban'
     deselectPiece()
     return
   }
-  
+
   // Update castling rights
   updateCastlingRights(fromIndex, piece)
-  
+
   // Clear previous en passant target
   const previousEnPassant = enPassantTarget.value
   enPassantTarget.value = null
-  
-  // Handle en passant capture
+
+  const moveData = validMoves.value.find(move => move.index === toIndex)
+
+  // Handle en passant
   if (moveData?.isEnPassant) {
     const direction = isWhite ? 1 : -1
-    const capturedPawnIndex = toIndex + (direction * 8)
-    const capturedPawn = boardSquares.value[capturedPawnIndex].piece
-    
-    // Move pawn
-    boardSquares.value[fromIndex].piece = null
-    boardSquares.value[toIndex].piece = piece
-    // Remove captured pawn
+    const capturedPawnIndex = toIndex + direction * 8
     boardSquares.value[capturedPawnIndex].piece = null
-    
-    statusMessage.value = `En passant! ${piece.toUpperCase()} captures ${capturedPawn.toUpperCase()}`
-    statusClass.value = 'alert-success'
-    statusIcon.value = 'fas fa-chess-pawn'
   }
+
   // Handle castling
-  else if (moveData?.isCastling) {
+  if (moveData?.isCastling) {
     const { row } = getSquareFromIndex(fromIndex)
-    
-    // Move king
-    boardSquares.value[fromIndex].piece = null
-    boardSquares.value[toIndex].piece = piece
-    
-    // Move rook
     if (moveData.isKingside) {
-      const rookFromIndex = getIndexFromSquare(row, 7)
-      const rookToIndex = getIndexFromSquare(row, 5)
-      const rook = boardSquares.value[rookFromIndex].piece
-      boardSquares.value[rookFromIndex].piece = null
-      boardSquares.value[rookToIndex].piece = rook
-      
-      statusMessage.value = '♔ Castled kingside! O-O'
-      statusClass.value = 'alert-success'
-      statusIcon.value = 'fas fa-chess-rook'
+      const rookFrom = getIndexFromSquare(row, 7)
+      const rookTo = getIndexFromSquare(row, 5)
+      boardSquares.value[rookTo].piece = boardSquares.value[rookFrom].piece
+      boardSquares.value[rookFrom].piece = null
     } else {
-      const rookFromIndex = getIndexFromSquare(row, 0)
-      const rookToIndex = getIndexFromSquare(row, 3)
-      const rook = boardSquares.value[rookFromIndex].piece
-      boardSquares.value[rookFromIndex].piece = null
-      boardSquares.value[rookToIndex].piece = rook
-      
-      statusMessage.value = '♔ Castled queenside! O-O-O'
-      statusClass.value = 'alert-success'
-      statusIcon.value = 'fas fa-chess-rook'
+      const rookFrom = getIndexFromSquare(row, 0)
+      const rookTo = getIndexFromSquare(row, 3)
+      boardSquares.value[rookTo].piece = boardSquares.value[rookFrom].piece
+      boardSquares.value[rookFrom].piece = null
     }
   }
+
   // Normal move
-  else {
-    // Check for double pawn move (for en passant setup)
-    if (piece.toLowerCase() === 'p' && moveData?.isDoublePawnMove) {
-      const direction = isWhite ? 1 : -1
-      enPassantTarget.value = toIndex + (direction * 8)
-    }
-    
-    boardSquares.value[fromIndex].piece = null
-    boardSquares.value[toIndex].piece = piece
-    
-    // Check for pawn promotion
-    const targetRow = Math.floor(toIndex / 8)
-    if (piece.toLowerCase() === 'p' && (targetRow === 0 || targetRow === 7)) {
-      // Show promotion dialog
-      showPromotionDialog.value = true
-      promotionSquare.value = toIndex
-      promotionColor.value = isWhite
-      isGameActive.value = false
-      
-      statusMessage.value = '👑 Choose a piece for promotion!'
-      statusClass.value = 'alert-info'
-      statusIcon.value = 'fas fa-crown'
-      
-      // Don't continue with rest of move logic until promotion is chosen
-      return
-    }
-    
-    if (capturedPiece) {
-      statusMessage.value = `${piece.toUpperCase()} captures ${capturedPiece.toUpperCase()}!`
-      statusClass.value = 'alert-success'
-      statusIcon.value = 'fas fa-times'
-    } else {
-      statusMessage.value = `${currentTurn.value === 'white' ? 'Black' : 'White'} to move`
-      statusClass.value = 'alert-info'
-      statusIcon.value = 'fas fa-chess'
-    }
+  boardSquares.value[toIndex].piece = piece
+  boardSquares.value[fromIndex].piece = null
+
+  // Double pawn move for en passant
+  if (piece.toLowerCase() === 'p' && moveData?.isDoublePawnMove) {
+    const direction = isWhite ? 1 : -1
+    enPassantTarget.value = toIndex + direction * 8
   }
-  
-  // Record move in history
+
+  // Handle promotion for user move
+  const targetRow = Math.floor(toIndex / 8)
+  if (!isAuto && piece.toLowerCase() === 'p' && (targetRow === 0 || targetRow === 7)) {
+    showPromotionDialog.value = true
+    promotionSquare.value = toIndex
+    promotionColor.value = isWhite
+    isGameActive.value = false
+    statusMessage.value = '👑 Choose a piece for promotion!'
+    statusClass.value = 'alert-info'
+    statusIcon.value = 'fas fa-crown'
+    return
+  }
+
+  // Record move
   gameHistory.value.push({
     from: fromIndex,
     to: toIndex,
-    piece: piece,
+    piece,
     captured: capturedPiece,
     turn: currentTurn.value,
     castling: moveData?.isCastling || false,
     enPassant: moveData?.isEnPassant || false
   })
-  
-  // Clear selection and highlights
+
+  // Clear selection
   deselectPiece()
-  
-  // Switch turns
-  currentTurn.value = currentTurn.value === 'white' ? 'black' : 'white'
-  
-  // Check for checkmate or stalemate
+
+  // Switch turn if not auto move
+  if (!isAuto) currentTurn.value = currentTurn.value === 'white' ? 'black' : 'white'
+
+  // Check for check/checkmate/stalemate
   checkGameEnd()
+
+  // ✅ Evaluate solution only for user moves
+  if (!isAuto) {
+    evaluateSolutionMove(fromIndex, toIndex)
+  }
 }
+
 
 const handleSquareClick = (index) => {
   if (!isGameActive.value || showPromotionDialog.value) return
@@ -1029,6 +1093,7 @@ onMounted(() => {
   statusClass.value = 'alert-info'
   statusIcon.value = 'fas fa-chess'
 })
+
 </script>
 
 <style scoped>
