@@ -1,6 +1,9 @@
 <template>
   <div id="app">
-    <NavigationMenu />
+    <!-- Show SpecialNavbar only on Puzzle route -->
+    <SpecialNavbar v-if="route.meta.specialNavbar" />
+    <NavigationMenu v-else />
+
     <main class="main-content">
       <RouterView />
     </main>
@@ -8,7 +11,11 @@
 </template>
 
 <script setup>
+import { useRoute } from 'vue-router'
 import NavigationMenu from './components/NavigationMenu.vue'
+import SpecialNavbar from './components/NavigationPuzzle.vue'
+
+const route = useRoute()
 </script>
 
 <style>

@@ -1,88 +1,82 @@
 <template>
   <div class="puzzles-page">
-    <!-- Hero Section -->
-    <section class="puzzles-hero position-relative overflow-hidden">
-      <div class="hero-background"></div>
-      <div class="chess-pattern-bg"></div>
-      <div class="container position-relative z-3">
-        <div class="row justify-content-center text-center">
-          <div class="col-lg-8">
-            <div class="hero-content py-5">
-              <div class="hero-badge mb-4">
-                <span class="badge bg-gradient-warning px-4 py-3 fs-6 rounded-pill">
-                  <i class="fas fa-brain me-2"></i>Mind Sharpening Challenges
-                </span>
-              </div>
-              <h1 class="hero-title mb-4">
-                <span class="chess-icon">🧩</span>
-                <span class="text-glow">Chess Puzzles</span>
-              </h1>
-              <p class="hero-subtitle mb-4">
-                Test your tactical prowess with mind-bending puzzles. Every move matters, every solution reveals mastery.
-              </p>
-              <div class="hero-stats d-flex justify-content-center gap-4 flex-wrap">
-                <div class="stat-item">
-                  <div class="stat-number">{{ currentPuzzle + 1 }}</div>
-                  <div class="stat-label">Current Puzzle</div>
-                </div>
-                <div class="stat-item">
-                  <div class="stat-number">{{ puzzlesSolved }}</div>
-                  <div class="stat-label">Solved</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Puzzle Content -->
+    <section class="puzzle-content">
+      <div class="puzzle-container">
+        <!-- Status Message -->
 
-    <!-- Puzzle Content -->
-    <!-- Puzzle Content -->
-    <section class="puzzle-content py-5">
-      <div class="container">
-        <div class="row justify-content-center">
-          <div class="col-lg-10">
-            <!-- Puzzle Info -->
-            <div class="puzzle-info-card mb-4">
-              <div class="row align-items-center">
-                <!-- Status Message -->
-                <div v-if="statusMessage" class="status-message mt-3 text-center">
-                  <div :class="statusClass" class="alert">
-                    <i :class="statusIcon" class="me-2"></i>{{ statusMessage }}
+
+        <div class="puzzle-layout">
+          <!-- Chess Board Container -->
+          <div class="chess-container">
+            <div class="board-wrapper">
+              <div class="chess-board" ref="chessBoard">
+                <div 
+                  v-for="(square, index) in boardSquares" 
+                  :key="index"
+                  :class="getSquareClass(index)"
+                  @click="handleSquareClick(index)"
+                >
+                  <div v-if="square.piece" :class="getPieceClass(square.piece)" class="chess-piece" :data-piece="square.piece">
                   </div>
+                  <!-- Valid move indicator -->
+                  <div v-if="isValidMove(index)" class="move-indicator"></div>
                 </div>
               </div>
               
-              <!-- Chess Board Container -->
-              <div class="chess-container">
-                <div class="board-wrapper">
-                  <div class="chess-board" ref="chessBoard">
-                    <div 
-                      v-for="(square, index) in boardSquares" 
-                      :key="index"
-                      :class="getSquareClass(index)"
-                      @click="handleSquareClick(index)"
-                    >
-                      <div v-if="square.piece" :class="getPieceClass(square.piece)" class="chess-piece" :data-piece="square.piece">
-                      </div>
-                      <!-- Valid move indicator -->
-                      <div v-if="isValidMove(index)" class="move-indicator"></div>
-                    </div>
-                  </div>
-                  
-                  <!-- Board Coordinates -->
-                  <div class="board-coordinates">
-                    <div class="files">
-                      <span v-for="file in files" :key="file" class="file-label">{{ file }}</span>
-                    </div>
-                    <div class="ranks">
-                      <span v-for="rank in ranks" :key="rank" class="rank-label">{{ rank }}</span>
-                    </div>
-                  </div>
+              <!-- Board Coordinates -->
+              <div class="board-coordinates">
+                <div class="files">
+                  <span v-for="file in files" :key="file" class="file-label">{{ file }}</span>
+                </div>
+                <div class="ranks">
+                  <span v-for="rank in ranks" :key="rank" class="rank-label">{{ rank }}</span>
                 </div>
               </div>
             </div>
-<div v-if="showPromotionDialog" class="promotion-dialog-overlay">
+            
+            <div class="controls-card">
+                      <div v-if="statusMessage" class="status-message mb-3">
+          <div :class="statusClass" class="alert">
+            <i :class="statusIcon" class="me-2"></i>{{ statusMessage }}
+          </div>
+        </div>
+        <!-- Controls Sidebar -->
+          <div class="controls-sidebar">
+            <div class="puzzle-info-card mb-3">
+              <h3 class="puzzle-title mb-2">
+                <i class="fas fa-puzzle-piece me-2"></i>Puzzle #{{ currentPuzzle + 1 }}
+              </h3>
+            </div>
+              <h4 class="controls-title">Controls</h4>
+              <div class="control-buttons-vertical">
+                <button class="btn btn-control btn-reset" @click="resetPuzzle">
+                  <i class="fas fa-undo me-2"></i>Reset
+                </button>
+                <button class="btn btn-control btn-hint" @click="showHint">
+                  <i class="fas fa-lightbulb me-2"></i>Hint
+                </button>
+                <button class="btn btn-control btn-check" @click="checkSolution">
+                  <i class="fas fa-check me-2"></i>Check Solution
+                </button>
+                <button class="btn btn-control btn-next" @click="nextPuzzle">
+                  <i class="fas fa-arrow-right me-2"></i>Next Puzzle
+                </button>
+              </div>
+            </div>
+
+            
+          </div>
+
+          
+
+            
+          </div>
+        </div>
+      </div>
+
+            <!-- Promotion Dialog -->
+            <div v-if="showPromotionDialog" class="promotion-dialog-overlay">
               <div class="promotion-dialog">
                 <h3 class="text-center mb-3">Choose Promotion Piece</h3>
                 <div class="promotion-pieces">
@@ -133,31 +127,11 @@
               </div>
             </div>
 
-            <!-- Puzzle Controls Section -->
-            <div class="controls-section mt-4">
-              <div class="puzzle-controls">
-                <div class="control-buttons d-flex justify-content-center gap-3 flex-wrap">
-                  <button class="btn btn-outline-warning" @click="resetPuzzle">
-                    <i class="fas fa-undo me-2"></i>Reset
-                  </button>
-                  <button class="btn btn-outline-info" @click="showHint">
-                    <i class="fas fa-lightbulb me-2"></i>Hint
-                  </button>
-                  <button class="btn btn-outline-success" @click="checkSolution">
-                    <i class="fas fa-check me-2"></i>Check
-                  </button>
-                  <button class="btn btn-warning" @click="nextPuzzle">
-                    <i class="fas fa-arrow-right me-2"></i>Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+            <!-- Promotion Dialog -->
     </section>
   </div>
 </template>
+
 
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
@@ -229,6 +203,7 @@ const evaluateSolutionMove = (fromIndex, toIndex) => {
   const expected = sol[currentSolutionIndex.value]
   const playerMove = convertToLAN(fromIndex, toIndex)
 
+  // Check if player move matches expected solution move
   if (playerMove === expected) {
     statusMessage.value = '✅ Correct move!'
     statusClass.value = 'alert-success'
@@ -242,11 +217,24 @@ const evaluateSolutionMove = (fromIndex, toIndex) => {
       const [oppFrom, oppTo] = parseLAN(oppMove)
 
       setTimeout(() => {
-        makeMove(oppFrom, oppTo, true) // true = auto move
+        makeMove(oppFrom, oppTo, true) // auto move
         currentSolutionIndex.value++
-            // After opponent move, set turn back to White
+
+        // Set turn back to White after auto move
         currentTurn.value = 'white'
+
+        // If solution is finished after opponent move
+        if (currentSolutionIndex.value >= sol.length) {
+          setTimeout(() => {
+            nextPuzzle()
+          }, 500)
+        }
       }, 400)
+    } else {
+      // Solution finished without opponent move
+      setTimeout(() => {
+        nextPuzzle()
+      }, 500)
     }
 
   } else {
@@ -1096,405 +1084,71 @@ onMounted(() => {
 
 </script>
 
+
 <style scoped>
+/* ==================== ENHANCED CHESS PUZZLE STYLES ==================== */
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-.game-end-overlay {
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1001;
-  animation: fadeIn 0.5s ease-in-out;
-  backdrop-filter: blur(6px);
-}
-
-.game-end-dialog {
-  background: rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(15px);
-  border-radius: 1.25rem;
-  padding: 2.5rem 2rem;
-  text-align: center;
-  max-width: 500px;
-  width: 90%;
-  box-shadow: 0 15px 50px rgba(0,0,0,0.6);
-  animation: scaleIn 0.5s ease;
-}
-
-.game-end-icon {
-  font-size: 4.5rem;
-  margin-bottom: 1rem;
-  color: #fff;
-  text-shadow: 0 6px 15px rgba(0,0,0,0.5);
-  animation: bounce 1.5s ease-in-out infinite;
-}
-
-.game-end-title {
-  font-size: 2.2rem;
-  font-weight: 800;
-  margin-bottom: 0.75rem;
-  color: #fff;
-}
-
-.game-end-subtitle {
-  font-size: 1.2rem;
-  color: rgba(255,255,255,0.9);
-  margin-bottom: 2rem;
-}
-
-.game-end-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  justify-content: center;
-}
-
-.game-end-buttons .btn {
-  background: linear-gradient(135deg, #fa3239 0%, #fd592c 100%);
-  border: none;
-  border-radius: 0.75rem;
-  padding: 0.75rem 1.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  color: #333;
-  transition: all 0.3s ease;
-}
-
-.game-end-buttons .btn:hover {
-  transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
-}
-@keyframes scaleIn {
-  from {
-    transform: scale(0.5);
-    opacity: 0;
-  }
-  to {
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-
-@keyframes bounce {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-.move-indicator {
-  position: absolute;
-  width: 30%;
-  height: 30%;
-  background-color: rgba(127, 201, 127, 0.6);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.valid-move-square {
-  cursor: pointer;
-}
-
-.valid-move-square:hover {
-  background-color: rgba(127, 201, 127, 0.3) !important;
-}
-
-.selected-square {
-  box-shadow: inset 0 0 0 3px #2e7d32 !important;
-  background-color: #7fc97f !important;
-}
-
-.king-in-check {
-  background-color: rgba(255, 0, 0, 0.4) !important;
-  box-shadow: inset 0 0 0 3px #d32f2f !important;
-  animation: checkPulse 1s ease-in-out infinite;
-}
-
-@keyframes checkPulse {
-  0%, 100% {
-    box-shadow: inset 0 0 0 3px #d32f2f;
-  }
-  50% {
-    box-shadow: inset 0 0 0 5px #ff5252;
-  }
-}
-.promotion-dialog-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(6px);
-  animation: fadeIn 0.3s ease;
-}
-
-.promotion-dialog {
-  background: rgba(255,255,255,0.08);
-  backdrop-filter: blur(12px);
-  padding: 2rem 2.5rem;
-  border-radius: 1rem;
-  text-align: center;
-  animation: slideUp 0.35s ease;
-  box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-}
-
-.promotion-dialog h3 {
-  font-size: 1.6rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: #fff;
-}
-
-.promotion-pieces {
-  display: flex;
-  gap: 1.2rem;
-  justify-content: center;
-}
-
-.promotion-btn {
-  background: rgba(255,255,255,0.12);
-  border: 2px solid rgba(255,255,255,0.25);
-  border-radius: 0.9rem;
-  padding: 1rem;
-  min-width: 85px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.6rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.promotion-btn:hover {
-  transform: translateY(-5px) scale(1.08);
-  background: rgba(255,255,255,0.2);
-  box-shadow: 0 6px 20px rgba(0,0,0,0.35);
-}
-
-.promotion-piece {
-  font-size: 2.8rem;
-  user-select: none;
-  color: #fff;
-  text-shadow: 0 4px 10px rgba(0,0,0,0.4);
-}
-
-.promotion-btn span {
-  color: rgba(255,255,255,0.95);
-  font-weight: 600;
-  font-size: 0.9rem;
-}
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes slideUp {
-  from {
-    transform: translateY(50px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-.move-indicator {
-  position: absolute;
-  width: 30%;
-  height: 30%;
-  background-color: rgba(127, 201, 127, 0.6);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.valid-move-square {
-  cursor: pointer;
-}
-
-.valid-move-square:hover {
-  background-color: rgba(127, 201, 127, 0.3) !important;
-}
-
-.selected-square {
-  box-shadow: inset 0 0 0 3px #2e7d32 !important;
-  background-color: #7fc97f !important;
-}
-/* Global Styles */
+/* Global Styles with Sidebar Offset */
 .puzzles-page {
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
   color: #e0e0e0;
   min-height: 100vh;
-  padding-top: 0px;
+  margin-left: 200px;
+  margin-top: -76px;
+  transition: margin-left 0.3s ease;
+  padding: 2rem 0;
 }
 
-/* Hero Section */
-.puzzles-hero {
-  background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0a0a0a 100%);
-  padding: 6rem 0;
+@media (max-width: 768px) {
+  .puzzles-page {
+    margin-left: 0;
+    padding-top: 70px;
+  }
 }
 
-.hero-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    linear-gradient(45deg, transparent 40%, rgba(255, 193, 7, 0.05) 50%, transparent 60%),
-    linear-gradient(-45deg, transparent 40%, rgba(138, 43, 226, 0.05) 50%, transparent 60%);
-  animation: heroShift 20s ease-in-out infinite alternate;
-}
-
-.chess-pattern-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 80px),
-    repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(255,193,7,0.02) 40px, rgba(255,193,7,0.02) 80px);
-  opacity: 0.3;
-}
-
-.hero-title {
-  font-size: 4rem;
-  font-weight: 900;
-  letter-spacing: -2px;
-}
-
-.text-glow {
-  background: linear-gradient(45deg, #ffc107, #8a2be2, #ff6b6b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  text-shadow: 0 0 40px rgba(255, 193, 7, 0.5);
-  animation: titlePulse 4s ease-in-out infinite;
-}
-
-.hero-subtitle {
-  font-size: 1.3rem;
-  opacity: 0.9;
-  line-height: 1.8;
-  max-width: 600px;
+/* ==================== PUZZLE LAYOUT ==================== */
+.puzzle-content {
+  max-width: 1400px;
   margin: 0 auto;
 }
 
-.chess-icon {
-  font-size: 1.1em;
-  margin-right: 15px;
-  filter: drop-shadow(0 0 15px rgba(255, 193, 7, 0.7));
+.puzzle-container {
+  background: rgba(26, 26, 46, 0.6);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  padding: 1.25rem;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(255, 193, 7, 0.1);
 }
 
-/* Hero Stats */
-.hero-stats .stat-item {
-  text-align: center;
-  padding: 1rem;
+.puzzle-layout {
+  display: flex;
+  gap: 3rem;
+  align-items: flex-start;
 }
 
-.hero-stats .stat-number {
-  font-size: 2.5rem;
-  font-weight: 900;
-  background: linear-gradient(45deg, #ffc107, #8a2be2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  display: block;
-}
-
-.hero-stats .stat-label {
-  font-size: 0.9rem;
-  opacity: 0.8;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
-
-.turn-active {
-  background: rgba(255, 193, 7, 0.2);
-  border-radius: 15px;
-  padding: 0.5rem;
-  border: 2px solid rgba(255, 193, 7, 0.5);
-}
-
-/* Puzzle Content */
-.puzzle-content {
-  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
-}
-
-.puzzle-info-card {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(255, 193, 7, 0.2);
-  border-radius: 20px;
-  padding: 2rem;
-}
-
-.puzzle-title {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #ffc107;
-}
-
-.puzzle-description {
-  opacity: 0.9;
-  font-size: 1rem;
-}
-
-.puzzle-badges .badge {
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 0.5rem 1rem;
-}
-
-/* Chess Board Styles */
+/* ==================== CHESS BOARD ==================== */
 .chess-container {
+  flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
-  padding: 1rem 0;
 }
 
 .board-wrapper {
   position: relative;
   display: inline-block;
+  padding-right: 50px;
+  padding-bottom: 50px;
 }
 
 .chess-board {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: 512px;
-  height: 512px;
-  border: 2px solid #333;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  width: 550px;
+  height: 550px;
+  border: 2px solid #746f6a;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
 
 .chess-square {
@@ -1520,19 +1174,43 @@ onMounted(() => {
 }
 
 .selected-square {
-  background-color: rgba(255, 255, 0, 0.6) !important;
-  position: relative;
+  box-shadow: inset 0 0 0 3px #2e7d32 !important;
+  background-color: #7fc97f !important;
 }
 
-.selected-square::after {
-  content: '';
+.valid-move-square {
+  cursor: pointer;
+}
+
+.valid-move-square:hover {
+  background-color: rgba(127, 201, 127, 0.3) !important;
+}
+
+.move-indicator {
   position: absolute;
-  inset: 0;
-  border: 3px solid #646f40;
+  width: 30%;
+  height: 30%;
+  background-color: rgba(127, 201, 127, 0.6);
+  border-radius: 50%;
   pointer-events: none;
 }
 
-/* Chess Pieces */
+.king-in-check {
+  background-color: rgba(255, 0, 0, 0.4) !important;
+  box-shadow: inset 0 0 0 3px #d32f2f !important;
+  animation: checkPulse 1s ease-in-out infinite;
+}
+
+@keyframes checkPulse {
+  0%, 100% {
+    box-shadow: inset 0 0 0 3px #d32f2f;
+  }
+  50% {
+    box-shadow: inset 0 0 0 5px #ff5252;
+  }
+}
+
+/* ==================== CHESS PIECES ==================== */
 .chess-piece {
   width: 100%;
   height: 100%;
@@ -1543,47 +1221,21 @@ onMounted(() => {
   transition: none;
 }
 
-/* White pieces */
-.chess-piece[data-piece="K"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/wK.svg");
-}
-.chess-piece[data-piece="Q"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/wQ.svg");
-}
-.chess-piece[data-piece="R"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/wR.svg");
-}
-.chess-piece[data-piece="B"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/wB.svg");
-}
-.chess-piece[data-piece="N"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/wN.svg");
-}
-.chess-piece[data-piece="P"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/wP.svg");
-}
+/* Piece URLs */
+.chess-piece[data-piece="K"] { background-image: url("https://lichess1.org/assets/piece/merida/wK.svg"); }
+.chess-piece[data-piece="Q"] { background-image: url("https://lichess1.org/assets/piece/merida/wQ.svg"); }
+.chess-piece[data-piece="R"] { background-image: url("https://lichess1.org/assets/piece/merida/wR.svg"); }
+.chess-piece[data-piece="B"] { background-image: url("https://lichess1.org/assets/piece/merida/wB.svg"); }
+.chess-piece[data-piece="N"] { background-image: url("https://lichess1.org/assets/piece/merida/wN.svg"); }
+.chess-piece[data-piece="P"] { background-image: url("https://lichess1.org/assets/piece/merida/wP.svg"); }
+.chess-piece[data-piece="k"] { background-image: url("https://lichess1.org/assets/piece/merida/bK.svg"); }
+.chess-piece[data-piece="q"] { background-image: url("https://lichess1.org/assets/piece/merida/bQ.svg"); }
+.chess-piece[data-piece="r"] { background-image: url("https://lichess1.org/assets/piece/merida/bR.svg"); }
+.chess-piece[data-piece="b"] { background-image: url("https://lichess1.org/assets/piece/merida/bB.svg"); }
+.chess-piece[data-piece="n"] { background-image: url("https://lichess1.org/assets/piece/merida/bN.svg"); }
+.chess-piece[data-piece="p"] { background-image: url("https://lichess1.org/assets/piece/merida/bP.svg"); }
 
-/* Black pieces */
-.chess-piece[data-piece="k"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/bK.svg");
-}
-.chess-piece[data-piece="q"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/bQ.svg");
-}
-.chess-piece[data-piece="r"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/bR.svg");
-}
-.chess-piece[data-piece="b"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/bB.svg");
-}
-.chess-piece[data-piece="n"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/bN.svg");
-}
-.chess-piece[data-piece="p"] {
-  background-image: url("https://lichess1.org/assets/piece/merida/bP.svg");
-}
-
-/* Board Coordinates */
+/* ==================== BOARD COORDINATES ==================== */
 .board-coordinates {
   position: absolute;
   top: 0;
@@ -1595,19 +1247,19 @@ onMounted(() => {
 
 .files {
   position: absolute;
-  bottom: -30px;
+  bottom: -35px;
   left: 0;
-  right: 0;
+  right: 50px;
   display: flex;
   justify-content: space-around;
-  padding: 0 2px;
+  padding: 0 4px;
 }
 
 .ranks {
   position: absolute;
   top: 0;
-  bottom: 0;
-  left: -30px;
+  bottom: 50px;
+  right: -35px;
   display: flex;
   flex-direction: column;
   justify-content: space-around;
@@ -1615,124 +1267,450 @@ onMounted(() => {
 }
 
 .file-label, .rank-label {
-  color: #b58863;
-  font-size: 0.9rem;
-  font-weight: bold;
-  font-family: 'Roboto', sans-serif;
+  color: rgba(255, 193, 7, 0.8);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Roboto Mono', monospace;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 
-/* Controls Section */
-.controls-section {
-  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-  border: 1px solid rgba(255, 193, 7, 0.2);
+/* ==================== CONTROLS SIDEBAR ==================== */
+.controls-card {
+  flex: 0 0 350px;
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(42, 42, 62, 0.9));
+  backdrop-filter: blur(15px);
   border-radius: 20px;
   padding: 2rem;
-  margin-top: 2rem;
-}
-.puzzle-controls {
-  text-align: center;
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
 }
 
-.control-buttons .btn {
-  position: relative;
-  overflow: hidden;
+.puzzle-info-card {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(138, 43, 226, 0.1));
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  border-radius: 16px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.puzzle-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #ffc107;
+  margin-bottom: 1rem;
+  text-shadow: 0 2px 8px rgba(255, 193, 7, 0.3);
+}
+
+.puzzle-title i {
+  color: #8a2be2;
+  filter: drop-shadow(0 2px 6px rgba(138, 43, 226, 0.5));
+}
+
+.puzzle-stats-inline {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.stat-badge {
+  background: rgba(76, 175, 80, 0.2);
+  border: 1px solid rgba(76, 175, 80, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
   font-weight: 600;
+  color: #4caf50;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.controls-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.control-buttons-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.btn-control {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  border-width: 2px;
-  padding: 0.8rem 1.5rem;
-  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.control-buttons .btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+.btn-control::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.6s;
 }
 
-/* Status Messages */
-.status-message .alert {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+.btn-control:hover::before {
+  transform: translateX(100%);
+}
+
+.btn-reset {
+  background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+  color: white;
+  box-shadow: 0 4px 15px rgba(255, 107, 107, 0.3);
+}
+
+.btn-reset:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 107, 107, 0.5);
+}
+
+.btn-hint {
+  background: linear-gradient(135deg, #ffc107, #ffb300);
+  color: #000;
+  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+}
+
+.btn-hint:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
+}
+
+.btn-check {
+  background: linear-gradient(135deg, #4caf50, #66bb6a);
+  color: white;
+  box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+}
+
+.btn-check:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(76, 175, 80, 0.5);
+}
+
+.btn-next {
+  background: linear-gradient(135deg, #8a2be2, #9b59b6);
+  color: white;
+  box-shadow: 0 4px 15px rgba(138, 43, 226, 0.3);
+}
+
+.btn-next:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
+}
+
+/* ==================== STATUS MESSAGES ==================== */
+.status-message {
+  margin-bottom: 1.5rem;
+}
+
+.alert {
+  padding: 1rem 1.25rem;
   border-radius: 12px;
-  padding: 1rem;
   font-weight: 600;
+  font-size: 0.95rem;
+  display: flex;
+  align-items: center;
+  backdrop-filter: blur(10px);
+  border: 2px solid;
+  animation: slideIn 0.4s ease;
+}
+
+@keyframes slideIn {
+  from { transform: translateX(-20px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
 }
 
 .alert-success {
-  background: rgba(76, 175, 80, 0.2) !important;
-  border-color: rgba(76, 175, 80, 0.4) !important;
+  background: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.4);
   color: #4caf50;
 }
 
 .alert-info {
-  background: rgba(33, 150, 243, 0.2) !important;
-  border-color: rgba(33, 150, 243, 0.4) !important;
+  background: rgba(33, 150, 243, 0.15);
+  border-color: rgba(33, 150, 243, 0.4);
   color: #2196f3;
 }
 
 .alert-warning {
-  background: rgba(255, 193, 7, 0.2) !important;
-  border-color: rgba(255, 193, 7, 0.4) !important;
+  background: rgba(255, 193, 7, 0.15);
+  border-color: rgba(255, 193, 7, 0.4);
   color: #ffc107;
 }
 
-/* Responsive Design */
+.alert-danger {
+  background: rgba(244, 67, 54, 0.15);
+  border-color: rgba(244, 67, 54, 0.4);
+  color: #f44336;
+}
+
+/* ==================== PROMOTION DIALOG ==================== */
+.promotion-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease;
+}
+
+.promotion-dialog {
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(42, 42, 62, 0.95));
+  backdrop-filter: blur(20px);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+  animation: scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.promotion-dialog h3 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 2rem;
+  color: #ffc107;
+  text-shadow: 0 2px 10px rgba(255, 193, 7, 0.4);
+}
+
+.promotion-pieces {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+}
+
+.promotion-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  border-radius: 16px;
+  padding: 1.5rem 1.25rem;
+  min-width: 100px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.promotion-btn:hover {
+  transform: translateY(-8px) scale(1.08);
+  background: rgba(255, 193, 7, 0.15);
+  border-color: rgba(255, 193, 7, 0.6);
+  box-shadow: 0 10px 30px rgba(255, 193, 7, 0.3);
+}
+
+.promotion-piece {
+  font-size: 3.5rem;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.5));
+}
+
+.promotion-btn span {
+  color: #e0e0e0;
+  font-weight: 700;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ==================== GAME END DIALOG ==================== */
+.game-end-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1001;
+  backdrop-filter: blur(10px);
+  animation: fadeIn 0.5s ease;
+}
+
+.game-end-dialog {
+  background: linear-gradient(135deg, rgba(26, 26, 46, 0.95), rgba(42, 42, 62, 0.95));
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  padding: 3rem 2.5rem;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  border: 2px solid rgba(255, 193, 7, 0.3);
+  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8);
+  animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.game-end-icon {
+  font-size: 5rem;
+  margin-bottom: 1.5rem;
+  animation: iconPulse 2s ease-in-out infinite;
+}
+
+@keyframes iconPulse {
+  0%, 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(255, 193, 7, 0.5)); }
+  50% { transform: scale(1.1); filter: drop-shadow(0 0 30px rgba(255, 193, 7, 0.8)); }
+}
+
+.game-end-title {
+  font-size: 2.5rem;
+  font-weight: 900;
+  margin-bottom: 1rem;
+  background: linear-gradient(45deg, #ffc107, #ff6b6b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.game-end-subtitle {
+  font-size: 1.4rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-bottom: 2.5rem;
+  font-weight: 600;
+}
+
+.game-end-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.game-end-buttons .btn {
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.game-end-buttons .btn-light {
+  background: linear-gradient(135deg, #e0e0e0, #bdbdbd);
+  color: #000;
+}
+
+.game-end-buttons .btn-warning {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+  color: #000;
+}
+
+.game-end-buttons .btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* ==================== RESPONSIVE DESIGN ==================== */
+@media (max-width: 1200px) {
+  .puzzle-layout {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .controls-card {
+    flex: none;
+    width: 100%;
+    max-width: 560px;
+  }
+  
+  .control-buttons-vertical {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .btn-control {
+    flex: 1;
+    min-width: 200px;
+  }
+}
+
 @media (max-width: 768px) {
   .chess-board {
-    width: 400px;
-    height: 400px;
+    width: 450px;
+    height: 450px;
   }
   
-  .hero-title {
-    font-size: 2.8rem;
-  }
-  
-  .puzzle-info-card {
-    padding: 1.5rem;
-  }
-  
-  .controls-section {
+  .puzzle-container {
     padding: 1.5rem;
   }
 }
 
 @media (max-width: 576px) {
   .chess-board {
-    width: 320px;
-    height: 320px;
+    width: 350px;
+    height: 350px;
   }
   
-  .hero-title {
-    font-size: 2.2rem;
+  .board-wrapper {
+    padding-right: 40px;
+    padding-bottom: 40px;
   }
   
-  .hero-stats {
-    flex-direction: column;
+  .files, .ranks {
+    font-size: 0.8rem;
+  }
+  
+  .files {
+    bottom: -28px;
+    right: 40px;
+  }
+  
+  .ranks {
+    right: -28px;
+    bottom: 40px;
+  }
+  
+  .btn-control {
+    width: 100%;
+    min-width: unset;
+  }
+  
+  .promotion-pieces {
     gap: 1rem;
   }
   
-  .control-buttons {
-    flex-direction: column;
-    gap: 0.5rem;
+  .promotion-btn {
+    min-width: 80px;
+    padding: 1.25rem 1rem;
   }
   
-  .control-buttons .btn {
-    width: 100%;
+  .promotion-piece {
+    font-size: 2.5rem;
   }
 }
 
-/* Animations */
-@keyframes titlePulse {
-  0%, 100% { 
-    text-shadow: 0 0 40px rgba(255, 193, 7, 0.5);
-  }
-  50% { 
-    text-shadow: 0 0 60px rgba(255, 193, 7, 0.8), 0 0 80px rgba(138, 43, 226, 0.3);
-  }
+/* ==================== UTILITY ANIMATIONS ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@keyframes heroShift {
-  0% { transform: translateX(-2px); }
-  100% { transform: translateX(2px); }
+@keyframes scaleIn {
+  from { transform: scale(0.8); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
 }
 </style>

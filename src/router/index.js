@@ -22,7 +22,7 @@ const routes = [
     path: '/puzzles',
     name: 'puzzles',
     component: () => import('../views/Puzzles.vue'),
-    meta: { requiresAuth: true } // 🔒 mark as protected
+    meta: { requiresAuth: true, specialNavbar: true } 
   }
 ]
 
