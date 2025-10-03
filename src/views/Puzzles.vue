@@ -160,7 +160,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 
 const currentPuzzle = ref(0)
 const puzzlesSolved = ref(0)
@@ -194,62 +194,44 @@ const castlingRights = ref({
 
 const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']
 const ranks = [8, 7, 6, 5, 4, 3, 2, 1]
-
-const puzzles = ref([
-  {
-    id: 1,
-    title: "Checkmate in 2",
-    description: "White to play and force checkmate in 2 moves.",
-    difficulty: "Intermediate",
-    theme: "Checkmate",
-    rating: 1200,
-    board: [
-      'r', '', 'b', 'q', 'k', '', '', 'r',
-      'p', 'p', 'p', '', '', 'p', 'p', 'p',
-      '', '', 'n', '', '', 'n', '', '',
-      '', '', '', 'p', 'p', '', '', '',
-      '', '', '', 'P', 'P', '', '', '',
-      '', '', 'N', '', '', 'N', '', '',
-      'P', 'P', 'P', '', '', 'P', 'P', 'P',
-      'R', '', 'B', 'Q', 'K', 'B', '', 'R'
-    ],
-    solution: ['Qd8+', 'Rxd8', 'Rxd8#']
-  },
-  {
-    id: 2,
-    title: "Fork Tactic",
-    description: "Find the knight fork that wins material.",
-    difficulty: "Beginner",
-    theme: "Tactics",
-    rating: 900,
-    board: [
-      'r', 'n', 'b', 'q', 'k', 'b', '', 'r',
-      'p', 'p', 'p', 'p', '', 'p', 'p', 'p',
-      '', '', '', '', '', 'n', '', '',
-      '', '', '', '', 'p', '', '', '',
-      '', '', '', '', 'P', '', '', '',
-      '', '', 'N', '', '', '', '', '',
-      'P', 'P', 'P', 'P', '', 'P', 'P', 'P',
-      'R', '', 'B', 'Q', 'K', 'B', 'N', 'R'
-    ],
-    solution: ['Nd5']
-  }
-])
-
-const currentPuzzleData = computed(() => puzzles.value[currentPuzzle.value] || puzzles.value[0])
+const puzzles = ref([])
 const boardSquares = ref([])
+
+const currentPuzzleData = computed(() => {
+  if (!puzzles.value || puzzles.value.length === 0) return null
+  return puzzles.value[currentPuzzle.value] || puzzles.value[0]
+})
+
+const fenToBoardArray = (fen) => {
+  const board = []
+  const rows = fen.split(" ")[0].split("/")
+  for (let row of rows) {
+    for (let char of row) {
+      if (!isNaN(char)) {
+        for (let i = 0; i < parseInt(char); i++) board.push("")
+      } else {
+        board.push(char)
+      }
+    }
+  }
+  return board
+}
+
 
 const initializeBoard = () => {
   const puzzle = currentPuzzleData.value
+  if (!puzzle) return // <-- prevents errors if puzzle not loaded yet
+
+  // Initialize the 8x8 board squares
   boardSquares.value = []
-  
   for (let i = 0; i < 64; i++) {
     boardSquares.value.push({
       piece: puzzle.board[i] || null,
       selected: false
     })
   }
-  
+
+  // Reset game state
   currentTurn.value = 'white'
   validMoves.value = []
   gameHistory.value = []
@@ -263,7 +245,7 @@ const initializeBoard = () => {
   showPromotionDialog.value = false
   promotionSquare.value = null
   promotionColor.value = null
-  
+
   // Reset castling rights
   castlingRights.value = {
     whiteKingMoved: false,
@@ -273,6 +255,28 @@ const initializeBoard = () => {
     blackKingsideRookMoved: false,
     blackQueensideRookMoved: false
   }
+}
+watch(puzzles, (newVal) => {
+  if (newVal.length > 0) {
+    initializeBoard()
+  }
+})
+
+const loadPuzzlesFromCSV = async () => {
+  const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQyFaAasaUsySp8rSfkT_zmqo4fKdxYc8Fi7WZeIbpRvRGT2aiNM5rNepOy9rWHjzL0xvzNUz2gfrXo/pub?output=csv"
+  const res = await fetch(url)
+  const text = await res.text()
+
+  const rows = text.split("\n").map(r => r.split(","))
+  const headers = rows[0]
+
+  puzzles.value = rows.slice(1).map(r => {
+    let obj = {}
+    headers.forEach((h, i) => obj[h.trim()] = r[i]?.trim())
+    obj.board = fenToBoardArray(obj.fen)
+    obj.solution = obj.solution?.split(" ").map(s => s.trim())
+    return obj
+  })
 }
 
 const isWhitePiece = (piece) => {
@@ -1018,6 +1022,7 @@ const promotePawn = (piece) => {
 }
 
 onMounted(() => {
+  loadPuzzlesFromCSV()
   document.title = 'IISER-TVM Chess Club - Puzzles'
   initializeBoard()
   statusMessage.value = 'White to move. Select a piece to start!'
