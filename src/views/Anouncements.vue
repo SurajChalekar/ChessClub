@@ -1,6 +1,5 @@
 <template>
   <div class="events-page">
-    <!-- Hero Section -->
     <section class="events-hero position-relative overflow-hidden">
       <div class="hero-background"></div>
       <div class="chess-pattern-bg"></div>
@@ -10,25 +9,24 @@
             <div class="hero-content py-5">
               <div class="hero-badge mb-4">
                 <span class="badge bg-gradient-danger px-4 py-3 fs-6 rounded-pill">
-                  <i class="fas fa-fire me-2"></i>Legendary Battles Await
+                  <i class="fas fa-bullhorn me-2"></i>Latest Updates
                 </span>
               </div>
               <h1 class="hero-title mb-4">
-                <span class="chess-icon">⚔️</span>
-                <span class="text-glow">Events</span>
+                <span class="chess-icon">📢</span>
+                <span class="text-glow">Announcements</span>
               </h1>
               <p class="hero-subtitle mb-4">
-                Enter the arena where legends are forged and champions are crowned. 
-                Every battle tells a story, every move shapes destiny.
+                All urgent and latest news regarding the club is posted here.
               </p>
               <div class="hero-stats d-flex justify-content-center gap-4 flex-wrap">
                 <div class="stat-item">
                   <div class="stat-number">1</div>
-                  <div class="stat-label">Upcoming Battles</div>
+                  <div class="stat-label">Important News</div>
                 </div>
                 <div class="stat-item">
                   <div class="stat-number">{{ totalParticipants }}</div>
-                  <div class="stat-label">Knights Ready</div>
+                  <div class="stat-label">Cumulative Engagement</div>
                 </div>
               </div>
             </div>
@@ -37,16 +35,19 @@
       </div>
     </section>
 
-    <!-- Events Grid -->
+    <section class="filter-section py-4" style="display: none;">
+      <div class="container">
+        </div>
+    </section>
+
     <section class="events-content py-5">
       <div class="container">
-        <!-- Featured Event -->
         <div class="row mb-5" v-if="featuredEvent">
           <div class="col-12">
             <div class="section-header text-center mb-4">
               <div class="section-badge mb-3">
                 <span class="badge bg-warning text-dark px-4 py-2 rounded-pill">
-                  <i class="fas fa-crown me-2"></i>Featured Event
+                  <i class="fas fa-exclamation-triangle me-2"></i>Pinned Notice
                 </span>
               </div>
             </div>
@@ -68,7 +69,7 @@
                       </div>
                       <div class="detail-item">
                         <i class="fas fa-users me-2"></i>
-                        <strong>{{ featuredEvent.participants }} participants</strong>
+                        <strong>{{ featuredEvent.participants }} members interested</strong>
                       </div>
                     </div>
                   </div>
@@ -84,6 +85,71 @@
             </div>
           </div>
         </div>
+
+        <div class="row">
+          <div class="col-12">
+            <div class="section-header text-center mb-5 mt-5">
+              <h2 class="section-title">Latest Communiques</h2>
+              <p class="section-subtitle">All announcements, sorted from newest to oldest.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="events-grid">
+          <div 
+            v-for="event in filteredEvents" 
+            :key="event.id" 
+            class="event-card shadow-lg"
+          >
+            <div class="card-glow"></div>
+            <div class="event-header">
+              <div class="event-info">
+                <h3 class="event-title">{{ event.title }}</h3>
+                <div class="event-badges">
+                  <span class="badge" :class="getTypeBadgeClass(event.type)">
+                    {{ event.type }}
+                  </span>
+                  <span class="badge" :class="getLevelBadgeClass(event.level)">
+                    {{ event.level }}
+                  </span>
+                </div>
+              </div>
+              <div class="event-icon">{{ event.icon }}</div>
+            </div>
+
+            <p class="event-description">{{ event.description }}</p>
+            
+            <hr class="my-3 opacity-25">
+
+            <div class="event-details mt-3">
+              <div class="detail-row">
+                <i class="fas fa-calendar-alt me-2 text-warning"></i>
+                <span>Posted On: <strong>{{ formatDate(event.date) }}</strong></span>
+              </div>
+              <div class="detail-row">
+                <i class="fas fa-tag me-2 text-info"></i>
+                <span>Category: <strong>{{ event.location }}</strong></span>
+              </div>
+              <div class="detail-row">
+                <i class="fas fa-users me-2 text-success"></i>
+                <span>Engagement: <strong>{{ event.participants }} views</strong></span>
+              </div>
+            </div>
+            
+            <a href="#" class="btn btn-warning w-100 mt-4 position-relative overflow-hidden featured-btn">
+              Read Full Notice
+              <span class="btn-shine"></span>
+            </a>
+            
+          </div>
+
+          <div v-if="filteredEvents.length === 0" class="col-12 text-center py-5">
+            <div class="text-glow display-4 mb-3">🛡️</div>
+            <h4 class="text-white">No communiques match your current filter.</h4>
+            <button @click="resetFilters" class="btn btn-outline-warning mt-3">Clear Filters</button>
+          </div>
+        </div>
+
       </div>
     </section>
   </div>
@@ -96,36 +162,82 @@ const selectedType = ref('all')
 const selectedLevel = ref('all')
 
 const events = ref([
-  {
+  { // 👑 IMPORTANT NEWS (PINNED) - ICON: QUEEN
     id: 1,
-    title: '👑 Knights Conquest 2025',
-    date: '2025-9-6',
-    time: '21:30',
-    type: 'championship',
-    level: 'advanced',
-    description: 'The ultimate test of chess supremacy. Winner takes the crown, losers fade into obscurity. Battle through multiple rounds to claim your place in legend.',
+    title: "Knight's Conquest",
+    date: '09-09-2025', 
+    time: 'Saturday:21:30, Sunday 15:00',
+    type: 'Open League Championship',
+    level: 'All',
+    description: 'IPL-like Franchise based featured league tournament of IISER TVM',
     participants: 40,
-    maxParticipants: 128,
-    prizePool: 25000,
-    location: 'Shadow Arena',
-    status: 'filling',
-    featured: true,
-    icon: '♞'
+    location: 'CDH 2',
+    status: 'Ongoing',
+    featured: true, 
+    icon: '♛' // 🎯 Queen Icon
   },
-  
+  /*{ // ♟️ LATEST COMMUNIQUE (Newest) - ICON: PAWN
+    id: 4,
+    title: '📅 Coming Soon',
+    date: '2025-10-02', 
+    time: '20:00',
+    type: 'tournament',
+    level: 'advanced',
+    description: 'Congratulations to all participants! The final standings and prize distribution for the Winter Blitz Challenge are now officially published. Check the club forum for the full breakdown.',
+    participants: 12,
+    maxParticipants: 64,
+    prizePool: 10000,
+    location: 'Tournament News',
+    status: 'open',
+    featured: false,
+    icon: '♟️' // 🎯 Pawn Icon
+  },*/
+  { // ♟️ LATEST COMMUNIQUE (Older) - ICON: PAWN
+    id: 3,
+    title: '📚 Weekly Chess Learning Sessions',
+    date: '2025-09-25', 
+    time: '15:00',
+    type: 'Interactive Workshop',
+    level: 'Beginner and Newbie',
+    description: 'We are thrilled to announce a learning series on chess lessons, open to members of Beginners and Newbie Level.',
+    participants: 20,
+    location: 'CDH-2',
+    status: 'Ongoing',
+    featured: false,
+    icon: '♟️' // 🎯 Pawn Icon
+  },
+  { // ♟️ LATEST COMMUNIQUE (Oldest) - ICON: PAWN
+    id: 2,
+    title: 'Chess Club Introduction Session',
+    date: '13-09-2025', 
+    time: '16:40',
+    type: 'Introduction and Intearaction',
+    level: 'ALl',
+    description: "Introduction session for all freshers to get a glimpse of functioning of chess club, it's activities and Future plans ",
+    participants: 20,
+    location: 'CDH-2',
+    status: 'Conducted',
+    featured: false,
+    icon: '♟️' // 🎯 Pawn Icon
+  },
 ])
 
 const featuredEvent = computed(() => events.value.find(event => event.featured))
 const upcomingEvents = computed(() => events.value.filter(event => new Date(event.date) > new Date()))
 const totalParticipants = computed(() => events.value.reduce((sum, event) => sum + event.participants, 0))
-const totalPrizePool = computed(() => events.value.reduce((sum, event) => sum + event.prizePool, 0))
 
 const filteredEvents = computed(() => {
-  return events.value.filter(event => {
+  let list = events.value.filter(event => {
+    // Filters out the featured event and applies user filters
     const typeMatch = selectedType.value === 'all' || event.type === selectedType.value
     const levelMatch = selectedLevel.value === 'all' || event.level === selectedLevel.value || event.level === 'all'
-    return typeMatch && levelMatch && !event.featured
+    return typeMatch && levelMatch && !event.featured // Excludes the single featured item
   })
+
+  // Sorts the list by date, newest date first (descending)
+  list.sort((a, b) => new Date(b.date) - new Date(a.date))
+  
+  return list
 })
 
 const formatDate = (dateString) => {
@@ -163,7 +275,7 @@ const resetFilters = () => {
 }
 
 onMounted(() => {
-  document.title = 'IISER-TVM Chess Club'
+  document.title = 'IISER-TVM Chess Club Announcements'
 })
 </script>
 
