@@ -215,7 +215,7 @@ const events = ref([
     level: 'ALl',
     description: "Introduction session for all freshers to get a glimpse of functioning of chess club, it's activities and Future plans ",
     participants: 20,
-    location: 'CDH 2',
+    location: 'CDH-2',
     status: 'Conducted',
     featured: false,
     icon: '♟️' // 🎯 Pawn Icon
