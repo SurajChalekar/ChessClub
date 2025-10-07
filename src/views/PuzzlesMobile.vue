@@ -1058,8 +1058,6 @@ onMounted(() => {
 })
 
 </script>
-
-
 <style scoped>
 /* ==================== GLOBAL STYLES ==================== */
 .puzzles-page {
@@ -1095,11 +1093,12 @@ onMounted(() => {
 
 /* ==================== CHESS BOARD ==================== */
 .chess-container {
+  flex: 1;
   display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-  width: 100%;
   justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .board-wrapper {
@@ -1113,8 +1112,8 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: 550px;
-  height: 550px;
+  width: 600px;
+  height: 600px;
   border: 2px solid #746f6a;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
@@ -1632,7 +1631,7 @@ onMounted(() => {
   }
 
   .board-wrapper {
-    padding-right: 35px;
+    padding-right: 0px;
     padding-bottom: 35px;
   }
 
@@ -1676,13 +1675,13 @@ onMounted(() => {
   .chess-board {
     width: calc(100vw - 2rem);
     height: calc(100vw - 2rem);
-    max-width: 360px;
-    max-height: 360px;
+    max-width: 400px;
+    max-height: 400px;
     border: 1px solid #746f6a;
   }
 
   .board-wrapper {
-    padding-right: 30px;
+    padding-right: 0px;
     padding-bottom: 30px;
   }
 
@@ -1791,12 +1790,12 @@ onMounted(() => {
   .chess-board {
     width: calc(100vw - 1.5rem);
     height: calc(100vw - 1.5rem);
-    max-width: 320px;
-    max-height: 320px;
+    max-width: 360px;
+    max-height: 360px;
   }
 
   .board-wrapper {
-    padding-right: 25px;
+    padding-right: 0px;
     padding-bottom: 25px;
   }
 

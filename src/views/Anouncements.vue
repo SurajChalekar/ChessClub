@@ -4,7 +4,7 @@
       <div class="hero-background"></div>
       <div class="chess-pattern-bg"></div>
       <div class="container position-relative z-3">
-        <div class="row justify-content-center text-center">
+        <div class="row justify-content-center text-center" style="min-height: 65vh;">
           <div class="col-lg-8">
             <div class="hero-content py-5">
               <div class="hero-badge mb-4">
@@ -307,7 +307,6 @@ onMounted(() => {
 }
 
 .chess-pattern-bg {
-  position: absolute;
   top: 0;
   left: 0;
   right: 0;

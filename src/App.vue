@@ -1,8 +1,17 @@
 <template>
   <div id="app">
-    <!-- Show SpecialNavbar only on Puzzle route -->
-    <SpecialNavbar v-if="route.meta.specialNavbar" />
-    <NavigationMenu v-else />
+    <!-- ✅ Navbar Control -->
+    <template v-if="route.meta.specialNavbar">
+      <!-- Desktop → show SpecialNavbar -->
+      <SpecialNavbar v-show="route.meta.specialNavbar && !isMobile" />
+      <NavigationMenu v-show="!route.meta.specialNavbar || isMobile" />
+
+    </template>
+
+    <!-- Normal routes -->
+    <template v-else>
+      <NavigationMenu />
+    </template>
 
     <main class="main-content">
       <RouterView />
@@ -11,12 +20,26 @@
 </template>
 
 <script setup>
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRoute } from 'vue-router'
 import NavigationMenu from './components/NavigationMenu.vue'
 import SpecialNavbar from './components/NavigationPuzzle.vue'
 
 const route = useRoute()
+const isMobile = ref(window.innerWidth <= 768)
+
+const handleResize = () => {
+  isMobile.value = window.innerWidth <= 768
+}
+
+onMounted(() => {
+  window.addEventListener('resize', handleResize)
+})
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+})
 </script>
+
 
 <style>
 #app {

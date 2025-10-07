@@ -1,12 +1,11 @@
 import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/Home.vue'
-import { auth } from '../firebase' // import Firebase auth
+import { auth } from '../firebase'
 
 // --- CORRECTED IMPORTS: Using singular component names ---
 import Tournament from '../views/Tournament.vue' 
 import TournamentDetails from '../views/TournamentDetails.vue' 
 // -----------------------------
-
 
 const routes = [
   {
@@ -23,19 +22,25 @@ const routes = [
   // --- 1. MAIN TOURNAMENT OVERVIEW PAGE ---
   {
     path: '/tournament',
-    name: 'tournament-overview', // New, distinct name for the main page
-    component: Tournament // Using the directly imported component: Tournament.vue
+    name: 'tournament-overview',
+    component: Tournament
   },
   
   // --- 2. DYNAMIC DETAILS/STANDINGS PAGE ---
   {
-    path: '/tournament/:id', // URL pattern to match /tournament/1, /tournament/42, etc.
-    name: 'tournament-details', // Name used for programmatic navigation (router.push)
-    component: TournamentDetails, // Using the directly imported component: TournamentDetails.vue
-    props: true // ESSENTIAL: Passes the ':id' from the URL as a prop to TournamentDetails.vue
+    path: '/tournament/:id',
+    name: 'tournament-details',
+    component: TournamentDetails,
+    props: true
   },
-  // ---------------------------------------------
 
+  // --- PUZZLE PAGES ---
+  {
+    path: '/puzzle-mobile',
+    name: 'puzzle-mobile',
+    component: () => import('../views/PuzzlesMobile.vue'),
+    meta: { requiresAuth: true } 
+  },
   {
     path: '/puzzles',
     name: 'puzzles',
@@ -45,25 +50,47 @@ const routes = [
 ]
 
 const router = createRouter({
-  // Using Hash history mode based on your original file
   history: createWebHashHistory(import.meta.env.BASE_URL),
-  routes
+  routes,
+
+  scrollBehavior(to, from, savedPosition) {
+    if (savedPosition) {
+      return savedPosition
+    } else {
+      return { top: 0, behavior: 'smooth' }
+    }
+  }
 })
 
-// Navigation guard for protected routes
+// ✅ Combined navigation guard (auth + device redirect)
 router.beforeEach((to, from, next) => {
   const user = auth.currentUser
 
+  // ---- Authentication Guard ----
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!user) {
       alert('You must be logged in to access this page!')
       next('/')
-    } else {
-      next()
+      return
     }
-  } else {
-    next()
   }
+
+  // ---- Responsive Redirect ----
+  const isMobile = window.innerWidth <= 768
+
+  // If visiting /puzzles on mobile → redirect to /puzzle-mobile
+  if (to.path === '/puzzles' && isMobile) {
+    next('/puzzle-mobile')
+    return
+  }
+
+  // If visiting /puzzle-mobile on desktop → redirect to /puzzles
+  if (to.path === '/puzzle-mobile' && !isMobile) {
+    next('/puzzles')
+    return
+  }
+
+  next()
 })
 
 export default router
