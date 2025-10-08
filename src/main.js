@@ -9,8 +9,10 @@ import { onAuthStateChanged } from 'firebase/auth'
 // Import Bootstrap & FontAwesome
 import '@fortawesome/fontawesome-free/css/all.css'
 import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import 'bootstrap'
-
+import * as bootstrap from 'bootstrap' 
+window.bootstrap = bootstrap
 // Only mount app after checking auth state
 let app
 
