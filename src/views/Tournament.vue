@@ -1,44 +1,43 @@
 <template>
-    <div class="tournaments-page">
-        <section class="tournaments-hero position-relative overflow-hidden">
-            <div class="hero-background"></div>
-            <div class="battle-pattern"></div>
-            <div class="container position-relative z-3">
-                <div class="row justify-content-center text-center">
-                    <div class="col-lg-8">
-                        <div class="hero-content py-5">
-                            <div class="hero-badge mb-4">
-                                <span class="badge bg-gradient-danger px-4 py-3 fs-6 rounded-pill">
-                                    <i class="fas fa-chess-king me-2"></i>The Gauntlet is Set
-                                </span>
-                            </div>
-                            <h1 class="hero-title mb-4">
-                                <span class="battle-icon">♔</span>
-                                <span class="text-glow">The Royal Arena</span>
-                            </h1>
-                            <p class="hero-subtitle mb-5">
-                                Enter the crucible where legends are forged and champions are crowned.
-                                Only the strongest warriors shall claim victory and eternal glory.
-                            </p>
-                            <div class="hero-stats row g-4 justify-content-center text-center">
-                                <div class="col-md-3 col-6">
-                                    <div class="stat-card">
-                                        <div class="stat-number">{{ ongoingTournaments.length }}</div>
-                                        <div class="stat-label">Ongoing Battles</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-3 col-6">
-                                    <div class="stat-card">
-                                        <div class="stat-number">{{ upcomingTournaments.length }}</div>
-                                        <div class="stat-label">Upcoming Events</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+  <div class="tournaments-page">
+    <section class="tournaments-hero position-relative overflow-hidden">
+      <div class="hero-background"></div>
+      <div class="chess-pattern-bg"></div>
+      <div class="container position-relative z-3">
+        <div class="row justify-content-center text-center" style="min-height: 65vh;">
+          <div class="col-lg-8">
+            <div class="hero-content py-5 d-flex flex-column align-items-center">
+              <div class="hero-badge mb-4">
+                <span class="badge bg-gradient-danger px-4 py-3 fs-6 rounded-pill">
+                  <i class="fas fa-chess-king me-2"></i>Tournament Arena
+                </span>
+              </div>
+              <h1 class="hero-title mb-4">
+                <span class="chess-icon">🏆</span>
+                <span class="text-glow">Tournaments</span>
+              </h1>
+              <p class="hero-subtitle mb-4">
+                Browse ongoing, upcoming, and past events hosted by the club.
+              </p>
+              <div class="hero-stats d-flex justify-content-center gap-4 flex-wrap">
+                <div class="stat-item">
+                  <div class="stat-number">{{ ongoingTournaments.length }}</div>
+                  <div class="stat-label">Ongoing Battles</div>
                 </div>
+                <div class="stat-item">
+                  <div class="stat-number">{{ upcomingTournaments.length }}</div>
+                  <div class="stat-label">Upcoming Events</div>
+                </div>
+                <div class="stat-item">
+                  <div class="stat-number">{{ pastTournaments.length }}</div>
+                  <div class="stat-label">Completed Events</div>
+                </div>
+              </div>
             </div>
-        </section>
+          </div>
+        </div>
+      </div>
+    </section>
 
         <section class="tournament-sections py-5 bg-dark-chess">
             <div class="container">
@@ -67,23 +66,6 @@
                 </div>
 
                 <hr class="tournament-divider my-5" />
-
-                <div class="past-section">
-                    <h2 class="section-title text-center mb-4">
-                        <button class="btn btn-dark-outline-gold w-100 py-3" type="button" data-bs-toggle="collapse" data-bs-target="#pastTournamentsCollapse" aria-expanded="false" aria-controls="pastTournamentsCollapse">
-                            Past Tournaments <i class="fas fa-history me-2"></i> ({{ pastTournaments.length }})
-                        </button>
-                    </h2>
-                    <div class="collapse" id="pastTournamentsCollapse">
-                        <div class="row row-cols-1 row-cols-lg-3 g-3 p-3 chess-shadow">
-                            <div v-for="tournament in pastTournaments" :key="tournament.id" class="col">
-                                <TournamentCard :tournament="tournament" category="past" @move-to="moveTournament" @view-details="handleViewDetails" />
-                            </div>
-                        </div>
-                        <p v-if="pastTournaments.length === 0" class="text-center text-muted py-4">No past tournaments recorded.</p>
-                    </div>
-                </div>
-
             </div>
         </section>
     </div>
@@ -130,6 +112,43 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.hero-title {
+  font-size: 4rem;
+  font-weight: 900;
+  letter-spacing: -2px;
+}
+.hero-subtitle {
+  font-size: 1.3rem;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Hero Stats */
+.hero-stats .stat-item {
+  text-align: center;
+  padding: 1rem;
+}
+
+.hero-stats .stat-number {
+  font-size: 2.5rem;
+  font-weight: 900;
+  background: linear-gradient(45deg, #ffc107, #dc3545);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  display: block;
+}
+
+.hero-stats .stat-label {
+  font-size: 0.9rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+
 /* All styles remain the same */
 .tournaments-page {
     background: linear-gradient(135deg, #050505 0%, #101820 50%, #050505 100%);
@@ -138,8 +157,8 @@ onMounted(() => {
 }
 
 .tournaments-hero {
-    background: radial-gradient(ellipse at center, #101820 0%, #0a0a0a 100%);
-    padding: 6rem 0;
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0a0a0a 100%);
+  padding: 6rem 0;
 }
 
 .hero-background {
@@ -157,11 +176,12 @@ onMounted(() => {
 }
 
 .text-glow {
-    background: linear-gradient(45deg, #FFD700, #C0C0C0, #B87333);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+  background: linear-gradient(45deg, #dc3545, #ffc107, #f72585);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(220, 53, 69, 0.5);
+  animation: titlePulse 4s ease-in-out infinite;
 }
 
 .battle-icon {

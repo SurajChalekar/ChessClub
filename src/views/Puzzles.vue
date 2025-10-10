@@ -46,6 +46,9 @@
                   <button class="btn btn-control btn-next" @click="nextPuzzle">
                     <i class="fas fa-arrow-right me-2"></i>Next Puzzle
                   </button>
+                  <button class="btn btn-control btn-back" @click="backPuzzle ">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                  </button>
                 </div>
               </div>
             </div>
@@ -1023,6 +1026,20 @@ const nextPuzzle = () => {
   statusIcon.value = 'fas fa-puzzle-piece'
   puzzlesSolved.value++
 }
+const backPuzzle = () => {
+  if (currentPuzzle.value > 0) {
+    currentPuzzle.value--
+  } else {
+    currentPuzzle.value = puzzles.value.length - 1
+  }
+  deselectPiece()
+  initializeBoard()
+  statusMessage.value = 'Previous puzzle loaded! White to move.'
+  statusClass.value = 'alert-info'
+  statusIcon.value = 'fas fa-puzzle-piece'
+  // Optional: you might want to decrement puzzlesSolved or leave it unchanged
+  if (puzzlesSolved.value > 0) puzzlesSolved.value--
+}
 
 const promotePawn = (piece) => {
   if (promotionSquare.value === null) return
@@ -1354,6 +1371,16 @@ onMounted(() => {
 .btn-next:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
+}
+.btn-back {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
+
+.btn-back:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.5);
 }
 
 /* ==================== STATUS MESSAGES ==================== */

@@ -46,6 +46,9 @@
                   <button class="btn btn-control btn-next" @click="nextPuzzle">
                     <i class="fas fa-arrow-right me-2"></i>Next Puzzle
                   </button>
+                  <button class="btn btn-control btn-back" @click="backPuzzle ">
+                    <i class="fas fa-arrow-left me-2"></i>Back
+                  </button>
                 </div>
               </div>
             </div>
@@ -1354,7 +1357,16 @@ onMounted(() => {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(138, 43, 226, 0.5);
 }
+.btn-back {
+  background: linear-gradient(135deg, #3498db, #2980b9);
+  color: white;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.4);
+}
 
+.btn-back:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(52, 152, 219, 0.5);
+}
 /* ==================== STATUS MESSAGES ==================== */
 .status-message {
   margin-bottom: 1.5rem;

@@ -24,10 +24,6 @@
                   <div class="stat-number">1</div>
                   <div class="stat-label">Important News</div>
                 </div>
-                <div class="stat-item">
-                  <div class="stat-number">{{ totalParticipants }}</div>
-                  <div class="stat-label">Cumulative Engagement</div>
-                </div>
               </div>
             </div>
           </div>
@@ -132,15 +128,9 @@
               </div>
               <div class="detail-row">
                 <i class="fas fa-users me-2 text-success"></i>
-                <span>Engagement: <strong>{{ event.participants }} views</strong></span>
+                <span>Participants: <strong>{{ event.participants }}+</strong></span>
               </div>
             </div>
-            
-            <a href="#" class="btn btn-warning w-100 mt-4 position-relative overflow-hidden featured-btn">
-              Read Full Notice
-              <span class="btn-shine"></span>
-            </a>
-            
           </div>
 
           <div v-if="filteredEvents.length === 0" class="col-12 text-center py-5">
@@ -209,7 +199,7 @@ const events = ref([
   { // ♟️ LATEST COMMUNIQUE (Oldest) - ICON: PAWN
     id: 2,
     title: 'Chess Club Introduction Session',
-    date: '13-09-2025', 
+    date: '2025-09-13', 
     time: '16:40',
     type: 'Introduction and Intearaction',
     level: 'ALl',

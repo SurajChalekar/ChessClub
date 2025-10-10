@@ -9,14 +9,7 @@
             <p class="card-text">{{ tournament.description }}</p>
 
             <div class="tournament-details-grid mt-4">
-                <div class="detail-item">
-                    <i class="fas fa-money-bill-wave text-warning"></i>
-                    <div>
-                        <div class="detail-label">Prize Pool</div>
-                        <div class="detail-value">${{ tournament.prizePool.toLocaleString() }}</div>
-                    </div>
-                </div>
-                <div class="detail-item">
+                <div class="detail-item" style="padding-left: 10px;">
                     <i class="fas fa-users text-info"></i>
                     <div>
                         <div class="detail-label">Participants</div>
@@ -36,17 +29,6 @@
                     <i :class="{'fa-chart-line': tournament.isFeatured, 'fa-info-circle': !tournament.isFeatured}" class="fas me-2"></i>
                     {{ tournament.isFeatured ? 'View Standings' : 'View Details' }}
                 </button>
-
-                <div class="dropdown">
-                    <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        Change Status
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-dark">
-                        <li v-if="category !== 'ongoing'"><a class="dropdown-item" href="#" @click.prevent="$emit('move-to', tournament.id, 'ongoing')">Set to Ongoing</a></li>
-                        <li v-if="category !== 'upcoming'"><a class="dropdown-item" href="#" @click.prevent="$emit('move-to', tournament.id, 'upcoming')">Set to Upcoming</a></li>
-                        <li v-if="category !== 'past'"><a class="dropdown-item" href="#" @click.prevent="$emit('move-to', tournament.id, 'past')">Set to Past/Completed</a></li>
-                    </ul>
-                </div>
             </div>
         </div>
     </div>
