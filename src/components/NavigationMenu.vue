@@ -50,6 +50,14 @@
           </li>
           <li class="nav-item">
             <router-link
+              to="/bot"
+              class="nav-link nav-link-custom"
+              active-class="active"
+              @click="menuOpen = false"
+            >Bot</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link
               to="/puzzles"
               class="nav-link nav-link-custom"
               active-class="active"

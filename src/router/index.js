@@ -18,7 +18,12 @@ const routes = [
     name: 'anouncements',
     component: () => import('../views/Anouncements.vue')
   },
-
+  {
+    path: '/bot',
+    name: 'bot',
+    component: () => import('../views/Bot.vue'),
+    meta: { requiresAuth: true, specialNavbar: true }
+  },
   // --- 1. MAIN TOURNAMENT OVERVIEW PAGE ---
   {
     path: '/tournament',
