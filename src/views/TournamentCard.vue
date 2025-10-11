@@ -2,11 +2,11 @@
     <div class="tournament-card card h-100 border-start border-4 shadow-lg" :class="cardClass">
         <div class="card-body d-flex flex-column">
             <div class="d-flex justify-content-between align-items-start mb-3">
-                <h5 class="card-title tournament-title">{{ tournament.TournamentName }}</h5>
+                <h5 v-if="tournament.TournamentName && tournament.TournamentName.trim()" class="card-title tournament-title">{{ tournament.TournamentName }}</h5>
                 <span class="badge rounded-pill text-uppercase" :class="badgeClass">{{ category }}</span>
             </div>
             
-            <p class="card-text">{{ tournament.Description }}</p>
+            <p v-if="tournament.Description && tournament.Description.trim()" class="card-text">{{ tournament.Description }}</p>
 
             <div class="tournament-details-grid mt-4">
                 <div v-if="tournament.Type" class="detail-item">
@@ -23,6 +23,16 @@
                         <div class="detail-value">{{ tournament.PrizeFund }}</div>
                     </div>
                 </div>
+            </div>
+
+            <div v-if="tournament.Status && tournament.Status.trim()" class="mt-3">
+                <strong>Status:</strong> {{ tournament.Status }}
+            </div>
+            <div v-if="tournament.Date && tournament.Date.trim()" class="mt-1">
+                <strong>Date:</strong> {{ tournament.Date }}
+            </div>
+            <div v-if="tournament.Location && tournament.Location.trim()" class="mt-1">
+                <strong>Location:</strong> {{ tournament.Location }}
             </div>
 
             <div class="d-flex justify-content-end align-items-center mt-auto pt-3 border-top border-secondary">

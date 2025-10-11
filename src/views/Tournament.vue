@@ -128,6 +128,7 @@ const fetchTournaments = async () => {
             throw new Error(`Network response was not ok (${response.status}): ${errorData.error.message}`);
         }
         const data = await response.json();
+        console.log('Fetched tournament data:', data);
         if (!data.values || data.values.length <= 1) {
             tournaments.value = [];
             return;
