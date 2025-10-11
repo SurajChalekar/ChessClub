@@ -81,27 +81,24 @@
         </div>
       </div>
 
-      <!-- Checkmate/Stalemate Dialog -->
-      <div v-if="isCheckmate || isStalemate" class="game-end-overlay">
+            <!-- Puzzle Complete Popup -->
+      <div v-if="showPuzzleCompletePopup" class="game-end-overlay">
         <div class="game-end-dialog">
+          <!-- Close (X) button -->
+          <button class="popup-close-btn" @click="showPuzzleCompletePopup = false">
+            <i class="fas fa-times"></i>
+          </button>
+
           <div class="game-end-icon">
-            <i v-if="isCheckmate" class="fas fa-trophy"></i>
-            <i v-if="isStalemate" class="fas fa-handshake"></i>
+            <i class="fas fa-trophy"></i>
           </div>
-          <h2 class="game-end-title">
-            <span v-if="isCheckmate">Checkmate!</span>
-            <span v-if="isStalemate">Stalemate!</span>
-          </h2>
-          <p class="game-end-subtitle">
-            <span v-if="isCheckmate && winner === 'white'">♔ White Wins!</span>
-            <span v-if="isCheckmate && winner === 'black'">♚ Black Wins!</span>
-            <span v-if="isStalemate">It's a Draw!</span>
-          </p>
+          <h2 class="game-end-title">Puzzle Complete!</h2>
+          <p class="game-end-subtitle">🎉 Great job solving the puzzle!</p>
           <div class="game-end-buttons">
             <button @click="resetPuzzle" class="btn btn-light btn-lg">
               <i class="fas fa-redo me-2"></i>Play Again
             </button>
-            <button @click="nextPuzzle" class="btn btn-warning btn-lg">
+            <button @click="handleNextPuzzle" class="btn btn-warning btn-lg">
               <i class="fas fa-arrow-right me-2"></i>Next Puzzle
             </button>
           </div>
@@ -134,6 +131,8 @@ const showPromotionDialog = ref(false)
 const promotionSquare = ref(null)
 const promotionColor = ref(null)
 const currentSolutionIndex = ref(0) // index into current puzzle solution array
+const showPuzzleCompletePopup = ref(false)
+const puzzleCompleteMessage = ref('')
 
 // Convert index (0..63) to algebraic like "e4"
 const indexToAlgebraic = (index) => {
@@ -153,22 +152,10 @@ const algebraicToIndex = (alg) => {
   return getIndexFromSquare(row, col)
 }
 
-// Parse a UCI move string like "e2e4" into { from, to } (indices) or null
-const uciToIndices = (uci) => {
-  if (!uci || !/^[a-h][1-8][a-h][1-8]$/.test(uci)) return null
-  const fromAlg = uci.slice(0, 2)
-  const toAlg = uci.slice(2, 4)
-  const from = algebraicToIndex(fromAlg)
-  const to = algebraicToIndex(toAlg)
-  if (from === -1 || to === -1) return null
-  return { from, to }
-}
-
 // Reset solution index for the puzzle
 const resetSolutionIndex = () => {
   currentSolutionIndex.value = 0
 }
-const currentSolutionMoves = computed(() => currentPuzzleData.value?.solution || [])
 // Evaluate a just-made move against the current solution step.
 // fromIndex and toIndex are numeric indices (0..63).
 const evaluateSolutionMove = (fromIndex, toIndex) => {
@@ -210,16 +197,24 @@ const evaluateSolutionMove = (fromIndex, toIndex) => {
       }, 400)
     } else {
       // Solution finished without opponent move
-      setTimeout(() => {
-        nextPuzzle()
-      }, 500)
+      puzzleCompleteMessage.value = '🎉 Puzzle Complete! Great job!'
+      showPuzzleCompletePopup.value = true
+      isGameActive.value = false
     }
 
   } else {
-    statusMessage.value = `❌ Wrong move! Expected ${expected}`
-    statusClass.value = 'alert-danger'
-    statusIcon.value = 'fas fa-ban'
+    setTimeout(() => {
+      resetPuzzle()
+      statusMessage.value = `❌ Wrong move! `
+      statusClass.value = 'alert-danger'
+      statusIcon.value = 'fas fa-ban'
+    }, 500)
+
   }
+}
+const handleNextPuzzle = () => {
+  showPuzzleCompletePopup.value = false
+  nextPuzzle()
 }
 
 // Castling rights tracking
@@ -320,6 +315,7 @@ const loadPuzzlesFromCSV = async () => {
     obj.solution = obj.solution?.split(" ").map(s => s.trim())
     return obj
   })
+  console.log(puzzles)
 }
 
 const isWhitePiece = (piece) => {
@@ -998,19 +994,21 @@ const resetPuzzle = () => {
   statusMessage.value = 'Puzzle reset! White to move.'
   statusClass.value = 'alert-info'
   statusIcon.value = 'fas fa-undo'
+  showPuzzleCompletePopup.value = false
 }
 
 const showHint = () => {
-  const solution = currentPuzzleData.value.solution[0]
-  statusMessage.value = `Hint: Try ${solution}`
+  const solution = currentPuzzleData.value.hints
+  statusMessage.value = `Hint: ${solution}`
   statusClass.value = 'alert-info'
   statusIcon.value = 'fas fa-lightbulb'
 }
 
 const checkSolution = () => {
-  statusMessage.value = 'Good move! Keep going...'
-  statusClass.value = 'alert-success'
-  statusIcon.value = 'fas fa-check-circle'
+  const solution = currentPuzzleData.value.sol
+  statusMessage.value = `solution: ${solution}`
+  statusClass.value = 'alert-info'
+  statusIcon.value = 'fas fa-lightbulb'
 }
 
 const nextPuzzle = () => {
@@ -1025,6 +1023,20 @@ const nextPuzzle = () => {
   statusClass.value = 'alert-success'
   statusIcon.value = 'fas fa-puzzle-piece'
   puzzlesSolved.value++
+}
+const backPuzzle = () => {
+  if (currentPuzzle.value > 0) {
+    currentPuzzle.value--
+  } else {
+    currentPuzzle.value = puzzles.value.length - 1
+  }
+  deselectPiece()
+  initializeBoard()
+  statusMessage.value = 'Previous puzzle loaded! White to move.'
+  statusClass.value = 'alert-info'
+  statusIcon.value = 'fas fa-puzzle-piece'
+  // Optional: you might want to decrement puzzlesSolved or leave it unchanged
+  if (puzzlesSolved.value > 0) puzzlesSolved.value--
 }
 
 const promotePawn = (piece) => {
@@ -1061,7 +1073,35 @@ onMounted(() => {
 })
 
 </script>
+
+
 <style scoped>
+.popup-close-btn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: #999;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.popup-close-btn:hover {
+  color: #333;
+}
+.btn-sol {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-sol:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
+}
 /* ==================== GLOBAL STYLES ==================== */
 .puzzles-page {
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);

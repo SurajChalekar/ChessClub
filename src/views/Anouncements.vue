@@ -469,7 +469,7 @@ onMounted(() => {
 }
 
 .section-title {
-  font-size: 2.5rem;
+  font-size: 3rem;
   font-weight: 900;
   background: linear-gradient(45deg, #ffc107, #dc3545);
   -webkit-background-clip: text;

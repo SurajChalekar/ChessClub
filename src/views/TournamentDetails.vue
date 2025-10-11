@@ -109,8 +109,11 @@ const getRowClass = (index) => {
 
 const refreshStandings = async () => {
     isRefreshing.value = true;
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    await fetchStandings();
+    if(props.category == 'ongoing')
+    {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        await fetchStandings();
+    }
     isRefreshing.value = false;
 };
 
@@ -149,12 +152,12 @@ const fetchStandings = async () => {
     min-height: 100vh;
 }
 .section-title {
-    background: linear-gradient(45deg, #dc0404, #ef0505);
-    -webkit-background-clip: text;
-    background-clip: text; /* Add this line */
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 10px rgba(7, 1, 1, 0.942);
-    font-weight: 800;
+  font-size: 3rem;
+  font-weight: 900;
+  background: linear-gradient(45deg, #ffc107, #dc3545);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 .standings-card {
     background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
