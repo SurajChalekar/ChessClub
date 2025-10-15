@@ -106,10 +106,6 @@ import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
 import TournamentCard from './TournamentCard.vue';
 
-const SPREADSHEET_ID = '1-Na0JSr6l74JfN-tcqWVTpPrHTpM0nZRQdMTADE3n9g';
-const API_KEY = 'AIzaSyAwbUc_sb6qo-N9lrb0Vvl2MjmpUSES_Rc';
-const SHEET_NAME = 'TournamentsList';
-
 const router = useRouter();
 const tournaments = ref([]);
 const isLoading = ref(true);
@@ -119,41 +115,59 @@ const ongoingTournaments = computed(() => tournaments.value.filter(t => t.Status
 const upcomingTournaments = computed(() => tournaments.value.filter(t => t.Status === 'Upcoming'));
 const pastTournaments = computed(() => tournaments.value.filter(t => t.Status === 'Completed'));
 
+// Replace the old fetchTournaments function with this corrected version
+
 const fetchTournaments = async () => {
-    const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(`Network response was not ok (${response.status}): ${errorData.error.message}`);
-        }
-        const data = await response.json();
-        console.log('Fetched tournament data:', data);
-        if (!data.values || data.values.length <= 1) {
-            tournaments.value = [];
-            return;
-        }
-        const headers = data.values[0];
-        const rows = data.values.slice(1);
-        tournaments.value = rows.map(row => {
-            const tournamentObject = {};
-            headers.forEach((header, index) => {
-                tournamentObject[header] = row[index] || '';
-            });
-            return tournamentObject;
-        });
-    } catch (e) {
-        console.error('Failed to fetch tournaments:', e);
-        error.value = e.message;
-    } finally {
-        isLoading.value = false;
-    }
+    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv`;
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            // It's safer to get the error response as text
+            const errorText = await response.text();
+            throw new Error(`Network response was not ok (${response.status}): ${errorText}`);
+        }
+        
+        // **FIX 1: Get the response as a text string, not JSON**
+        const csvText = await response.text();
+
+        // **FIX 2: Implement correct CSV parsing logic**
+        const lines = csvText.split(/\r?\n/);
+
+        if (lines.length <= 1) {
+            tournaments.value = [];
+            return;
+        }
+
+        const headers = lines[0].split(',').map(h => h.trim());
+        const rows = lines.slice(1);
+
+        tournaments.value = rows.map(line => {
+            if (!line.trim()) return null; // Skip any empty lines in the sheet
+            const tournamentObject = {};
+
+            // This robust regex handles cases where your data might have commas
+            const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+            headers.forEach((header, index) => {
+                if (values[index]) {
+                    // Clean up quotes and whitespace from each value
+                    tournamentObject[header] = values[index].trim().replace(/^"|"$/g, '');
+                } else {
+                    tournamentObject[header] = '';
+                }
+            });
+            return tournamentObject;
+        }).filter(Boolean); // Filter out any empty lines that became null
+
+    } catch (e) {
+        console.error('Failed to fetch tournaments:', e);
+        error.value = e.message;
+    } finally {
+        isLoading.value = false;
+    }
 };
 
 const handleViewDetails = (tournament) => {
-    // ADD THIS LINE FOR TESTING:
-    alert('Button clicked for: ' + tournament.TournamentName);
-
     // The rest of the function remains the same
     if (tournament.PageType === 'KnightsConquest') {
         router.push({ 
