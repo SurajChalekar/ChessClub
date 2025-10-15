@@ -101,54 +101,15 @@ const fetchTournamentDetails = async () => {
       tournament.value = foundTournament;
       document.title = tournament.value.TournamentName;
     } else {
-        // If no tournament is found, redirect back to the overview page
-        console.error(`Tournament with ID ${props.id} not found.`);
-        router.push({ name: 'tournament-overview' });
+      throw new Error(`Tournament with ID "${props.id}" not found.`);
     }
-});
 
-const getRowClass = (index) => {
-    if (index === 0) return 'champion-row';
-    if (index === 1) return 'second-place-row';
-    if (index === 2) return 'third-place-row';
-    return '';
-};
-
-const refreshStandings = async () => {
-    isRefreshing.value = true;
-    if(props.category == 'ongoing')
-    {
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        await fetchStandings();
-    }
-    isRefreshing.value = false;
-};
-
-const fetchStandings = async () => {
-    // In a real app, this URL could come from the tournament object itself
-    // e.g., const sheetUrl = tournament.value.standingsUrl;
-    const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTRWCgc3OdW0FHFovxqB-YQdD-mo4Vy470TA5ckiJHnYae9UOp8DmZPe-qs8jnMI90wHGndgnt4oNFh/pub?output=csv";
-    
-    try {
-        const response = await fetch(sheetUrl + "&cacheBust=" + new Date().getTime());
-        const csv = await response.text();
-        const lines = csv.split("\n").map(line => line.split(","));
-        columns.value = lines[0].filter(c => c.trim() !== '');
-        rows.value = lines.slice(1).filter(row => row.some(cell => cell.trim() !== ''));
-    } catch (error) {
-        console.error("Error fetching CSV:", error);
-        // Fallback data is great for demos
-        columns.value = ['Rank', 'Player', 'Rating', 'Points', 'Wins', 'Losses', 'Draws'];
-        rows.value = [
-            ['1', 'ShadowMaster99', '2150', '8.5', '8', '0', '1'],
-            ['2', 'DarkKnight_X', '2087', '8.0', '7', '1', '1'],
-            ['3', 'ChessReaper', '1995', '7.5', '7', '1', '1'],
-            ['4', 'VoidPlayer', '1876', '7.0', '6', '2', '1'],
-            ['5', 'NightWarrior', '1923', '6.5', '6', '2', '1']
-        ];
-    } finally {
-        isLoading.value = false;
-    }
+  } catch (e) {
+    console.error(e);
+    error.value = e.message;
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 // Computed property for the status badge color
@@ -169,16 +130,11 @@ onMounted(() => {
 
 <style scoped>
 .tournament-details-page {
-    background: linear-gradient(135deg, #050505 0%, #101820 50%, #050505 100%);
-    min-height: 100vh;
-}
-.section-title {
-  font-size: 3rem;
-  font-weight: 900;
-  background: linear-gradient(45deg, #ffc107, #dc3545);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+  color: #e0e0e0;
+  min-height: calc(100vh - 76px); /* Adjust for navbar height */
+  display: flex;
+  align-items: center;
 }
 
 .details-card {
