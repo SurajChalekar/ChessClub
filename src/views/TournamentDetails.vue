@@ -1,98 +1,105 @@
 <template>
-    <div v-if="tournament" class="tournament-details-page bg-dark-chess py-5">
-        <div class="container">
-            <h1 class="text-center section-title mb-3">{{ tournament.name }}: Live Standings</h1>
-            <p class="text-center text-warning mb-5">Current Phase: Round 2/7 (Tournament ID: {{ tournament.id }})</p>
-            
-            <div class="standings-card mt-5">
-                <div class="standings-header">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="standings-title mb-0">
-                            <i class="fas fa-crown me-2 text-warning"></i>
-                            Live Tournament Rankings
-                        </h4>
-                        <div class="refresh-btn">
-                            <button class="btn btn-outline-warning btn-sm" @click="refreshStandings">
-                                <i class="fas fa-sync-alt me-1" :class="{ 'fa-spin': isRefreshing }"></i>
-                                Refresh
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                <div class="table-container">
-                    <div v-if="isLoading" class="loading-state text-center py-5">
-                        <div class="spinner-border text-warning mb-3" role="status">
-                            <span class="visually-hidden">Loading...</span>
-                        </div>
-                        <p class="text-muted">Loading battle standings...</p>
-                    </div>
-                    <div v-else-if="columns.length > 0" class="table-responsive">
-                        <table class="table table-dark table-hover align-middle text-center standings-table mb-0 shadow-lg">
-                            <thead class="table-gradient">
-                                <tr>
-                                    <th v-for="(col, index) in columns" :key="index" class="standings-header-cell text-uppercase">{{ col }}</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="(row, rowIndex) in rows" :key="rowIndex" class="standings-row" :class="getRowClass(rowIndex)">
-                                    <td v-for="(cell, colIndex) in row" :key="colIndex" class="standings-cell">
-                                        <span v-if="colIndex === 0" class="rank-indicator"><span>{{ cell }}</span></span>
-                                        <span v-else>{{ cell }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div v-else class="text-center text-muted py-5">
-                        <p>No standings data available yet for this tournament.</p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="text-center mt-5">
-                <button class="btn btn-lg btn-outline-light" @click="router.go(-1)">
-                    <i class="fas fa-arrow-left me-2"></i> Back to Tournament Overview
-                </button>
-            </div>
+  <div class="tournament-details-page py-5">
+    <div class="container">
+      <div v-if="isLoading" class="text-center">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="mt-3">Loading Tournament Details...</p>
+      </div>
+
+      <div v-else-if="error" class="alert alert-danger">
+        {{ error }}
+      </div>
+
+      <div v-else-if="tournament" class="details-card">
+        <div class="card-header">
+          <h1 class="card-title">{{ tournament.TournamentName }}</h1>
+          <span class="badge" :class="statusBadgeClass">{{ tournament.Status }}</span>
         </div>
+        <div class="card-body">
+          <p class="description">{{ tournament.Description }}</p>
+          <hr class="my-4">
+          <div class="details-grid">
+            <div v-if="tournament.Date" class="detail-item">
+              <span class="detail-label"><i class="fas fa-calendar-alt me-2"></i>Date</span>
+              <span class="detail-value">{{ tournament.Date }}</span>
+            </div>
+            <div v-if="tournament.Location" class="detail-item">
+              <span class="detail-label"><i class="fas fa-map-marker-alt me-2"></i>Location</span>
+              <span class="detail-value">{{ tournament.Location }}</span>
+            </div>
+            <div v-if="tournament.Type" class="detail-item">
+              <span class="detail-label"><i class="fas fa-sitemap me-2"></i>Type</span>
+              <span class="detail-value">{{ tournament.Type }}</span>
+            </div>
+            <div v-if="tournament.Rounds" class="detail-item">
+              <span class="detail-label"><i class="fas fa-hashtag me-2"></i>Rounds</span>
+              <span class="detail-value">{{ tournament.Rounds }}</span>
+            </div>
+            <div v-if="tournament.PrizeFund" class="detail-item">
+              <span class="detail-label"><i class="fas fa-trophy me-2"></i>Prize Fund</span>
+              <span class="detail-value">{{ tournament.PrizeFund }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="card-footer text-center">
+          <button class="btn btn-outline-light" @click="router.back()">
+            <i class="fas fa-arrow-left me-2"></i> Back to List
+          </button>
+        </div>
+      </div>
     </div>
-    <div v-else class="loading-state text-center py-5">
-        <div class="spinner-border text-light" role="status"></div>
-    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router';
-import { initialTournaments } from '../data/T1.js';
+import { ref, onMounted, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 
+// We get the ID from the URL as a prop
 const props = defineProps({
-    id: [String, Number] 
+  id: String
 });
 
+const route = useRoute();
 const router = useRouter();
 
-const tournament = ref(null); // Will hold the data for the current tournament
-const isLoading = ref(true);
-const isRefreshing = ref(false);
-const columns = ref([]);
-const rows = ref([]);
+// Configuration for Google Sheets
+const SPREADSHEET_ID = 'YOUR_SPREADSHEET_ID'; // The ID for your main TournamentsList
+const API_KEY = 'YOUR_API_KEY';
+const SHEET_NAME = 'TournamentsList';
 
-onMounted(() => {
-    // Find the specific tournament using the ID from the route prop.
-    // The '==' is used intentionally here for loose comparison between string (from URL) and number.
-    const foundTournament = initialTournaments.find(t => t.id == props.id);
+// Component State
+const tournament = ref(null);
+const isLoading = ref(true);
+const error = ref(null);
+
+const fetchTournamentDetails = async () => {
+  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_NAME}?key=${API_KEY}`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch tournament list.");
+
+    const data = await response.json();
+    if (!data.values || data.values.length <= 1) throw new Error("No tournaments found in the sheet.");
+
+    const headers = data.values[0];
+    const rows = data.values.slice(1);
+
+    const allTournaments = rows.map(row => {
+      const tournamentObject = {};
+      headers.forEach((header, index) => {
+        tournamentObject[header] = row[index] || '';
+      });
+      return tournamentObject;
+    });
+
+    // Find the specific tournament that matches the ID from the URL
+    const foundTournament = allTournaments.find(t => t.TournamentID === props.id);
 
     if (foundTournament) {
-        tournament.value = foundTournament;
-        document.title = `${tournament.value.name} - Standings`;
-        if (tournament.value.isFeatured) {
-            fetchStandings();
-        } else {
-            // For other tournaments, maybe show a "coming soon" or different data
-            console.log("This tournament does not have live standings data.");
-            isLoading.value = false;
-        }
+      tournament.value = foundTournament;
+      document.title = tournament.value.TournamentName;
     } else {
         // If no tournament is found, redirect back to the overview page
         console.error(`Tournament with ID ${props.id} not found.`);
@@ -143,10 +150,24 @@ const fetchStandings = async () => {
         isLoading.value = false;
     }
 };
+
+// Computed property for the status badge color
+const statusBadgeClass = computed(() => {
+  if (!tournament.value) return 'bg-secondary';
+  switch (tournament.value.Status) {
+    case 'Ongoing': return 'bg-danger';
+    case 'Upcoming': return 'bg-success';
+    case 'Completed': return 'bg-secondary';
+    default: return 'bg-info';
+  }
+});
+
+onMounted(() => {
+  fetchTournamentDetails();
+});
 </script>
 
 <style scoped>
-/* All styles remain the same, ensuring visual consistency */
 .tournament-details-page {
     background: linear-gradient(135deg, #050505 0%, #101820 50%, #050505 100%);
     min-height: 100vh;
@@ -159,46 +180,71 @@ const fetchStandings = async () => {
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
-.standings-card {
-    background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-    border: 1px solid rgba(255, 55, 0, 0.749);
-    border-radius: 25px;
-    padding: 2rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+
+.details-card {
+  background: linear-gradient(145deg, #181818, #2a2a2a);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+  border-radius: 15px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  overflow: hidden;
 }
-.standings-header {
-    border-bottom: 1px solid rgb(200, 90, 5);
-    padding-bottom: 1rem;
+
+.card-header {
+  padding: 2rem;
+  background-color: rgba(0,0,0,0.2);
+  border-bottom: 1px solid rgba(255, 215, 0, 0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
-.standings-title {
-    color: #cf4d06;
-    font-weight: 700;
+
+.card-title {
+  margin: 0;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #FFD700;
 }
-.table-gradient {
-    background: linear-gradient(90deg, #010505, #dc3545);
-    color: #0a0a0a;
+
+.card-body {
+  padding: 2rem;
 }
-.standings-header-cell {
-    color: #d2cf0c;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-size: 0.9rem;
-    padding: 1rem;
-    border: none;
-    border-bottom: 2px solid rgba(255, 193, 7, 0.3);
+
+.description {
+  font-size: 1.1rem;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.8);
 }
-.champion-row {
-    background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 215, 0, 0.05) 100%);
-    font-weight: 700;
-    color: #FFD700;
+
+.details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
 }
-.second-place-row {
-    background: linear-gradient(135deg, rgba(192, 192, 192, 0.1) 0%, rgba(169, 169, 169, 0.05) 100%);
-    color: #c0c0c0;
+
+.detail-item {
+  background: rgba(0,0,0,0.2);
+  padding: 1rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
 }
-.third-place-row {
-    background: linear-gradient(135deg, rgba(205, 127, 50, 0.1) 0%, rgba(184, 115, 51, 0.05) 100%);
-    color: #cd7f32;
+
+.detail-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.detail-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.card-footer {
+  background-color: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255, 215, 0, 0.2);
+  padding: 1.5rem;
 }
 </style>

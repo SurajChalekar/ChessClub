@@ -1,33 +1,42 @@
 <template>
     <div class="tournament-card card h-100 border-start border-4 shadow-lg" :class="cardClass">
-        <div class="card-body">
+        <div class="card-body d-flex flex-column">
             <div class="d-flex justify-content-between align-items-start mb-3">
-                <h5 class="card-title tournament-title">{{ tournament.icon }} {{ tournament.name }}</h5>
+                <h5 v-if="tournament.TournamentName && tournament.TournamentName.trim()" class="card-title tournament-title">{{ tournament.TournamentName }}</h5>
                 <span class="badge rounded-pill text-uppercase" :class="badgeClass">{{ category }}</span>
             </div>
             
-            <p class="card-text">{{ tournament.description }}</p>
+            <p v-if="tournament.Description && tournament.Description.trim()" class="card-text">{{ tournament.Description }}</p>
 
             <div class="tournament-details-grid mt-4">
                 <div class="detail-item" style="padding-left: 10px;">
                     <i class="fas fa-users text-info"></i>
                     <div>
-                        <div class="detail-label">Participants</div>
-                        <div class="detail-value">{{ tournament.participants }}/{{ tournament.maxParticipants }}</div>
+                        <div class="detail-label">Prize Pool</div>
+                        <div class="detail-value">{{ tournament.PrizeFund }}</div>
                     </div>
                 </div>
             </div>
 
-            <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top border-secondary">
-                
-                <button 
-                    class="btn btn-sm" 
-                    :class="actionButtonClass"
-                    @click="$emit('view-details', tournament.id)"
-                    :disabled="category === 'past'"
-                >
-                    <i :class="{'fa-chart-line': tournament.isFeatured, 'fa-info-circle': !tournament.isFeatured}" class="fas me-2"></i>
-                    {{ tournament.isFeatured ? 'View Standings' : 'View Details' }}
+            <div v-if="tournament.Status && tournament.Status.trim()" class="mt-3">
+                <strong>Status:</strong> {{ tournament.Status }}
+            </div>
+            <div v-if="tournament.Date && tournament.Date.trim()" class="mt-1">
+                <strong>Date:</strong> {{ tournament.Date }}
+            </div>
+            <div v-if="tournament.Location && tournament.Location.trim()" class="mt-1">
+                <strong>Location:</strong> {{ tournament.Location }}
+            </div>
+
+            <div class="d-flex justify-content-end align-items-center mt-auto pt-3 border-top border-secondary">
+                <a v-if="category === 'upcoming' && tournament.RegistrationLink" :href="tournament.RegistrationLink" target="_blank" class="btn btn-success">
+                    <i class="fas fa-user-plus me-2"></i> Register Now
+                </a>
+                <button v-else-if="category === 'ongoing'" class="btn btn-warning" @click="$emit('view-details', tournament)">
+                    <i class="fas fa-chart-line me-2"></i> View Standings
+                </button>
+                <button v-else-if="category === 'past'" class="btn btn-outline-secondary" @click="$emit('view-details', tournament)">
+                    <i class="fas fa-archive me-2"></i> View Results
                 </button>
             </div>
         </div>
@@ -35,14 +44,14 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'; // <-- CORRECTED IMPORT
+import { computed } from 'vue';
 
 const props = defineProps({
     tournament: Object,
-    category: String // 'ongoing', 'upcoming', or 'past'
+    category: String
 });
 
-defineEmits(['move-to', 'view-details']);
+defineEmits(['view-details']);
 
 const badgeClass = computed(() => ({
     'bg-danger': props.category === 'ongoing',
@@ -54,19 +63,8 @@ const cardClass = computed(() => ({
     'border-warning': props.category === 'ongoing',
     'border-success': props.category === 'upcoming',
     'border-secondary': props.category === 'past',
-    'opacity-75': props.category === 'past',
+    // REMOVED: The 'opacity-75' rule that was muting the colors
 }));
-
-const actionButtonClass = computed(() => {
-    if (props.tournament.isFeatured && props.category === 'ongoing') {
-        return 'btn-warning';
-    } else if (props.category === 'ongoing') {
-        return 'btn-outline-danger';
-    } else if (props.category === 'upcoming') {
-        return 'btn-outline-success';
-    }
-    return 'btn-outline-secondary';
-});
 </script>
 
 <style scoped>
@@ -75,28 +73,55 @@ const actionButtonClass = computed(() => {
     color: #e0e0e0;
     border-radius: 12px;
     transition: all 0.3s ease;
+    display: flex; /* Ensures the flex context starts here */
+    flex-direction: column;
 }
 
 .tournament-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 10px 30px rgba(2, 90, 241, 0.918);
+    transform: translateY(-5px);
+    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.25);
+}
+
+/* Using the component's class to increase specificity */
+.tournament-card .card-body {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Makes the card body fill the height */
+}
+
+.tournament-card .tournament-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #FFD700 !important; /* Bright gold for high visibility */
 }
 
 .tournament-card .card-text {
-  /* The !important flag ensures this rule will always be applied */
-  color: #e4f711 !important; 
-
-  min-height: 48px; 
-}
-.tournament-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #f90707;
+  color: #cccccc !important; /* Brighter grey for description */
+  min-height: 48px;
+  flex-grow: 1; /* Allows the description to push the button down */
 }
 
+.tournament-card .detail-label {
+    font-size: 0.8rem;
+    color: #a0a0a0 !important; /* Much brighter grey for labels */
+    text-transform: uppercase;
+}
+
+.tournament-card .detail-value {
+    font-weight: 600;
+    color: #ffffff !important; /* Pure white for maximum contrast */
+    font-size: 1.1rem;
+}
+
+.tournament-card .detail-item i {
+    color: #FFD700; /* Gold icon color */
+    font-size: 1.2rem;
+}
+
+/* Other existing styles that are fine */
 .tournament-details-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
     gap: 1rem;
 }
 
@@ -104,19 +129,5 @@ const actionButtonClass = computed(() => {
     display: flex;
     align-items: center;
     gap: 1rem;
-}
-
-.detail-label {
-    font-size: 0.75rem;
-    color: rgba(255, 255, 255, 0.6);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin-bottom: 0.2rem;
-}
-
-.detail-value {
-    font-weight: 600;
-    color: #e0e0e0;
-    font-size: 1rem;
 }
 </style>

@@ -2,10 +2,10 @@ import { createRouter, createWebHashHistory } from 'vue-router'
 import HomeView from '../views/Home.vue'
 import { auth } from '../firebase'
 
-// --- CORRECTED IMPORTS: Using singular component names ---
 import Tournament from '../views/Tournament.vue' 
 import TournamentDetails from '../views/TournamentDetails.vue' 
-// -----------------------------
+// CORRECTED: Importing your specific tournament component
+import KnightsConquest2 from '../views/Knights_Conquest_2.vue'
 
 const routes = [
   {
@@ -33,31 +33,18 @@ const routes = [
   
   // --- 2. DYNAMIC DETAILS/STANDINGS PAGE ---
   {
-    path: '/tournament/:id',
-    name: 'tournament-details',
-    component: TournamentDetails,
+    path: '/tournament/knights-conquest/:id',
+    name: 'knights-conquest-details',
+    component: KnightsConquest2,
     props: true
   },
-
-  // --- PUZZLE PAGES ---
-  {
-    path: '/puzzle-mobile',
-    name: 'puzzle-mobile',
-    component: () => import('../views/PuzzlesMobile.vue'),
-    meta: { requiresAuth: true } 
-  },
-  {
-    path: '/puzzles',
-    name: 'puzzles',
-    component: () => import('../views/Puzzles.vue'),
-    meta: { requiresAuth: true, specialNavbar: true } 
-  }
+  { path: '/puzzle-mobile', name: 'puzzle-mobile', component: () => import('../views/PuzzlesMobile.vue'), meta: { requiresAuth: true } },
+  { path: '/puzzles', name: 'puzzles', component: () => import('../views/Puzzles.vue'), meta: { requiresAuth: true, specialNavbar: true } }
 ]
 
 const router = createRouter({
   history: createWebHashHistory(import.meta.env.BASE_URL),
   routes,
-
   scrollBehavior(to, from, savedPosition) {
     if (savedPosition) {
       return savedPosition
@@ -67,11 +54,9 @@ const router = createRouter({
   }
 })
 
-// ✅ Combined navigation guard (auth + device redirect)
+// Your router.beforeEach guard remains the same
 router.beforeEach((to, from, next) => {
   const user = auth.currentUser
-
-  // ---- Authentication Guard ----
   if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!user) {
       alert('You must be logged in to access this page!')
@@ -79,22 +64,15 @@ router.beforeEach((to, from, next) => {
       return
     }
   }
-
-  // ---- Responsive Redirect ----
   const isMobile = window.innerWidth <= 768
-
-  // If visiting /puzzles on mobile → redirect to /puzzle-mobile
   if (to.path === '/puzzles' && isMobile) {
     next('/puzzle-mobile')
     return
   }
-
-  // If visiting /puzzle-mobile on desktop → redirect to /puzzles
   if (to.path === '/puzzle-mobile' && !isMobile) {
     next('/puzzles')
     return
   }
-
   next()
 })
 
