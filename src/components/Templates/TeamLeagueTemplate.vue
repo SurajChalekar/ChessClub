@@ -907,6 +907,22 @@ const closeModal = () => {
   gap: 3rem; /* Space between matchups in the same round */
 }
 
+.matchup {
+  position: relative; /* For connecting lines */
+  width: 100%;
+  background: linear-gradient(145deg, #2a2a3a, #1e1e24); /* New gradient */
+  border-radius: 8px;
+  border: 1px solid #555;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  overflow: hidden; /* Ensure rounded corners */
+  transition: transform 0.3s ease, box-shadow 0.3s ease; /* This line is essential */
+}
+
+.matchup:hover {
+  transform: translateY(-5px) scale(1.03); /* Add hover effect */
+  box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255, 215, 0, 0.3);
+}
+
 /* Ensures matches fill height for space-around to work */
 .round.semifinals .matches {
   flex-grow: 1;
@@ -1029,6 +1045,15 @@ const closeModal = () => {
   left: -2.5rem; /* Half of 5rem gap */
   width: 2.5rem;
   height: 2px;
+}
+
+/* Add trophy icon to Final title */
+.round.finals div:first-child .round-title::before {
+  content: '\1F3C6'; /* Trophy emoji */
+  display: inline-block;
+  margin-right: 0.5rem;
+  font-size: 1.2em;
+  transform: translateY(2px);
 }
 
 /* Final (Top-Right) */
