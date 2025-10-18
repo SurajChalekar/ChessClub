@@ -3,10 +3,7 @@ import HomeView from '../views/Home.vue'
 import { auth } from '../firebase'
 
 import Tournament from '../views/Tournament.vue' 
-import TournamentDetails from '../views/TournamentDetails.vue' 
-// CORRECTED: Importing your specific tournament component
-import KnightsConquest2 from '../views/Knights_Conquest_2.vue'
-
+import GenericTournament from '../views/GenericTournament.vue'
 const routes = [
   {
     path: '/',
@@ -24,20 +21,19 @@ const routes = [
     component: () => import('../views/Bot.vue'),
     meta: { requiresAuth: true, specialNavbar: true }
   },
-  // --- 1. MAIN TOURNAMENT OVERVIEW PAGE ---
   {
     path: '/tournament',
     name: 'tournament-overview',
     component: Tournament
   },
   
-  // --- 2. DYNAMIC DETAILS/STANDINGS PAGE ---
   {
-    path: '/tournament/knights-conquest/:id',
-    name: 'knights-conquest-details',
-    component: KnightsConquest2,
-    props: true
+    path: '/tournaments/:id',           // The URL structure
+    name: 'generic-tournament-details', // <<< The name being looked for
+    component: GenericTournament,       // The component to load
+    props: true                         // Pass URL params as props
   },
+ 
   { path: '/puzzle-mobile', name: 'puzzle-mobile', component: () => import('../views/PuzzlesMobile.vue'), meta: { requiresAuth: true } },
   { path: '/puzzles', name: 'puzzles', component: () => import('../views/Puzzles.vue'), meta: { requiresAuth: true, specialNavbar: true } }
 ]

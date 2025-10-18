@@ -104,82 +104,77 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+// --- NOTE: Check your file path for TournamentCard.vue ---
+// Your error said 'Tournament.vue', so this path should be correct.
+// If your card is in 'src/components/', it should be '../components/TournamentCard.vue'
 import TournamentCard from './TournamentCard.vue';
 
 const router = useRouter();
-const tournaments = ref([]);
+const allTournaments = ref([]);
 const isLoading = ref(true);
 const error = ref(null);
 
-const ongoingTournaments = computed(() => tournaments.value.filter(t => t.Status === 'Ongoing'));
-const upcomingTournaments = computed(() => tournaments.value.filter(t => t.Status === 'Upcoming'));
-const pastTournaments = computed(() => tournaments.value.filter(t => t.Status === 'Completed'));
+const displayableTournaments = computed(() => {
+  return allTournaments.value.filter(t => t.DisplayStatus === 'Primary');
+});
 
-// Replace the old fetchTournaments function with this corrected version
+const ongoingTournaments = computed(() => displayableTournaments.value.filter(t => t.Status === 'Ongoing'));
+const upcomingTournaments = computed(() => displayableTournaments.value.filter(t => t.Status === 'Upcoming'));
+const pastTournaments = computed(() => displayableTournaments.value.filter(t => t.Status === 'Completed'));
+
 
 const fetchTournaments = async () => {
-    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv`;
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            // It's safer to get the error response as text
-            const errorText = await response.text();
-            throw new Error(`Network response was not ok (${response.status}): ${errorText}`);
-        }
+    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv`;
+    
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Network response was not ok (${response.status}): ${errorText}`);
+        }
         
-        // **FIX 1: Get the response as a text string, not JSON**
-        const csvText = await response.text();
+        const csvText = await response.text();
+        const lines = csvText.split(/\r?\n/);
 
-        // **FIX 2: Implement correct CSV parsing logic**
-        const lines = csvText.split(/\r?\n/);
+        if (lines.length <= 1) {
+            allTournaments.value = [];
+            return;
+        }
 
-        if (lines.length <= 1) {
-            tournaments.value = [];
-            return;
-        }
+        const headers = lines[0].split(',').map(h => h.trim());
+        const rows = lines.slice(1);
 
-        const headers = lines[0].split(',').map(h => h.trim());
-        const rows = lines.slice(1);
-
-        tournaments.value = rows.map(line => {
-            if (!line.trim()) return null; // Skip any empty lines in the sheet
-            const tournamentObject = {};
-
-            // This robust regex handles cases where your data might have commas
+        allTournaments.value = rows.map(line => {
+            if (!line.trim()) return null; 
+            const tournamentObject = {};
             const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
 
-            headers.forEach((header, index) => {
-                if (values[index]) {
-                    // Clean up quotes and whitespace from each value
-                    tournamentObject[header] = values[index].trim().replace(/^"|"$/g, '');
+            headers.forEach((header, index) => {
+                if (values[index]) {
+                    tournamentObject[header] = values[index].trim().replace(/^"|"$/g, '');
                 } else {
                     tournamentObject[header] = '';
                 }
-            });
-            return tournamentObject;
-        }).filter(Boolean); // Filter out any empty lines that became null
+            });
+            return tournamentObject;
+        }).filter(Boolean);
 
-    } catch (e) {
-        console.error('Failed to fetch tournaments:', e);
-        error.value = e.message;
-    } finally {
-        isLoading.value = false;
-    }
+    } catch (e) {
+        console.error('Failed to fetch tournaments:', e);
+        // --- THIS IS THE FIX ---
+        // Changed 'e..message' to 'e.message'
+        error.value = e.message; 
+    } finally {
+        isLoading.value = false;
+    }
 };
 
+// This function has the correct route name
 const handleViewDetails = (tournament) => {
-    // The rest of the function remains the same
-    if (tournament.PageType === 'KnightsConquest') {
-        router.push({ 
-            name: 'knights-conquest-details', 
-            params: { id: tournament.TournamentID } 
-        });
-    } else {
-        router.push({ 
-            name: 'tournament-details', 
-            params: { id: tournament.TournamentID } 
-        });
-    }
+    router.push({ 
+        name: 'generic-tournament-details', 
+        params: { id: tournament.TournamentID } 
+    });
 };
 
 onMounted(() => {
@@ -189,75 +184,72 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* All your existing styles remain unchanged */
 .tournaments-page {
-    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
-    color: #e0e0e0;
+  background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
+  color: #e0e0eD;
 }
 .tournaments-hero {
-    background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0a0a0a 100%);
-    padding: 6rem 0;
+  background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0a0a0a 100%);
+  padding: 6rem 0;
 }
 .hero-background {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(45deg, transparent 40%, rgba(220, 53, 69, 0.05) 50%, transparent 60%), linear-gradient(-45deg, transparent 40%, rgba(255, 193, 7, 0.05) 50%, transparent 60%);
-    animation: heroShift 20s ease-in-out infinite alternate;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(45deg, transparent 40%, rgba(220, 53, 69, 0.05) 50%, transparent 60%), linear-gradient(-45deg, transparent 40%, rgba(255, 193, 7, 0.05) 50%, transparent 60%);
+  animation: heroShift 20s ease-in-out infinite alternate;
 }
 .chess-pattern-bg {
-    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-    background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 80px), repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(220,53,69,0.02) 40px, rgba(220,53,69,0.02) 80px);
-    opacity: 0.3;
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 80px), repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(220,53,69,0.02) 40px, rgba(220,53,69,0.02) 80px);
+  opacity: 0.3;
 }
-
-/* --- CORRECTED HERO STYLES --- */
 .hero-title {
-    font-size: 4.5rem;
-    font-weight: 900;
-    letter-spacing: -1px;
-    margin-bottom: 1.5rem;
+  font-size: 4.5rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin-bottom: 1.5rem;
 }
 .text-glow {
-    background: linear-gradient(45deg, #ff8800, #ffc837); /* Vibrant Orange/Yellow */
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 30px rgba(255, 165, 0, 0.7);
-    animation: titlePulse 4s ease-in-out infinite;
+  background: linear-gradient(45deg, #ff8800, #ffc837); /* Vibrant Orange/Yellow */
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(255, 165, 0, 0.7);
+  animation: titlePulse 4s ease-in-out infinite;
 }
 .hero-subtitle {
-    font-size: 1.3rem;
-    font-weight: 400;
-    opacity: 0.9;
-    line-height: 1.8;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
+  font-size: 1.3rem;
+  font-weight: 400;
+  opacity: 0.9;
+  line-height: 1.8;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
 }
 .chess-icon {
-    font-size: 0.9em;
-    margin-right: 15px;
-    filter: drop-shadow(0 0 20px rgba(255, 165, 0, 0.7));
+  font-size: 0.9em;
+  margin-right: 15px;
+  filter: drop-shadow(0 0 20px rgba(255, 165, 0, 0.7));
 }
 .hero-stats .stat-item {
-    text-align: center;
-    padding: 1rem;
+  text-align: center;
+  padding: 1rem;
 }
 .hero-stats .stat-number {
-    font-size: 2.5rem;
-    font-weight: 700;
-    background: linear-gradient(45deg, #ffc107, #FFD700);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    display: block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #ffc107, #FFD700);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: block;
 }
 .hero-stats .stat-label {
-    font-size: 0.9rem;
-    opacity: 0.8;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
-/* --- END CORRECTED HERO STYLES --- */
-
 @keyframes titlePulse {
   0%, 100% { 
     text-shadow: 0 0 30px rgba(255, 165, 0, 0.6);

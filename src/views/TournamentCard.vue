@@ -21,9 +21,11 @@
             <div v-if="tournament.Status && tournament.Status.trim()" class="mt-3">
                 <strong>Status:</strong> {{ tournament.Status }}
             </div>
-            <div v-if="tournament.Date && tournament.Date.trim()" class="mt-1">
-                <strong>Date:</strong> {{ tournament.Date }}
+            
+            <div v-if="displayDate" class="mt-1">
+                <strong>Date:</strong> {{ displayDate }}
             </div>
+
             <div v-if="tournament.Location && tournament.Location.trim()" class="mt-1">
                 <strong>Location:</strong> {{ tournament.Location }}
             </div>
@@ -63,71 +65,81 @@ const cardClass = computed(() => ({
     'border-warning': props.category === 'ongoing',
     'border-success': props.category === 'upcoming',
     'border-secondary': props.category === 'past',
-    // REMOVED: The 'opacity-75' rule that was muting the colors
 }));
+
+// --- MODIFICATION 2: Added 'displayDate' computed property ---
+// This checks for Date_Status first, then falls back to Date
+const displayDate = computed(() => {
+  if (props.tournament.Date_Status && props.tournament.Date_Status.trim() !== '') {
+    return props.tournament.Date_Status;
+  }
+  if (props.tournament.Date && props.tournament.Date.trim() !== '') {
+    return props.tournament.Date;
+  }
+  return null; // Don't show the date field if both are empty
+});
 </script>
 
 <style scoped>
+/* All your existing styles remain unchanged */
 .tournament-card {
-    background: linear-gradient(145deg, #181818, #2a2a2a);
-    color: #e0e0e0;
-    border-radius: 12px;
-    transition: all 0.3s ease;
-    display: flex; /* Ensures the flex context starts here */
-    flex-direction: column;
+  background: linear-gradient(145deg, #181818, #2a2a2a);
+  color: #e0e0e0;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .tournament-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 123, 255, 0.25);
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 123, 255, 0.25);
 }
 
-/* Using the component's class to increase specificity */
 .tournament-card .card-body {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1; /* Makes the card body fill the height */
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
 }
 
 .tournament-card .tournament-title {
-    font-size: 1.4rem;
-    font-weight: 700;
-    color: #FFD700 !important; /* Bright gold for high visibility */
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #FFD700 !important;
 }
 
 .tournament-card .card-text {
-  color: #cccccc !important; /* Brighter grey for description */
+  color: #cccccc !important;
   min-height: 48px;
-  flex-grow: 1; /* Allows the description to push the button down */
+  flex-grow: 1;
 }
 
 .tournament-card .detail-label {
-    font-size: 0.8rem;
-    color: #a0a0a0 !important; /* Much brighter grey for labels */
-    text-transform: uppercase;
+  font-size: 0.8rem;
+  color: #a0a0a0 !important;
+  text-transform: uppercase;
 }
 
 .tournament-card .detail-value {
-    font-weight: 600;
-    color: #ffffff !important; /* Pure white for maximum contrast */
-    font-size: 1.1rem;
+  font-weight: 600;
+  color: #ffffff !important;
+  font-size: 1.1rem;
 }
 
 .tournament-card .detail-item i {
-    color: #FFD700; /* Gold icon color */
-    font-size: 1.2rem;
+  color: #FFD700;
+  font-size: 1.2rem;
 }
 
-/* Other existing styles that are fine */
 .tournament-details-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 1rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 1rem;
 }
 
 .detail-item {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 </style>
