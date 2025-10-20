@@ -137,36 +137,37 @@ const getBotMove = async () => {
   try {
     const fen = getFEN();
 
-    const res = await fetch(`https://chess-api.com/v1`, {
+    const res = await fetch('https://mute-king-9573.chalekarsuraj.workers.dev/', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fen })
     });
 
     const data = await res.json();
+    console.log("Bot move:", data.bestmove);
 
-    if (data.move) {
-      console.log('Bot move:', data.move);
-
-      const [fromIndex, toIndex] = parseLAN(data.move);
-
-      // Perform the bot's move
+    if (data.bestmove) {  // <-- use bestmove
+      const [fromIndex, toIndex] = parseLAN(data.bestmove);
+      if (fromIndex === null || toIndex === null) {
+        console.error('Invalid move format:', data.bestmove);
+        return;
+      }
       makeMove(fromIndex, toIndex, true);
-      
-      // ✅ Wait until Vue updates boardSquares
+
+      // Wait until Vue updates boardSquares
       await nextTick();
-      
-      // ✅ Re-run checkmate/stalemate detection
+
+      // Re-run checkmate/stalemate detection
+      currentTurn.value = 'white';
       checkGameEnd();
 
-      // ✅ If game ended, popup will automatically show
+      // If game ended, popup will automatically show
       if (!isGameActive.value || isCheckmate.value || isStalemate.value) {
         console.log('Game over, popup triggered');
         return;
       }
 
-      // ✅ Otherwise, switch to white's turn
-      currentTurn.value = 'white';
+      // Otherwise, switch to white's turn
     } else {
       console.error('No move from API:', data);
     }
@@ -174,6 +175,7 @@ const getBotMove = async () => {
     console.error('Bot move failed:', err);
   }
 };
+
 // Reset solution index for the puzzle
 const resetSolutionIndex = () => {
   currentSolutionIndex.value = 0
@@ -785,13 +787,20 @@ const convertToLAN = (fromIndex, toIndex) => {
 }
 
 const parseLAN = (move) => {
-  const files = "abcdefgh"
-  const fromCol = files.indexOf(move[0])
-  const fromRow = 8 - parseInt(move[1])
-  const toCol = files.indexOf(move[2])
-  const toRow = 8 - parseInt(move[3])
-  return [fromRow * 8 + fromCol, toRow * 8 + toCol]
-}
+  const m = move.match(/[a-h][1-8][a-h][1-8][qrbn]?/i);
+  if (!m) return [null, null, null];
+
+  const lan = m[0];
+  const files = "abcdefgh";
+  const fromCol = files.indexOf(lan[0]);
+  const fromRow = 8 - parseInt(lan[1]);
+  const toCol = files.indexOf(lan[2]);
+  const toRow = 8 - parseInt(lan[3]);
+  const promotion = lan[4] || null; // Get promotion piece if exists
+  
+  return [fromRow * 8 + fromCol, toRow * 8 + toCol, promotion];
+};
+
 const makeMove = (fromIndex, toIndex, isAuto = false) => {
   const piece = boardSquares.value[fromIndex]?.piece
   if (!piece) return
@@ -823,7 +832,14 @@ const makeMove = (fromIndex, toIndex, isAuto = false) => {
     const capturedPawnIndex = toIndex + direction * 8
     boardSquares.value[capturedPawnIndex].piece = null
   }
-
+  // Update castling rights for captured rooks
+  if (capturedPiece === 'R') {
+    if (toIndex === 63) castlingRights.value.whiteKingsideRookMoved = true
+    if (toIndex === 56) castlingRights.value.whiteQueensideRookMoved = true
+  } else if (capturedPiece === 'r') {
+    if (toIndex === 7) castlingRights.value.blackKingsideRookMoved = true
+    if (toIndex === 0) castlingRights.value.blackQueensideRookMoved = true
+  }
   // Handle castling
   if (moveData?.isCastling) {
     const { row } = getSquareFromIndex(fromIndex)
@@ -851,16 +867,24 @@ const makeMove = (fromIndex, toIndex, isAuto = false) => {
   }
 
   // Handle promotion for user move
+  // Handle promotion
   const targetRow = Math.floor(toIndex / 8)
-  if (!isAuto && piece.toLowerCase() === 'p' && (targetRow === 0 || targetRow === 7)) {
-    showPromotionDialog.value = true
-    promotionSquare.value = toIndex
-    promotionColor.value = isWhite
-    isGameActive.value = false
-    statusMessage.value = '👑 Choose a piece for promotion!'
-    statusClass.value = 'alert-info'
-    statusIcon.value = 'fas fa-crown'
-    return
+  if (piece.toLowerCase() === 'p' && (targetRow === 0 || targetRow === 7)) {
+    if (isAuto) {
+      // Auto-promote to queen for bot moves
+      const promotedPiece = isWhite ? 'Q' : 'q'
+      boardSquares.value[toIndex].piece = promotedPiece
+    } else {
+      // Show dialog for user moves
+      showPromotionDialog.value = true
+      promotionSquare.value = toIndex
+      promotionColor.value = isWhite
+      isGameActive.value = false
+      statusMessage.value = '👑 Choose a piece for promotion!'
+      statusClass.value = 'alert-info'
+      statusIcon.value = 'fas fa-crown'
+      return
+    }
   }
 
   // Record move
