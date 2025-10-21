@@ -137,7 +137,7 @@ const getBotMove = async () => {
   try {
     const fen = getFEN();
 
-    const res = await fetch(`https://chess-api.com/v1`, {
+    const res = await fetch(`https://stockfish.online/api/s/v2.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ fen })

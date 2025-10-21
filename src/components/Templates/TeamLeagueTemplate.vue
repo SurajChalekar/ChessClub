@@ -129,85 +129,92 @@
           </div>
         </div>
 
-        <div class="tab-pane fade p-4" id="standings-pane" role="tabpanel">
-          <div class="d-flex justify-content-center mb-4">
-            <div class="btn-group" role="group">
-              <input
-                type="radio"
-                class="btn-check"
-                name="standingsToggle"
-                id="teamToggle"
-                autocomplete="off"
-                :checked="activeStandingsView === 'team'"
-                @change="activeStandingsView = 'team'"
-              />
-              <label class="btn btn-outline-warning" for="teamToggle"
-                >Team Standings</label
-              >
-              <input
-                type="radio"
-                class="btn-check"
-                name="standingsToggle"
-                id="individualToggle"
-                autocomplete="off"
-                :checked="activeStandingsView === 'individual'"
-                @change="activeStandingsView = 'individual'"
-              />
-              <label class="btn btn-outline-warning" for="individualToggle"
-                >Individual Leaderboard</label
-              >
-            </div>
-          </div>
-          <div v-if="activeStandingsView === 'team'">
-            <h3 class="text-center mb-3">Team Points Table</h3>
-            <table class="table table-dark table-hover align-middle text-center">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Team</th>
-                  <th>Match Points</th>
-                  <th>Tie-Break (Game Pts)</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="team in teamStandings" :key="team.TeamID">
-                  <td>{{ team.rank }}</td>
-                  <td @click="showTeamRecords(team)" class="clickable-name">
-                    {{ team.TeamName }}
-                  </td>
-                  <td>{{ team.matchPoints }}</td>
-                  <td>{{ team.gamePoints.toFixed(1) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <div v-if="activeStandingsView === 'individual'">
-            <h3 class="text-center mb-3">Individual Leaderboard (All Stages)</h3>
-            <table class="table table-dark table-hover align-middle text-center">
-              <thead>
-                <tr>
-                  <th>Rank</th>
-                  <th>Player</th>
-                  <th>Team</th>
-                  <th>Points</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="player in individualStandings" :key="player.PlayerID">
-                  <td>{{ player.rank }}</td>
-                  <td @click="showPlayerRecords(player)" class="clickable-name">
-                    {{ player.PlayerName }}
-                    <span v-if="player.PlayerType === 'Captain'" class="captain-tag">
-                      (C)</span
-                    >
-                  </td>
-                  <td>{{ player.TeamName }}</td>
-                  <td>{{ player.points.toFixed(1) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
+      <div class="tab-pane fade p-4" id="standings-pane" role="tabpanel">
+  <div class="standings-desktop-toggle d-flex justify-content-center mb-4">
+    <div class="btn-group" role="group">
+      <input
+        type="radio"
+        class="btn-check"
+        name="standingsToggleDesktop"
+        id="teamToggle"
+        autocomplete="off"
+        :checked="activeStandingsView === 'team'"
+        @change="activeStandingsView = 'team'"
+      />
+      <label class="btn btn-outline-warning" for="teamToggle">Team Standings</label>
+      
+      <input
+        type="radio"
+        class="btn-check"
+        name="standingsToggleDesktop"
+        id="individualToggle"
+        autocomplete="off"
+        :checked="activeStandingsView === 'individual'"
+        @change="activeStandingsView = 'individual'"
+      />
+      <label class="btn btn-outline-warning" for="individualToggle">Individual Leaderboard</label>
+    </div>
+  </div>
+
+  <div class="standings-select-wrapper">
+    <select v-model="activeStandingsView" class="standings-select">
+      <option value="team">Team Standings</option>
+      <option value="individual">Individual Leaderboard</option>
+    </select>
+  </div>
+
+
+  <div v-if="activeStandingsView === 'team'">
+    <h3 class="text-center mb-3">Team Points Table</h3>
+    <div class="table-responsive table-sticky-col">
+      <table class="table table-dark table-hover align-middle text-center">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Team</th>
+            <th>Match Points</th>
+            <th>Tie-Breaks</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="team in teamStandings" :key="team.TeamID">
+            <td>{{ team.rank }}</td>
+            <td @click="showTeamRecords(team)" class="clickable-name">
+              {{ team.TeamName }}
+            </td>
+            <td>{{ team.matchPoints }}</td>
+            <td>{{ team.gamePoints.toFixed(1) }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div v-if="activeStandingsView === 'individual'">
+    <h3 class="text-center mb-3">Individual Leaderboard (All Stages)</h3>
+    <table class="table table-dark table-hover align-middle text-center individual-leaderboard-table">
+      <thead>
+        <tr>
+          <th>Rank</th>
+          <th>Player</th>
+          <th>Team</th>
+          <th>Points</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="player in individualStandings" :key="player.PlayerID">
+          <td>{{ player.rank }}</td>
+          <td @click="showPlayerRecords(player)" class="clickable-name">
+            {{ player.PlayerName }}
+            <span v-if="player.PlayerType === 'Captain'" class="captain-tag"> (C)</span>
+          </td>
+          <td>{{ player.TeamName }}</td>
+          <td>{{ player.points.toFixed(1) }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
         <div class="tab-pane fade p-4" id="pairings-pane" role="tabpanel">
           <div class="d-flex justify-content-center mb-4">
@@ -804,296 +811,472 @@ const closeModal = () => {
 </script>
 
 <style scoped>
-/* --- BASE & COMMON STYLES --- */
-@keyframes background-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-@keyframes title-glow { 0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4), 0 0 20px rgba(255, 215, 0, 0.2); } 50% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5); } }
-@keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes modal-fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+  /* --- BASE & COMMON STYLES --- */
+  @keyframes background-pan { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+  @keyframes title-glow { 0%, 100% { text-shadow: 0 0 10px rgba(255, 215, 0, 0.4), 0 0 20px rgba(255, 215, 0, 0.2); } 50% { text-shadow: 0 0 20px rgba(255, 215, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.5); } }
+  @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes modal-fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
 
-.knights-conquest-page { background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #2a0a1e, #1a1a2e, #0a0a0a); background-size: 400% 400%; color: #e0e0e0; min-height: 100vh; animation: background-pan 25s ease infinite; }
-.tournament-title { font-size: 3.5rem; font-weight: 900; background: linear-gradient(45deg, #FFD700, #f0c000, #C0C0C0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: title-glow 5s ease-in-out infinite; }
-.tournament-subtitle { font-size: 1.25rem; color: rgba(255, 255, 255, 0.7); }
-.nav-tabs { border-bottom: 2px solid rgba(255, 215, 0, 0.2); }
-.nav-tabs .nav-link { color: rgba(255, 255, 255, 0.7); background-color: transparent; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s ease; font-weight: 600; position: relative; }
-.nav-tabs .nav-link:hover { color: #FFD700; border-bottom-color: rgba(255, 215, 0, 0.5); }
-.nav-tabs .nav-link.active { color: #FFD700; background-color: rgba(255, 215, 0, 0.05); border-bottom: 2px solid #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
-.tab-content { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 0 0 15px 15px; backdrop-filter: blur(5px); }
-.tab-title, .details-subtitle { color: #FFD700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); }
+  .knights-conquest-page { background: linear-gradient(135deg, #0a0a0a, #1a1a2e, #2a0a1e, #1a1a2e, #0a0a0a); background-size: 400% 400%; color: #e0e0e0; min-height: 100vh; animation: background-pan 25s ease infinite; }
+  .tournament-title { font-size: 3.5rem; font-weight: 900; background: linear-gradient(45deg, #FFD700, #f0c000, #C0C0C0); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: title-glow 5s ease-in-out infinite; }
+  .tournament-subtitle { font-size: 1.25rem; color: rgba(255, 255, 255, 0.7); }
+  .nav-tabs { border-bottom: 2px solid rgba(255, 215, 0, 0.2); }
+  .nav-tabs .nav-link { color: rgba(255, 255, 255, 0.7); background-color: transparent; border: none; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all 0.3s ease; font-weight: 600; position: relative; }
+  .nav-tabs .nav-link:hover { color: #FFD700; border-bottom-color: rgba(255, 215, 0, 0.5); }
+  .nav-tabs .nav-link.active { color: #FFD700; background-color: rgba(255, 215, 0, 0.05); border-bottom: 2px solid #FFD700; text-shadow: 0 0 10px rgba(255, 215, 0, 0.5); }
+  .tab-content { background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 215, 0, 0.2); border-radius: 0 0 15px 15px; backdrop-filter: blur(5px); }
+  .tab-title, .details-subtitle { color: #FFD700; text-shadow: 0 0 5px rgba(255, 215, 0, 0.4); }
 
-/* --- Info Pane --- */
-#info-pane .list-group-item { background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 215, 0, 0.2); color: #e0e0e0; transition: all 0.3s ease; }
-#info-pane .list-group-item:hover { background-color: rgba(255, 215, 0, 0.1); color: #FFD700; transform: translateX(5px); }
+  /* --- Info Pane --- */
+  #info-pane .list-group-item { background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 215, 0, 0.2); color: #e0e0e0; transition: all 0.3s ease; }
+  #info-pane .list-group-item:hover { background-color: rgba(255, 215, 0, 0.1); color: #FFD700; transform: translateX(5px); }
 
-/* --- Standings Pane --- */
-#standings-pane .btn-check:checked+.btn-outline-warning { background-color: #FFD700; color: #0a0a0a; font-weight: 700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
-#standings-pane .table thead { background: linear-gradient(45deg, #FFD700, #e6b200); color: #1a1a1a; text-transform: uppercase; }
-#standings-pane .table tbody tr { animation: fade-in-up 0.5s ease-out both; }
-#standings-pane .table tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
-#standings-pane .table tbody tr:hover { background-color: rgba(255, 215, 0, 0.1); }
-#standings-pane .clickable-name { cursor: pointer; text-decoration: underline dotted rgba(255, 215, 0, 0.5); transition: all 0.2s ease; }
-#standings-pane .clickable-name:hover { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); transform: scale(1.05); }
+  /* --- Standings Pane --- */
+  #standings-pane .btn-check:checked+.btn-outline-warning { background-color: #FFD700; color: #0a0a0a; font-weight: 700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
+  #standings-pane .table thead { background: linear-gradient(45deg, #FFD700, #e6b200); color: #1a1a1a; text-transform: uppercase; }
+  #standings-pane .table tbody tr { animation: fade-in-up 0.5s ease-out both; }
+  #standings-pane .table tbody tr:nth-child(even) { background-color: rgba(255,255,25Next,0.02); }
+  #standings-pane .table tbody tr:hover { background-color: rgba(255, 215, 0, 0.1); }
+  #standings-pane .clickable-name { cursor: pointer; text-decoration: underline dotted rgba(255, 215, 0, 0.5); transition: all 0.2s ease; }
+  #standings-pane .clickable-name:hover { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); transform: scale(1.05); }
 
-/* --- Pairings Pane --- */
-.pairing-card { background-color: #212529; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #444; transition: all 0.3s ease; }
-.pairing-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px rgba(255, 215, 0, 0.2); border-color: #FFD700; }
-.pairing-header { background: linear-gradient(90deg, #2c2c34, #1e1e24); padding: 0.75rem 1.5rem; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; font-size: 1.2em; box-shadow: inset 0 -5px 10px rgba(0,0,0,0.3); }
-.pairing-header > span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
-.pairing-header > span:first-child { text-align: left; color: #e0e0e0; }
-.pairing-header > span:last-child { text-align: right; color: #e0e0e0; }
-.team-score { text-align: center; flex: 0 0 auto; color: #FFD700; background: linear-gradient(45deg, #4b0101, #2408a5); padding: 0.5rem 1.2rem; border-radius: 8px; margin: 0 1.5rem; font-size: 1.1em; font-weight: 900; border: 2px solid #fff; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); position: relative; left: 44px; /* From original */ }
-.pairing-card .list-group-item { background: transparent; color: #e0e0e0; display: grid; grid-template-columns: auto 1fr auto 1fr; align-items: center; gap: 1.5rem; padding: 0.75rem 1.5rem; }
-.pairing-card .list-group-item > span:nth-child(2) { text-align: right; }
-.pairing-card .list-group-item > span:nth-child(3) { justify-self: center; font-weight: bold; }
-.pairing-card .list-group-item > span:nth-child(4) { text-align: left; }
-.board-number { font-weight: bold; color: #adb5bd; }
+  /*
+  =============================================================
+  == VISIBILITY FIX ==
+  This hides the mobile dropdown on desktop.
+  =============================================================
+  */
+  .standings-select-wrapper {
+    display: none !important; /* MODIFIED: Added !important */
+  }
 
-/* --- Teams Pane --- */
-#teams-pane .accordion-item { background-color: #1a1a1a; border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px; margin-bottom: 0.75rem; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
-#teams-pane .accordion-item:hover { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.2); transform: translateY(-2px); }
-#teams-pane .accordion-button { background: linear-gradient(90deg, #3a3a3a, #2a2a2a); color: #FFD700; font-weight: bold; padding: 1rem 1.5rem; border-radius: 10px; transition: all 0.3s ease; font-size:0.5em;border: none; }
-#teams-pane .accordion-button::after { filter: invert(80%) sepia(100%) saturate(500%) hue-rotate(0deg) brightness(120%) contrast(100%); transition: transform 0.3s ease-in-out; }
-#teams-pane .accordion-button:not(.collapsed) { background: linear-gradient(90deg, #FFD700, #e6b200); color: #1a1a1a; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); border-bottom: 1px solid rgba(0, 0, 0, 0.2); }
-#teams-pane .accordion-button:not(.collapsed)::after { filter: none; transform: rotate(-180deg); }
-#teams-pane .accordion-button:focus { outline: none; box-shadow: 0 0 10px rgba(255, 215, 0, 0.7); }
-#teams-pane .accordion-body { background-color: #282828; border-top: 1px solid rgba(255, 215, 0, 0.1); border-radius: 0 0 10px 10px; padding: 1rem 1.5rem; }
-#teams-pane .player-group h5 { color: #adb5bd; font-size: 0.9em; text-transform: uppercase; border-bottom: 1px solid rgba(255, 215, 0, 0.2); padding-bottom: 0.3rem; margin-bottom: 0.75rem; }
-#teams-pane .accordion-body ul { list-style-type: none; padding-left: 0; margin-bottom: 0; }
-#teams-pane .accordion-body li { cursor: pointer; color: #f0f0f0; background-color: rgba(0, 0, 0, 0.3); padding: 0.6rem 1rem; margin-bottom: 0.4rem; border-radius: 5px; border-left: 3px solid #6c757d; transition: all 0.2s ease-in-out; display: flex; align-items: center; }
-#teams-pane .accordion-body li:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; transform: translateX(5px); border-left-color: #fff; }
-#teams-pane .accordion-body li.owner-item { border-left-color: #dc3545; font-weight: bold; }
-#teams-pane .accordion-body li.owner-item:hover { background-color: rgba(220, 53, 69, 0.2); color: #ffc107; border-left-color: #ffc107; }
-#teams-pane .accordion-body li.captain-item { border-left-color: #FFD700; }
-#teams-pane .accordion-body li.captain-item:hover { background-color: rgba(255, 215, 0, 0.15); color: #FFD700; border-left-color: #fff; }
-.captain-tag, .owner-tag { color: #c0c0c0; font-weight: bold; font-size: 0.8em; margin-left: 6px; }
+  /* --- Pairings Pane --- */
+  .pairing-card { background-color: #212529; border-radius: 10px; margin-bottom: 1rem; border: 1px solid #444; transition: all 0.3s ease; }
+  .pairing-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.4), 0 0 15px rgba(255, 215, 0, 0.2); border-color: #FFD700; }
+  .pairing-header { background: linear-gradient(90deg, #2c2c34, #1e1e24); padding: 0.75rem 1.5rem; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; font-size: 1.2em; box-shadow: inset 0 -5px 10px rgba(0,0,0,0.3); }
+  .pairing-header > span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-weight: 600; }
+  .pairing-header > span:first-child { text-align: left; color: #e0e0e0; }
+  .pairing-header > span:last-child { text-align: right; color: #e0e0e0; }
+  .team-score { text-align: center; flex: 0 0 auto; color: #FFD700; background: linear-gradient(45deg, #4b0101, #2408a5); padding: 0.5rem 1.2rem; border-radius: 8px; margin: 0 1.5rem; font-size: 1.1em; font-weight: 900; border: 2px solid #fff; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); position: relative; left: 44px; }
+  .pairing-card .list-group-item { background: transparent; color: #e0e0e0; display: grid; grid-template-columns: auto 1fr auto 1fr; align-items: center; gap: 1.5rem; padding: 0.75rem 1.5rem; }
+  .pairing-card .list-group-item > span:nth-child(2) { text-align: right; }
+  .pairing-card .list-group-item > span:nth-child(3) { justify-self: center; font-weight: bold; }
+  .pairing-card .list-group-item > span:nth-child(4) { text-align: left; }
+  .board-number { font-weight: bold; color: #adb5bd; }
 
-/* --- NEW Playoffs Pane (Semi-Finals Bracket) --- */
-.playoff-container {
-  display: flex;
-  justify-content: center;
-  gap: 5rem; /* Space between rounds */
-  padding: 1rem;
-  overflow-x: auto;
-  position: relative;
-}
+  /* --- Teams Pane --- */
+  #teams-pane .accordion-item { background-color: #1a1a1a; border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 10px; margin-bottom: 0.75rem; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); transition: all 0.3s ease; }
+  #teams-pane .accordion-item:hover { box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4), 0 0 15px rgba(255, 215, 0, 0.2); transform: translateY(-2px); }
+  #teams-pane .accordion-button { background: linear-gradient(90deg, #3a3a3a, #2a2a2a); color: #FFD700; font-weight: bold; padding: 1rem 1.5rem; border-radius: 10px; transition: all 0.3s ease; font-size:0.5em;border: none; }
+  #teams-pane .accordion-button::after { filter: invert(80%) sepia(100%) saturate(500%) hue-rotate(0deg) brightness(120%) contrast(100%); transition: transform 0.3s ease-in-out; }
+  #teams-pane .accordion-button:not(.collapsed) { background: linear-gradient(90deg, #FFD700, #e6b200); color: #1a1a1a; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); border-bottom: 1px solid rgba(0, 0, 0, 0.2); }
+  #teams-pane .accordion-button:not(.collapsed)::after { filter: none; transform: rotate(-180deg); }
+  #teams-pane .accordion-button:focus { outline: none; box-shadow: 0 0 10px rgba(255, 215, 0, 0.7); }
+  #teams-pane .accordion-body { background-color: #282828; border-top: 1px solid rgba(255, 215, 0, 0.1); border-radius: 0 0 10px 10px; padding: 1rem 1.5rem; }
+  #teams-pane .player-group h5 { color: #adb5bd; font-size: 0.9em; text-transform: uppercase; border-bottom: 1px solid rgba(255, 215, 0, 0.2); padding-bottom: 0.3rem; margin-bottom: 0.75rem; }
+  #teams-pane .accordion-body ul { list-style-type: none; padding-left: 0; margin-bottom: 0; }
+  #teams-pane .accordion-body li { cursor: pointer; color: #f0f0f0; background-color: rgba(0, 0, 0, 0.3); padding: 0.6rem 1rem; margin-bottom: 0.4rem; border-radius: 5px; border-left: 3px solid #6c757d; transition: all 0.2s ease-in-out; display: flex; align-items: center; }
+  #teams-pane .accordion-body li:hover { background-color: rgba(255, 255, 255, 0.1); color: #fff; transform: translateX(5px); border-left-color: #fff; }
+  #teams-pane .accordion-body li.owner-item { border-left-color: #dc3545; font-weight: bold; }
+  #teams-pane .accordion-body li.owner-item:hover { background-color: rgba(220, 53, 69, 0.2); color: #ffc107; border-left-color: #ffc107; }
+  #teams-pane .accordion-body li.captain-item { border-left-color: #FFD700; }
+  #teams-pane .accordion-body li.captain-item:hover { background-color: rgba(255, 215, 0, 0.15); color: #FFD700; border-left-color: #fff; }
+  .captain-tag, .owner-tag { color: #c0c0c0; font-weight: bold; font-size: 0.8em; margin-left: 6px; }
 
-.round {
-  display: flex;
-  flex-direction: column;
-  flex-shrink: 0;
-  width: 280px; /* Wider matchups */
-  position: relative;
-}
+  /* --- Playoffs Pane --- */
+  .playoff-container { display: flex; justify-content: center; gap: 5rem; padding: 1rem; overflow-x: auto; position: relative; }
+  .round { display: flex; flex-direction: column; flex-shrink: 0; width: 280px; position: relative; }
+  .round.semifinals { justify-content: space-around; }
+  .round.finals { justify-content: space-around; }
+  .round-title { color: #FFD700; text-align: center; font-weight: 700; margin-bottom: 1.5rem; text-transform: uppercase; letter-spacing: 1px; }
+  .matches { display: flex; flex-direction: column; gap: 3rem; }
+  .matchup { position: relative; width: 100%; background: linear-gradient(145deg, #2a2a3a, #1e1e24); border-radius: 8px; border: 1px solid #555; box-shadow: 0 4px 15px rgba(0,0,0,0.3); overflow: hidden; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  .matchup:hover { transform: translateY(-5px) scale(1.03); box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255, 215, 0, 0.3); }
+  .round.semifinals .matches { flex-grow: 1; justify-content: space-around; }
+  .round.finals > div { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; }
+  .matchup { position: relative; width: 100%; background-color: #212529; border-radius: 8px; border: 1px solid #555; box-shadow: 0 4px 15px rgba(0,0,0,0.3); overflow: hidden; background: linear-gradient(to bottom, rgba(75, 1, 1, 0.9), rgba(36, 8, 165, 0.9)); }
+  .participant { display: flex; justify-content: space-between; align-items: center; padding: 0.6rem 1rem; color: #e0e0e0; font-size: 0.9em; border-bottom: 1px solid #555; transition: all 0.2s ease; height: 2.5rem; box-sizing: border-box; }
+  .participant:last-child { border-bottom: none; }
+  .participant.winner { color: #FFD700; font-weight: bold; text-shadow: 0 0 8px rgba(255, 215, 0, 0.3); }
+  .participant span { font-weight: bold; background-color: rgba(0,0,0,0.3); padding: 0.15rem 0.5rem; border-radius: 4px; min-width: 28px; text-align: center; }
+  .participant.winner span { background-color: rgba(255, 215, 0, 0.2); color: #FFD700; text-shadow: none; }
+  .matchup::before, .matchup::after { content: ''; position: absolute; background-color: #ffd700; z-index: 0; }
+  .semifinals .matchup::after { right: -2.5rem; width: 2.5rem; height: 2px; }
+  .semifinals .matchup::before { right: -2.5rem; width: 2px; z-index: -1; }
+  .semifinals .matchup:first-child::after { top: calc(1.25rem - 1px); }
+  .semifinals .matchup:first-child::before { top: calc(3.75rem - 1px); height: calc(50vh); height: calc(100% + 3rem + 2.5rem); }
+  .semifinals .matchup:last-child::after { top: calc(1.25rem - 1px); }
+  .semifinals .matchup:last-child::before { top: calc(3.75rem - 1px); }
+  .semifinals .matchup:last-child::after { height: calc(100% + 3rem + 2.5rem); bottom: calc(1.25rem - 1px); top: auto; }
+  .finals .matchup::before { left: -2.5rem; width: 2.5rem; height: 2px; }
+  .round.finals div:first-child .round-title::before { content: '\1F3C6'; display: inline-block; margin-right: 0.5rem; font-size: 1.2em; transform: translateY(2px); }
+  .finals .matchup.final::before { top: calc(1.25rem - 1px); }
+  .finals .matchup.final::after { content: ''; position: absolute; background-color: #ffd700; left: -2.5rem; width: 2.5rem; height: 2px; top: calc(3.75rem - 1px); }
+  .finals .matchup.third-place::before { top: calc(1.25rem - 1px); }
+  .finals .matchup.third-place::after { content: ''; position: absolute; background-color: #ffd700; left: -2.5rem; width: 2.5rem; height: 2px; top: calc(3.75rem - 1px); }
 
-.round.semifinals {
-  justify-content: space-around;
-}
+  /* --- Gallery Pane --- */
+  #gallery-pane .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
+  #gallery-pane .photo-gallery img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+  #gallery-pane .photo-gallery img:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4); }
 
-.round.finals {
-  justify-content: space-around;
-}
+  /* --- MODAL STYLES --- */
+  .modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1050; animation: fade-in-up 0.3s ease; }
+  .modal-container { background: #212529; border: 1px solid #FFD700; border-radius: 10px; color: #e0e0e0; width: 90%; max-width: 600px; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.3); animation: modal-fade-in 0.4s ease-out; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent); border-bottom: 1px solid #FFD700; }
+  .modal-title { color: #FFD700; margin-bottom: 0; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+  .modal-body { padding: 1rem; max-height: 70vh; overflow-y: auto; }
 
-.round-title {
-  color: #FFD700;
-  text-align: center;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-}
 
-.matches {
-  display: flex;
-  flex-direction: column;
-  gap: 3rem; /* Space between matchups in the same round */
-}
+  /* ============================================= */
+  /* == RESPONSIVE ADJUSTMENTS FOR MOBILE == */
+  /* ============================================= */
 
-.matchup {
-  position: relative; /* For connecting lines */
-  width: 100%;
-  background: linear-gradient(145deg, #2a2a3a, #1e1e24); /* New gradient */
-  border-radius: 8px;
-  border: 1px solid #555;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  overflow: hidden; /* Ensure rounded corners */
-  transition: transform 0.3s ease, box-shadow 0.3s ease; /* This line is essential */
-}
+  @media (max-width: 767px) {
 
-.matchup:hover {
-  transform: translateY(-5px) scale(1.03); /* Add hover effect */
-  box-shadow: 0 8px 30px rgba(0,0,0,0.5), 0 0 15px rgba(255, 215, 0, 0.3);
-}
+    /* --- General Typography & Layout --- */
+    .tournament-title {
+      font-size: 2.2rem;
+    }
+    .tournament-subtitle {
+      font-size: 1rem;
+    }
+    .tab-content {
+      padding: 1rem;
+    }
 
-/* Ensures matches fill height for space-around to work */
-.round.semifinals .matches {
-  flex-grow: 1;
-  justify-content: space-around;
-}
-/* This makes the wrapper divs for Final/3rd fill the height */
-.round.finals > div {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center; /* Center the single match in the available space */
-}
+    /* --- Nav Tabs --- */
+    .nav-tabs {
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      padding-bottom: 2px;
+    }
+    .nav-tabs .nav-link {
+      white-space: nowrap;
+    }
 
-.matchup {
-  position: relative; /* For connecting lines */
-  width: 100%;
-  background-color: #212529;
-  border-radius: 8px;
-  border: 1px solid #555;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-  overflow: hidden; /* Ensure rounded corners */
-  background: linear-gradient(to bottom, rgba(75, 1, 1, 0.9), rgba(36, 8, 165, 0.9));
-}
+    /* --- Info Pane --- */
+    #info-pane .details-subtitle {
+      text-align: center;
+    }
+    #info-pane .list-group-item {
+      text-align: center;
+      justify-content: center;
+    }
+    #info-pane .list-group-item:hover {
+      transform: none;
+    }
 
-.participant {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.6rem 1rem;
-  color: #e0e0e0;
-  font-size: 0.9em;
-  border-bottom: 1px solid #555;
-  transition: all 0.2s ease;
-  height: 2.5rem; /* Fixed height for line calculation */
-  box-sizing: border-box;
-}
-.participant:last-child {
-  border-bottom: none;
-}
+    /* =============================================
+    STANDINGS PANE
+    ============================================= */
+    
+    /* 1. Hide desktop buttons on mobile */
+    .standings-desktop-toggle {
+      display: none !important; /* MODIFIED: Added !important */
+    }
 
-.participant.winner {
-  color: #FFD700;
-  font-weight: bold;
-  text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
-}
+    /* 2. Show the mobile dropdown wrapper */
+    .standings-select-wrapper {
+      display: block !important; /* MODIFIED: Added !important */
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    
+    .standings-select {
+      width: 100%;
+      background-color: #1a1a1a;
+      color: #FFD700;
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 1rem;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%23FFD700" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat;
+      background-position: right 1rem center;
+      background-size: 1.2em;
+      overflow-anchor: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .standings-select:focus {
+      outline: none;
+      border-color: #FFD700;
+      box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.7);
+    }
 
-.participant span {
-  font-weight: bold;
-  background-color: rgba(0,0,0,0.3);
-  padding: 0.15rem 0.5rem;
-  border-radius: 4px;
-  min-width: 28px;
-  text-align: center;
-}
-.participant.winner span {
-   background-color: rgba(255, 215, 0, 0.2);
-   color: #FFD700;
-   text-shadow: none;
-}
+    /* 3. Team Table (Sticky Scroll) */
+    #standings-pane .table-responsive {
+      display: block;
+      width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
+    
+    #standings-pane .table {
+      white-space: nowrap; 
+      font-size: 0.68rem;
+      margin-bottom: 0;
+    }
+    #standings-pane .table th,
+  #standings-pane .table td {
+    padding: 0.75rem 0.6rem;
+    vertical-align: middle;
+  }
 
-/* --- Connecting Lines --- */
-.matchup::before,
-.matchup::after {
-  content: '';
-  position: absolute;
-  background-color: #ffd700; /* Gold lines */
-  z-index: 0;
-}
+    /* 4. Individual Table (Leaderboard Card) */
+    .individual-leaderboard-table {
+      font-size: 1rem;
+      white-space: normal;
+    }
+    
+    .individual-leaderboard-table thead {
+      display: none; /* Hide desktop header */
+    }
 
-/* --- Lines EXITING Semifinals --- */
-/* Horizontal part of the line */
-.semifinals .matchup::after {
-  right: -2.5rem; /* Half of 5rem gap */
-  width: 2.5rem; /* Half of 5rem gap */
-  height: 2px;
-}
-/* Vertical connector part */
-.semifinals .matchup::before {
-  right: -2.5rem; /* Align with horizontal line */
-  width: 2px;
-  z-index: -1; /* Behind horizontal line */
-}
+    .individual-leaderboard-table tr {
+      display: grid;
+      grid-template-columns: 3rem 1fr; /* Reduced rank column */
+      grid-template-rows: auto auto auto;
+      grid-template-areas:
+        "rank player"
+        "rank team"
+        "rank points";
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(255, 215, 0, 0.2);
+      border-radius: 8px;
+      margin-bottom: 0.75rem; /* Reduced margin */
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    }
 
-/* --- Lines for SF1 (Top-Left) --- */
-.semifinals .matchup:first-child::after {
-  /* SF1 Winner -> Final Top */
-  top: calc(1.25rem - 1px); /* Center of top participant (2.5rem / 2) */
-}
-.semifinals .matchup:first-child::before {
-  /* SF1 Loser -> 3rd-Place Top */
-  top: calc(3.75rem - 1px); /* Center of bottom participant (2.5rem + 1.25rem) */
-  /* Height = distance from SF1-Loser to 3rd-Place-Winner */
-  /* (space-around handles this) */
-  height: calc(50vh); /* Just an estimate, needs layout context */
-  /* This is tricky. Let's simplify. */
-  height: calc(100% + 3rem + 2.5rem); /* SF1 box + gap + half of SF2 box */
-}
+    .individual-leaderboard-table td {
+      display: flex;
+      padding: 0.4rem 0.75rem; /* Reduced padding */
+      border: none;
+      text-align: left;
+      white-space: normal;
+    }
 
-/* --- Lines for SF2 (Bottom-Left) --- */
-.semifinals .matchup:last-child::after {
-  /* SF2 Winner -> Final Bottom */
-  top: calc(1.25rem - 1px); /* Center of top participant */
-}
-.semifinals .matchup:last-child::before {
-  /* SF2 Loser -> 3rd-Place Bottom */
-  top: calc(3.75rem - 1px); /* Center of bottom participant */
-}
+    /* Rank (Column 1) */
+    .individual-leaderboard-table td:first-child {
+      grid-area: rank;
+      font-size: 1.5rem; /* Reduced font size */
+      font-weight: 700;
+      color: #FFD700;
+      align-items: center;
+      justify-content: center;
+      border-right: 1px solid rgba(255, 215, 0, 0.2);
+    }
 
-/* --- Vertical lines connecting the "cross" --- */
-.semifinals .matchup:last-child::after {
-  /* This line needs to go UP to the Final */
-  height: calc(100% + 3rem + 2.5rem); /* Height of SF2 box + gap + half of SF1 box */
-  bottom: calc(1.25rem - 1px); /* Anchor to top participant and go up */
-  top: auto;
-}
+    /* Player (Column 2) */
+    .individual-leaderboard-table td:nth-child(2) {
+      grid-area: player;
+      font-size: 1rem; /* Reduced font size */
+      font-weight: 600;
+      padding-top: 0.6rem; /* Reduced padding */
+      padding-bottom: 0.25rem;
+      cursor: pointer;
+      text-decoration: underline dotted rgba(255, 215, 0, 0.7);
+      transition: color 0.2s ease;
+    }
+    
+    .individual-leaderboard-table td:nth-child(2):hover {
+      color: #FFD700;
+    }
+    
+    /* Team & Points (Cols 3 & 4) */
+    .individual-leaderboard-table td:nth-child(3),
+    .individual-leaderboard-table td:nth-child(4) {
+      font-size: 0.85rem; /* Reduced font size */
+      opacity: 0.8;
+    }
 
-/* --- Lines ENTERING Finals/3rd --- */
-.finals .matchup::before {
-  /* Horizontal line */
-  left: -2.5rem; /* Half of 5rem gap */
-  width: 2.5rem;
-  height: 2px;
-}
+    .individual-leaderboard-table td:nth-child(3) {
+      grid-area: team;
+    }
 
-/* Add trophy icon to Final title */
-.round.finals div:first-child .round-title::before {
-  content: '\1F3C6'; /* Trophy emoji */
-  display: inline-block;
-  margin-right: 0.5rem;
-  font-size: 1.2em;
-  transform: translateY(2px);
-}
+    /* Points (Column 4) */
+    .individual-leaderboard-table td:nth-child(4) {
+      grid-area: points;
+      padding-bottom: 0.6rem; /* Reduced padding */
+    }
+    
+    /* Labels for Team and Points */
+    .individual-leaderboard-table td:nth-child(3)::before {
+      content: "Team: ";
+      font-weight: 600;
+      opacity: 0.7;
+      margin-right: 0.5rem;
+    }
+    .individual-leaderboard-table td:nth-child(4)::before {
+      content: "Points: ";
+      font-weight: 600;
+      opacity: 0.7;
+      margin-right: 0.5rem;
+    }
 
-/* Final (Top-Right) */
-.finals .matchup.final::before {
-  top: calc(1.25rem - 1px); /* SF1-W Entry */
-}
-.finals .matchup.final::after {
-  content: '';
-  position: absolute;
-  background-color: #ffd700;
-  left: -2.5rem;
-  width: 2.5rem;
-  height: 2px;
-  top: calc(3.75rem - 1px); /* SF2-W Entry */
-}
+    /* --- Pairings Pane --- */
+    .pairing-header {
+      flex-direction: column;
+      padding: 1rem;
+      gap: 0.75rem;
+      text-align: center;
+      border-bottom: 2px solid rgba(255, 215, 0, 0.3);
+    }
+    .pairing-header > span {
+      text-align: center !important; 
+      font-size: 1.4rem;
+      font-weight: 700;
+      white-space: normal;
+      padding: 0.5rem;
+      border-radius: 6px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+      width: 100%;
+    }
+    .pairing-header > span:first-child { 
+      order: 1;
+      background: linear-gradient(135deg, rgba(75, 1, 1, 0.9), rgba(120, 1, 1, 0.7));
+      border: 1px solid rgba(220, 53, 69, 0.5);
+    }
+    .pairing-header > span:last-child { 
+      order: 3;
+      background: linear-gradient(135deg, rgba(36, 8, 165, 0.9), rgba(50, 15, 200, 0.7));
+      border: 1px solid rgba(13, 110, 253, 0.5);
+    }
+    .team-score {
+      position: static;
+      margin: 0;
+      order: 2;
+      font-size: 2rem;
+      padding: 0.25rem 1.5rem;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+      font-weight: 900;
+      background: #0a0a0a;
+      border: 2px solid #FFD700;
+    }
+    .pairing-card .list-group-item {
+      display: grid;
+      grid-template-areas:
+        'board board board'
+        'playerA result playerB';
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.5rem 0.5rem;
+      padding: 1rem 0.75rem;
+      font-size: 1rem;
+      white-space: normal;
+      border-bottom: 1px solid #333;
+    }
+    .pairing-card .list-group-item:last-child {
+      border-bottom: none;
+    }
+    .board-number {
+      grid-area: board;
+      justify-self: center;
+      font-size: 0.9rem;
+      padding-bottom: 0.5rem;
+      color: #FFD700;
+      text-align: center;
+      width: 100%;
+    }
+    .pairing-card .list-group-item > span:nth-child(2) {
+      grid-area: playerA;
+      text-align: right;
+      font-weight: 600;
+    }
+    .pairing-card .list-group-item > span:nth-child(3) {
+      grid-area: result;
+      justify-self: center;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #FFD700;
+      background: rgba(0,0,0,0.4);
+      padding: 0.25rem 0.6rem;
+      border-radius: 4px;
+      min-width: 40px;
+      text-align: center;
+    }
+    .pairing-card .list-group-item > span:nth-child(4) {
+      grid-area: playerB;
+      text-align: left;
+      font-weight: 600;
+    }
 
-/* 3rd Place (Bottom-Right) */
-.finals .matchup.third-place::before {
-  top: calc(1.25rem - 1px); /* SF1-L Entry */
-}
-.finals .matchup.third-place::after {
-  content: '';
-  position: absolute;
-  background-color: #ffd700;
-  left: -2.5rem;
-  width: 2.5rem;
-  height: 2px;
-  top: calc(3.75rem - 1px); /* SF2-L Entry */
-}
-/* --- End of Playoff CSS --- */
+    /* --- Teams Pane --- */
+    #teams-pane .accordion-button {
+      font-size: 1rem;
+      padding: 1rem;
+    }
+    #teams-pane .accordion-body {
+      padding: 1rem;
+    }
+    #teams-pane .accordion-body li {
+      padding: 0.5rem 0.75rem;
+    }
+    #teams-pane .accordion-item:hover {
+      transform: none;
+    }
 
-/* --- Gallery Pane (Your Original Enhanced) --- */
-#gallery-pane .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-#gallery-pane .photo-gallery img { width: 100%; height: 200px; object-fit: cover; border-radius: 10px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
-#gallery-pane .photo-gallery img:hover { transform: scale(1.05); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4); }
+    /* --- Playoffs Pane --- */
+    .playoff-container {
+      flex-direction: column;
+      gap: 1.5rem;
+      padding: 1rem 0.5rem;
+      overflow-x: hidden;
+    }
+    .round {
+      width: 100%;
+    }
+    .matches {
+      gap: 1.5rem;
+    }
+    .round.semifinals,
+    .round.finals {
+      justify-content: flex-start;
+    }
+    .round.finals > div {
+      flex-grow: 0;
+    }
+    .matchup:hover {
+      transform: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
 
-/* --- MODAL STYLES (Your Original Enhanced) --- */
-.modal-backdrop { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 1050; animation: fade-in-up 0.3s ease; }
-.modal-container { background: #212529; border: 1px solid #FFD700; border-radius: 10px; color: #e0e0e0; width: 90%; max-width: 600px; box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.3); animation: modal-fade-in 0.4s ease-out; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent); border-bottom: 1px solid #FFD700; }
-.modal-title { color: #FFD700; margin-bottom: 0; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
-.modal-body { padding: 1rem; max-height: 70vh; overflow-y: auto; }
+    /* --- DISABLE ALL PLAYOFF CONNECTING LINES --- */
+    .matchup::before,
+    .matchup::after,
+    .semifinals .matchup::after,
+    .semifinals .matchup::before,
+    .semifinals .matchup:first-child::after,
+    .semifinals .matchup:first-child::before,
+    .semifinals .matchup:last-child::after,
+    .semifinals .matchup:last-child::before,
+    .finals .matchup::before,
+    .finals .matchup.final::before,
+    .finals .matchup.final::after,
+    .finals .matchup.third-place::before,
+    .finals .matchup.third-Glace::after {
+      content: none !important;
+      display: none !important;
+    }
+
+    /* --- Gallery Pane --- */
+    #gallery-pane .photo-gallery {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem;
+    }
+    #gallery-pane .photo-gallery img {
+      height: 120px;
+    }
+    #gallery-pane .photo-gallery img:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
 </style>
