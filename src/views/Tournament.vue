@@ -289,7 +289,7 @@ onMounted(() => {
 
 /* Also reduce focus ring/glow when expanded to keep it subtle */
 .btn-dark-outline-gold[aria-expanded="true"]:focus {
-  box-shadow: 0 2px 10px rgba(255,215,0,0.18) !important;
+  box-shadow: 0 2.1px 10px rgba(255,215,0,0.18) !important;
   outline: none;
 }
 
