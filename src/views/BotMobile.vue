@@ -10,8 +10,8 @@
             
             <div class="controls-card">
                 <div v-if="botMessage" class="status-message">
-                <div :class="statusClass" class="alert">
-                  <img src="/cat1.jpg" alt="status icon" class="status-image me-2" />
+                <div :class="stateconst" class="alert">
+                  <img src="/billa.png" alt="status icon" class="status-image me-2" />
                   <i class="me-2"></i>{{ botMessage }}
                 </div>
               </div>
@@ -19,8 +19,7 @@
                 <div :class="statusClass" class="alert">
                   <i :class="statusIcon" class="me-2"></i>{{ statusMessage }}
                 </div>
-              </div>    
-              
+              </div>
             </div>
             <div class="board-wrapper" style="padding-top: 25px;">
               <div class="chess-board" ref="chessBoard">
@@ -34,7 +33,12 @@
                 </div>
               </div>
             </div>
-
+    
+              <div style="text-align: center; margin-top: 20px;">
+                <button @click="resetPuzzle" class="btn btn-control btn-reset">
+                  <i class="fas fa-redo me-2"></i>Reset
+                </button>
+              </div>
           </div>
         </div>
       </div>
@@ -66,8 +70,12 @@
 
       
             <!-- Checkmate/Stalemate Dialog -->
-            <div v-if="isCheckmate || isStalemate" class="game-end-overlay">
+            <div v-if="(isCheckmate || isStalemate) && !showPuzzleCompletePopup" class="game-end-overlay">
               <div class="game-end-dialog">
+              <!-- Close (X) button -->
+                <button class="popup-close-btn" @click="showPuzzleCompletePopup = true">
+                  <i class="fas fa-times"></i>
+                </button>
                 <div class="game-end-icon">
                   <i v-if="isCheckmate" class="fas fa-trophy"></i>
                   <i v-if="isStalemate" class="fas fa-handshake"></i>
@@ -93,6 +101,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { nextTick } from 'vue';
@@ -101,6 +110,7 @@ const currentPuzzle = ref(0)
 const selectedSquare = ref(null)
 const botMessage = ref('Meow! I am C.A.L.I.C.O Chess Assisting and Learning Intelligence for Coaching Oddballs')
 const statusMessage = ref('')
+const stateconst= ref('alert-info')
 const statusClass = ref('')
 const statusIcon = ref('')
 const currentTurn = ref('white')
@@ -118,7 +128,6 @@ const promotionSquare = ref(null)
 const promotionColor = ref(null)
 const currentSolutionIndex = ref(0) // index into current puzzle solution array
 const showPuzzleCompletePopup = ref(false)
-const puzzleCompleteMessage = ref('')
 const botEnabled = ref(true)  // 👈 enables the bot mode
 const botSelectedSquare  = ref(null);
 
@@ -264,8 +273,9 @@ const getBotMove = async () => {
       await nextTick();
       botSelectedSquare .value = toIndex;
       setTimeout(() => {
+        statusMessage.value = 'White to move';
         botSelectedSquare.value = null;
-      }, 1000);
+      }, 700);
       // Re-run checkmate/stalemate detection
       currentTurn.value = 'white';
       checkGameEnd();
@@ -542,7 +552,7 @@ const checkGameEnd = () => {
       statusClass.value = 'alert-warning';
       statusIcon.value = 'fas fa-exclamation-triangle';
     } else {
-      statusMessage.value = '';
+      statusMessage.value = 'Bots move...';
     }
   }
 };
@@ -1070,7 +1080,7 @@ const deselectPiece = () => {
 const resetPuzzle = () => {
   deselectPiece()
   initializeBoard()
-  statusMessage.value = 'Puzzle reset! White to move.'
+  statusMessage.value = 'Play again! White to move.'
   statusClass.value = 'alert-info'
   statusIcon.value = 'fas fa-undo'
   showPuzzleCompletePopup.value = false
@@ -1104,7 +1114,7 @@ const promotePawn = (piece) => {
 }
 
 onMounted(() => {
-  document.title = 'IISER-TVM Chess Club - Puzzles'
+  document.title = 'IISER-TVM Chess Club - Bot'
   initializeBoard()
   statusMessage.value = 'White to move. Select a piece to start!'
   statusClass.value = 'alert-info'
