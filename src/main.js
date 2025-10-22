@@ -23,9 +23,4 @@ onAuthStateChanged(auth, (user) => {
       .mount('#app')
   }
 
-  if (user) {
-    console.log('Logged in as:', user.email)
-  } else {
-    console.log('User is not logged in')
-  }
 })

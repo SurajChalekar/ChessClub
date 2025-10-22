@@ -297,7 +297,7 @@
                     </div>
                     
                     <div v-if="playoffMatches.thirdPlace.length > 0">
-                        <h4 class="round-title">3rd/4th Place</h4> 
+                        <h4 class="round-title" style="padding-top: 0px">3rd/4th Place</h4>
                         <div class="matches">
                             <div v-for="match in playoffMatches.thirdPlace" :key="match.TeamMatchID" class="matchup third-place">
                                 <div class="participant" :class="{ 'winner': match.MatchResult === 'Team A Won' }">

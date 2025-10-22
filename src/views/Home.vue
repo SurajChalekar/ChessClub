@@ -149,21 +149,18 @@
             <div class="event-card h-100">
               <div class="card-header">
                 <div class="event-type">
-                  👑 ITSAV
+                  👑 IISM
                 </div>
               </div>
               <div class="card-body p-4">
-                <h5 class="card-title">Inter House Championship</h5>
+                <h5 class="card-title">Inter-IISER Sports Meet</h5>
+                <h5></h5>
                 <div class="event-date mb-3">
-                  <i class="fas fa-calendar-alt me-2"></i>October, 2025
+                  <i class="fas fa-calendar-alt me-2"></i>December, 2025
                 </div>
                 <p class="card-text">
-                  The ultimate test of chess supremacy. Battle of 4 teams in a 5v5 conquest. Winner takes the crown.
-
+                  The ultimate test of chess supremacy.
                 </p>
-                <router-link to="/tournament" class="btn btn-danger btn-glow">
-                  Join The Tournament
-                </router-link>
               </div>
             </div>
           </div>
@@ -213,7 +210,6 @@ const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, provider)
     const user = result.user
-    console.log(user.email.endsWith('@iisertvm.ac.in'))
     // Restrict only IISER TVM emails
     if (!user.email.endsWith('@iisertvm.ac.in')) {
       alert('Only IISER TVM emails are allowed.')

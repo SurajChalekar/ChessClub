@@ -172,7 +172,7 @@ const handleViewDetails = (tournament) => {
 };
 
 onMounted(() => {
-  document.title = 'Tournament Arena - Overview';
+  document.title = 'IISER-TVM Chess Club - Tournament';
   fetchTournaments();
 });
 </script>
@@ -276,7 +276,6 @@ onMounted(() => {
 .upcoming-list-scroll::-webkit-scrollbar-thumb:hover { background: #e6b200; }
 .chess-shadow { box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.05); }
 .btn-dark-outline-gold { color: #FFD700; border-color: #FFD700; background-color: rgba(255, 215, 0, 0.05); font-size: 1.5rem; font-weight: 700; transition: all 0.3s ease; border-radius: 12px; }
-.btn-dark-outline-gold:hover { color: #0a0a0a; background-color: #FFD700; border-color: #FFD700; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4); }
 
 /* When Past Tournaments is expanded, tone down the glow so it's not overpowering */
 .btn-dark-outline-gold[aria-expanded="true"] {

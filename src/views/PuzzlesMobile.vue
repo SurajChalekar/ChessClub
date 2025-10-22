@@ -265,7 +265,6 @@ const initializeBoard = () => {
       selected: false
     })
   }
-  console.log(puzzle)
 
   // Reset game state
   currentTurn.value = 'white'
@@ -315,7 +314,6 @@ const loadPuzzlesFromCSV = async () => {
     obj.solution = obj.solution?.split(" ").map(s => s.trim())
     return obj
   })
-  console.log(puzzles)
 }
 
 const isWhitePiece = (piece) => {

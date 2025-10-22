@@ -66,15 +66,8 @@
                       </div>
                       <div class="detail-item">
                         <i class="fas fa-users me-2"></i>
-                        <strong>{{ item.participants }} members interested</strong>
+                        <strong>{{ item.participants }} members</strong>
                       </div>
-                    </div>
-                  </div>
-                </div>
-                <div class="col-lg-4 d-none d-lg-block">
-                  <div class="featured-visual text-center p-4">
-                    <div class="featured-icon">
-                      <span class="display-1">{{ item.icon }}</span>
                     </div>
                   </div>
                 </div>
@@ -171,8 +164,8 @@ const events = ref([
   {
     id: 4,
     title: "ITSAV",
-    date: '17-10-2025', 
-    time: 'Friday:21:00,Sat-Sun: 15:00',
+    date: '10-17-2025', 
+    time: 'Friday:21:00, Sunday 15:00',
     type: 'Open Arena Championship',
     level: 'All',
     description: 'The ultimate test of chess supremacy. Battle of 4 teams in a 10v10v10v10 swiss Arena conquest. Winner takes the crown.',
@@ -293,7 +286,7 @@ const resetFilters = () => {
 }
 
 onMounted(() => {
-  document.title = 'IISER-TVM Chess Club Announcements'
+  document.title = 'IISER-TVM Chess Club - Announcements'
 })
 </script>
 

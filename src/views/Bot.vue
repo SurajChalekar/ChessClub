@@ -253,7 +253,6 @@ const getBotMove = async () => {
     });
 
     const data = await res.json();
-    console.log("Bot move:", data.bestmove);
 
     if (data.bestmove) {  // <-- use bestmove
       const [fromIndex, toIndex] = parseLAN(data.bestmove);
@@ -277,7 +276,6 @@ const getBotMove = async () => {
 
       // If game ended, popup will automatically show
       if (!isGameActive.value || isCheckmate.value || isStalemate.value) {
-        console.log('Game over, popup triggered');
         return;
       }
 
@@ -340,7 +338,6 @@ const initializeBoard = () => {
       selected: false
     })
   }
-  console.log(puzzle)
 
   // Reset game state
   currentTurn.value = 'white'
@@ -517,7 +514,6 @@ const checkGameEnd = () => {
       statusMessage.value = '♚ Checkmate! Black wins!';
       statusClass.value = 'alert-danger';
       statusIcon.value = 'fas fa-trophy';
-      console.log('✅ Checkmate detected: White checkmated');
     } else if (!opponentIsWhite && blackInCheck) {
       // Black checkmated
       isCheckmate.value = true;
@@ -526,7 +522,6 @@ const checkGameEnd = () => {
       statusMessage.value = '♔ Checkmate! White wins!';
       statusClass.value = 'alert-danger';
       statusIcon.value = 'fas fa-trophy';
-      console.log('✅ Checkmate detected: Black checkmated');
     } else {
       // Stalemate
       isStalemate.value = true;
@@ -534,7 +529,6 @@ const checkGameEnd = () => {
       statusMessage.value = '🤝 Stalemate! Draw!';
       statusClass.value = 'alert-warning';
       statusIcon.value = 'fas fa-handshake';
-      console.log('✅ Stalemate detected');
     }
   } else {
     // Game continues - show check status
