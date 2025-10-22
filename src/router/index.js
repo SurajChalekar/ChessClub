@@ -15,12 +15,9 @@ const routes = [
     name: 'anouncements',
     component: () => import('../views/Anouncements.vue')
   },
-  {
-    path: '/bot',
-    name: 'bot',
-    component: () => import('../views/Bot.vue'),
-    meta: { requiresAuth: true, specialNavbar: true }
-  },
+  { path: '/bot-mobile', name: 'bot-mobile', component: () => import('../views/BotMobile.vue'), meta: { requiresAuth: true } },
+  { path: '/bot', name: 'bot', component: () => import('../views/Bot.vue'), meta: { requiresAuth: true, specialNavbar: true } },
+
   {
     path: '/tournament',
     name: 'tournament-overview',
@@ -67,6 +64,14 @@ router.beforeEach((to, from, next) => {
   }
   if (to.path === '/puzzle-mobile' && !isMobile) {
     next('/puzzles')
+    return
+  }
+  if (to.path === '/bot' && isMobile) {
+    next('/bot-mobile')
+    return
+  }
+  if (to.path === '/bot-mobile' && !isMobile) {
+    next('/bot')
     return
   }
   next()

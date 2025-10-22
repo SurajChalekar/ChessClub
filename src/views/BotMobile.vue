@@ -4,9 +4,20 @@
     <section class="bot-content">
       <div class="bot-container">
         <div class="bot-layout">
+            
           <!-- Chess Board Container -->
-          <div class="chess-container">
-            <div class="board-wrapper">
+          <div class="chess-container"> 
+            
+            <div class="controls-card">
+                <div v-if="statusMessage" class="status-message">
+                <div :class="statusClass" class="alert">
+                    <img src="/cat.jpg" alt="status icon" class="status-image me-2" />
+                {{ statusMessage }}
+                </div>
+              </div>
+              
+            </div>
+            <div class="board-wrapper" style="padding-top: 25px;">
               <div class="chess-board" ref="chessBoard">
                 <div v-for="(square, index) in boardSquares" :key="index" :class="getSquareClass(index)"
                   @click="handleSquareClick(index)">
@@ -19,20 +30,6 @@
               </div>
             </div>
 
-            <div class="controls-card">
-                <div v-if="botMessage" class="status-message">
-                <div :class="statusClass" class="alert">
-                  <img src="/cat.jpg" alt="status icon" class="status-image me-2" />
-                  <i class="me-2"></i>{{ botMessage }}
-                </div>
-              </div>
-              <div v-if="statusMessage" class="status-message">
-                <div :class="statusClass" class="alert">
-                  <i :class="statusIcon" class="me-2"></i>{{ statusMessage }}
-                </div>
-              </div>
-              
-            </div>
           </div>
         </div>
       </div>
@@ -94,11 +91,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { nextTick } from 'vue';
-const moveCount = ref(0)
+
 const currentPuzzle = ref(0)
 const puzzlesSolved = ref(0)
 const selectedSquare = ref(null)
-const botMessage = ref('Meow! I am thinking...')
 const statusMessage = ref('')
 const statusClass = ref('')
 const statusIcon = ref('')
@@ -121,105 +117,6 @@ const puzzleCompleteMessage = ref('')
 const botEnabled = ref(true)  // 👈 enables the bot mode
 
 
-const catMessages = {
-  start: [
-    "Meow! Ready to play, hooman?",
-    "Let’s see if your moves are as sharp as my claws.",
-    "I’ve been practicing on the mouse… the *computer mouse*! 🖱️",
-    "Don’t worry, I’ll try not to shed all over the board.",
-    "You sit there; I’ll take the sunny square.",
-    "I’m in the mood for some purr-fect strategy!",
-    "Time to show off my nine lives on the board.",
-    "Warm up your paws… I’m about to pounce!",
-    "Let’s see if you can catch me… in chess!"
-  ],
-
-  mid: [
-    "Hmm... that move smells suspicious.",
-    "Give me a moment… chasing ideas like yarn balls.",
-    "I’m thinking… or maybe just pretending to.",
-    "Purrrhaps… I’ll move *this* piece.",
-    "Hold your pawns… I’m plotting something.",
-    "You’re making me twitch my whiskers in concentration.",
-    "Aha! I see your strategy… and raise you a nap.",
-    "Didn’t see that coming, did you?",
-    "Mew-hahaha, that’s a purrfect move!",
-    "I’m just toying with you… like a mouse.",
-    "Careful — I’m on the prowl now.",
-    "You just stepped into my territory.",
-    "I might be small, but my moves are mighty!",
-    "Your knight is cute… but can it catch my tail?",
-    "I’m balancing my moves and my catnip cravings."
-  ],
-
-  end: [
-    "Oops… slipped on the keyboard. 🐾",
-    "That wasn’t my most graceful pounce.",
-    "You’re pretty good… for a human.",
-    "I meant to do that. Yes. Totally.",
-    "Ugh, my tail hit the wrong piece again.",
-    "Fine, I’ll blame lag… or gravity.",
-    "I told you… cats always land on their feet.",
-    "Game over! Time for a victory nap.",
-    "Mrow! I outplayed you and didn’t even shed a hair.",
-    "You fought well, hooman. Now fetch me a treat.",
-    "You won? Must’ve been a hairball in my code.",
-    "Well played… I’ll let you pet me as a reward.",
-    "Draw? Let’s call it a *purr-spective* tie.",
-    "Alright, I’ll go nap this one off.",
-    "You’re improving! Soon I’ll need nine lives to beat you.",
-    "I almost let that one slip… but my reflexes are sharp!",
-    "Not bad, but my paws still have tricks up their fur!",
-    "Next game, I’ll bring extra whisker power!",
-    "You got lucky… but I’ll be back with vengeance."
-  ],
-
-  random: [
-    "Sometimes I wonder why knights don’t move like cats.",
-    "I’d knock over the king, but I’m not allowed on the board.",
-    "Do you have any tuna-flavored pawns?",
-    "Chess pieces make great toys when no one’s watching.",
-    "I like bishops. They move diagonally, like a proper cat sneaking around.",
-    "I only play for snacks. Or glory. Mostly snacks.",
-    "If I fit, I sit… even on your chessboard.",
-    "Paws and reflect… are you ready for my next move?",
-    "I could nap… but your pawns look tasty.",
-    "My tail says yes… my pawns disagree.",
-    "I chase lasers… but today I chase checkmates!",
-    "Did you see that? My pawns just slipped by — en passant style! 🐾",
-    "Sneaky! That pawn moved like a laser pointer… en passant!",
-    "I caught your pawn… before you even knew it! Purrfect en passant.",
-    "I pounced on that pawn so fast, it barely moved… classic en passant!",
-    "You blinked, I captured — en passant, cat edition!",
-    "My pawns are stealthy… like shadows on the board. En passant!",
-    "Oops, I did it again… en passant strikes! 🐱",
-    "That pawn thought it could escape? Nope, en passanted!",
-    "Purr-haps you didn’t notice… but that was an en passant!",
-    "I tiptoed, I leapt, I captured… en passant. Classic cat move."
-  ]
-}
-
-
-const getMessage = (moveCount) => {
-  let type
-
-  if (moveCount <= 5) {
-    type = 'start'        // first 2 moves → start messages
-  } else if (moveCount <= 20) {
-    type = 'mid'     // early-mid game → thinking
-  } else if (moveCount <= 30) {
-    type = 'end'       // mid game → random fun messages
-  } else {
-    // late game → mix of strongMove, mistake, or random
-    type = 'random'
-  }
-
-  // pick a random message from that type
-  const messages = catMessages[type] || catMessages.random
-  const message = messages[Math.floor(Math.random() * messages.length)]
-
-  return message
-}
 const getFEN = () => {
   const pieces = boardSquares.value.map(p => p.piece || '1');
   let fen = '';
@@ -258,7 +155,6 @@ const getBotMove = async () => {
         console.error('Invalid move format:', data.bestmove);
         return;
       }
-      botMessage.value = getMessage(moveCount.value);
       makeMove(fromIndex, toIndex, true);
 
       // Wait until Vue updates boardSquares
@@ -1007,13 +903,14 @@ const makeMove = (fromIndex, toIndex, isAuto = false) => {
 
   // Clear selection
   deselectPiece()
-  moveCount.value++
+
   // Switch turn if not auto move
   if (!isAuto) {
     currentTurn.value = currentTurn.value === 'white' ? 'black' : 'white'
     
     // Check for game end immediately after user move
     checkGameEnd()
+
     // If game is still active, trigger bot move
     if (botEnabled.value && currentTurn.value === 'black' && isGameActive.value) {
       setTimeout(() => getBotMove(), 700)
@@ -1121,17 +1018,17 @@ onMounted(() => {
   statusClass.value = 'alert-info'
   statusIcon.value = 'fas fa-chess'
 })
-
 </script>
 
 
 <style scoped>
 
 .status-image {
-  width: 96px;
-  height: 96px;
+  width: 50px;
+  height: 50px;
   object-fit: contain; /* ensures it doesn't stretch */
 }
+
 
 .popup-close-btn {
   position: absolute;
@@ -1148,7 +1045,17 @@ onMounted(() => {
 .popup-close-btn:hover {
   color: #333;
 }
+.btn-sol {
+  background: linear-gradient(135deg, #28a745, #218838);
+  color: #fff;
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+  transition: all 0.2s ease;
+}
 
+.btn-sol:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
+}
 /* ==================== GLOBAL STYLES ==================== */
 .bot-page {
   background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 50%, #0a0a0a 100%);
@@ -1183,11 +1090,12 @@ onMounted(() => {
 
 /* ==================== CHESS BOARD ==================== */
 .chess-container {
+  flex: 1;
   display: flex;
-  gap: 2rem;
-  align-items: flex-start;
-  width: 100%;
   justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
 }
 
 .board-wrapper {
@@ -1201,8 +1109,8 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(8, 1fr);
-  width: 550px;
-  height: 550px;
+  width: 600px;
+  height: 600px;
   border: 2px solid #746f6a;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
 }
@@ -1327,7 +1235,7 @@ onMounted(() => {
 
 /* ==================== CONTROLS ==================== */
 .controls-card {
-  flex: 0.5 0 350px;
+  flex: 0 0 350px;
   background: linear-gradient(135deg, rgba(26, 26, 46, 0.9), rgba(42, 42, 62, 0.9));
   backdrop-filter: blur(15px);
   border-radius: 20px;
@@ -1421,17 +1329,6 @@ onMounted(() => {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(255, 193, 7, 0.5);
 }
-.btn-sol {
-  background: linear-gradient(135deg, #28a745, #218838);
-  color: #fff;
-  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
-  transition: all 0.2s ease;
-}
-
-.btn-sol:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.5);
-}
 
 .btn-check {
   background: linear-gradient(135deg, #4caf50, #66bb6a);
@@ -1464,7 +1361,6 @@ onMounted(() => {
   transform: translateY(-3px);
   box-shadow: 0 8px 25px rgba(52, 152, 219, 0.5);
 }
-
 /* ==================== STATUS MESSAGES ==================== */
 .status-message {
   margin-bottom: 1.5rem;
@@ -1720,7 +1616,7 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .puzzles-page {
+  .bot-page {
     margin-left: 0;
     padding: 1rem 0.5rem;
     padding-top: 70px;
@@ -1741,7 +1637,7 @@ onMounted(() => {
   }
 
   .board-wrapper {
-    padding-right: 35px;
+    padding-right: 0px;
     padding-bottom: 35px;
   }
 
@@ -1772,7 +1668,7 @@ onMounted(() => {
 }
 
 @media (max-width: 576px) {
-  .puzzles-page {
+  .bot-page {
     padding: 0.75rem 0.5rem;
     padding-top: 70px;
   }
@@ -1785,13 +1681,13 @@ onMounted(() => {
   .chess-board {
     width: calc(100vw - 2rem);
     height: calc(100vw - 2rem);
-    max-width: 360px;
-    max-height: 360px;
+    max-width: 400px;
+    max-height: 400px;
     border: 1px solid #746f6a;
   }
 
   .board-wrapper {
-    padding-right: 30px;
+    padding-right: 0px;
     padding-bottom: 30px;
   }
 
@@ -1900,12 +1796,12 @@ onMounted(() => {
   .chess-board {
     width: calc(100vw - 1.5rem);
     height: calc(100vw - 1.5rem);
-    max-width: 320px;
-    max-height: 320px;
+    max-width: 360px;
+    max-height: 360px;
   }
 
   .board-wrapper {
-    padding-right: 25px;
+    padding-right: 0px;
     padding-bottom: 25px;
   }
 
