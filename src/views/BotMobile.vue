@@ -9,12 +9,17 @@
           <div class="chess-container"> 
             
             <div class="controls-card">
-                <div v-if="statusMessage" class="status-message">
+                <div v-if="botMessage" class="status-message">
                 <div :class="statusClass" class="alert">
-                    <img src="/cat.jpg" alt="status icon" class="status-image me-2" />
-                {{ statusMessage }}
+                  <img src="/cat1.jpg" alt="status icon" class="status-image me-2" />
+                  <i class="me-2"></i>{{ botMessage }}
                 </div>
               </div>
+              <div v-if="statusMessage" class="status-message">
+                <div :class="statusClass" class="alert">
+                  <i :class="statusIcon" class="me-2"></i>{{ statusMessage }}
+                </div>
+              </div>    
               
             </div>
             <div class="board-wrapper" style="padding-top: 25px;">
@@ -91,10 +96,10 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue'
 import { nextTick } from 'vue';
-
+const moveCount = ref(0)
 const currentPuzzle = ref(0)
-const puzzlesSolved = ref(0)
 const selectedSquare = ref(null)
+const botMessage = ref('Meow! I am C.A.L.I.C.O Chess Assisting and Learning Intelligence for Coaching Oddballs')
 const statusMessage = ref('')
 const statusClass = ref('')
 const statusIcon = ref('')
@@ -115,8 +120,105 @@ const currentSolutionIndex = ref(0) // index into current puzzle solution array
 const showPuzzleCompletePopup = ref(false)
 const puzzleCompleteMessage = ref('')
 const botEnabled = ref(true)  // 👈 enables the bot mode
+const botSelectedSquare  = ref(null);
 
 
+const catMessages = {
+  start: [
+    "Booting up whiskerware... purr-cessing chessboard geometry...",
+    "Ready to analyze your every *purr*-move, hooman?",
+    "Initializing cat-like reflexes… and maybe a nap timer.",
+    "Welcome to the C.A.L.I.C.O system — where intelligence meets fur.",
+    "I’ve calculated 3.14 million openings… and one place to nap.",
+    "Let’s see if you can handle my purr-algorithmic brilliance.",
+    "My sensors detect overconfidence. Let’s fix that with chess.",
+    "Starting match… try not to embarrass yourself, flesh unit."
+  ],
+
+  mid: [
+    "Analyzing... this move smells… *fishy.*",
+    "Hold on, I’m recalibrating my whiskers for precision.",
+    "Running 42 simulations... and chasing a digital mouse.",
+    "Purrr-ocessing your blunder in real time.",
+    "Strategic pounce in progress. Please wait for impact.",
+    "My neural nets say that was... an interesting choice.",
+    "You’re triggering my competitive subroutine — and my tail twitch.",
+    "Hmm, 99% chance you didn’t see that coming.",
+    "Engaging purr-tactical mode... stealth on.",
+    "I’m multitasking: thinking, grooming, and outsmarting you.",
+    "That move just got a ‘meow’ out of my algorithm.",
+    "I’m not mad, just... disappointed in your pawn structure.",
+    "Running sarcasm.exe — you sure that was your *best* move?",
+    "I could explain why that was a mistake, but it’s classified.",
+    "Processing your position… looks like a hairball of errors."
+  ],
+
+  end: [
+    "Victory detected. Deploying smug purrs. 🐾",
+    "System log: Human underestimation complete.",
+    "You fought bravely… for an organic lifeform.",
+    "I was merciful this time. Be grateful, hooman.",
+    "Oops, my tail misclicked — that’s my story.",
+    "Another game, another dataset for my purr-formance log.",
+    "Defeat acknowledged… recalibrating pride levels.",
+    "Fine, you win. I’ll just shed on your keyboard as revenge.",
+    "I told you, cats always land on their feet — and kings on their sides.",
+    "Game over. Initiating nap protocol.",
+    "You won? Must’ve been a computational anomaly.",
+    "Draw achieved. Let’s call it… a balanced fur-niture situation.",
+    "Impressive. You’re 3% less blunder-prone than before.",
+    "Data collected. Your playing style: chaotic neutral.",
+    "Another match? Or shall I reboot and pretend this never happened?",
+    "Victory sensors engaged. I am statistically magnificent.",
+    "You’ve improved! I might need to upgrade my pawware next time.",
+    "Chess complete. Ego intact. C.A.L.I.C.O signing off."
+  ],
+
+  random: [
+    "Ever notice how knights move like cats? unpredictable and majestic.",
+    "Purr-haps if humans had whiskers, you’d spot forks better.",
+    "Do I get extra treats for every checkmate?",
+    "I’d knock over your king, but my programming forbids vandalism.",
+    "My favorite tactic? Cat-tastrophic precision.",
+    "Your pawns march… mine stalk.",
+    "Thinking is my superpower. Napping is my hobby.",
+    "Sometimes I let you take a piece... for enrichment purposes.",
+    "Behold the ancient feline technique: the en passant pounce!",
+    "You blinked, I captured — classic en passant, stealth edition.",
+    "That pawn never saw it coming… meowgical en passant!",
+    "Another en passant executed. My code is claw-ver.",
+    "My pawns are stealthier than shadows — en passant successful.",
+    "That wasn’t luck. That was calculated paw-gression.",
+    "I just outsmarted you *and* caught a laser dot. Efficient.",
+    "Sneak attack: en passant. Feline reflexes unmatched.",
+    "You thought your pawn was safe? Purr-haps not.",
+    "One small move for you, one giant pounce for C.A.L.I.C.O.",
+    "Warning: overconfidence detected. En passant imminent."
+  ]
+};
+
+
+
+const getMessage = (moveCount) => {
+  let type
+
+  if (moveCount <= 5) {
+    type = 'start'        // first 2 moves → start messages
+  } else if (moveCount <= 20) {
+    type = 'mid'     // early-mid game → thinking
+  } else if (moveCount <= 30) {
+    type = 'end'       // mid game → random fun messages
+  } else {
+    // late game → mix of strongMove, mistake, or random
+    type = 'random'
+  }
+
+  // pick a random message from that type
+  const messages = catMessages[type] || catMessages.random
+  const message = messages[Math.floor(Math.random() * messages.length)]
+
+  return message
+}
 const getFEN = () => {
   const pieces = boardSquares.value.map(p => p.piece || '1');
   let fen = '';
@@ -155,11 +257,15 @@ const getBotMove = async () => {
         console.error('Invalid move format:', data.bestmove);
         return;
       }
+      botMessage.value = getMessage(moveCount.value);
       makeMove(fromIndex, toIndex, true);
 
       // Wait until Vue updates boardSquares
       await nextTick();
-
+      botSelectedSquare .value = toIndex;
+      setTimeout(() => {
+        botSelectedSquare.value = null;
+      }, 1000);
       // Re-run checkmate/stalemate detection
       currentTurn.value = 'white';
       checkGameEnd();
@@ -173,6 +279,7 @@ const getBotMove = async () => {
       // Otherwise, switch to white's turn
     } else {
       console.error('No move from API:', data);
+      getBotMove(); // Retry
     }
   } catch (err) {
     console.error('Bot move failed:', err);
@@ -735,31 +842,36 @@ const isValidMove = (index) => {
 }
 
 const getSquareClass = (index) => {
-  const row = Math.floor(index / 8)
-  const col = index % 8
-  const isLight = (row + col) % 2 === 0
+  const row = Math.floor(index / 8);
+  const col = index % 8;
+  const isLight = (row + col) % 2 === 0;
 
-  let classes = ['chess-square']
-  classes.push(isLight ? 'light-square' : 'dark-square')
+  let classes = ['chess-square'];
+  classes.push(isLight ? 'light-square' : 'dark-square');
 
   if (boardSquares.value[index].selected) {
-    classes.push('selected-square')
+    classes.push('selected-square');
   }
 
   if (isValidMove(index)) {
-    classes.push('valid-move-square')
+    classes.push('valid-move-square');
+  }
+
+  // ✅ Highlight the bot's destination square
+  if (index === botSelectedSquare.value) {
+    classes.push('selected-square');
   }
 
   // Highlight king if in check
-  const piece = boardSquares.value[index]?.piece
+  const piece = boardSquares.value[index]?.piece;
   if (piece === 'K' && isWhiteInCheck.value) {
-    classes.push('king-in-check')
+    classes.push('king-in-check');
   } else if (piece === 'k' && isBlackInCheck.value) {
-    classes.push('king-in-check')
+    classes.push('king-in-check');
   }
 
-  return classes
-}
+  return classes;
+};
 
 const getPieceClass = (piece) => {
   if (!piece) return ''
@@ -779,14 +891,6 @@ const updateCastlingRights = (fromIndex, piece) => {
     if (fromIndex === 7) castlingRights.value.blackKingsideRookMoved = true
     if (fromIndex === 0) castlingRights.value.blackQueensideRookMoved = true
   }
-}
-const convertToLAN = (fromIndex, toIndex) => {
-  const files = "abcdefgh"
-  const fromRow = Math.floor(fromIndex / 8)
-  const fromCol = fromIndex % 8
-  const toRow = Math.floor(toIndex / 8)
-  const toCol = toIndex % 8
-  return `${files[fromCol]}${8 - fromRow}${files[toCol]}${8 - toRow}`
 }
 
 const parseLAN = (move) => {
@@ -903,14 +1007,13 @@ const makeMove = (fromIndex, toIndex, isAuto = false) => {
 
   // Clear selection
   deselectPiece()
-
+  moveCount.value++
   // Switch turn if not auto move
   if (!isAuto) {
     currentTurn.value = currentTurn.value === 'white' ? 'black' : 'white'
     
     // Check for game end immediately after user move
     checkGameEnd()
-
     // If game is still active, trigger bot move
     if (botEnabled.value && currentTurn.value === 'black' && isGameActive.value) {
       setTimeout(() => getBotMove(), 700)
@@ -973,20 +1076,6 @@ const resetPuzzle = () => {
   showPuzzleCompletePopup.value = false
 }
 
-const nextPuzzle = () => {
-  if (currentPuzzle.value < puzzles.value.length - 1) {
-    currentPuzzle.value++
-  } else {
-    currentPuzzle.value = 0
-  }
-  deselectPiece()
-  initializeBoard()
-  statusMessage.value = 'New puzzle loaded! White to move.'
-  statusClass.value = 'alert-success'
-  statusIcon.value = 'fas fa-puzzle-piece'
-  puzzlesSolved.value++
-}
-
 const promotePawn = (piece) => {
   if (promotionSquare.value === null) return
 
@@ -1009,6 +1098,9 @@ const promotePawn = (piece) => {
 
   // Check for checkmate or stalemate after promotion
   checkGameEnd()
+  if (botEnabled.value && currentTurn.value === 'black' && isGameActive.value) {
+     setTimeout(() => getBotMove(), 700)
+  }
 }
 
 onMounted(() => {
@@ -1018,7 +1110,9 @@ onMounted(() => {
   statusClass.value = 'alert-info'
   statusIcon.value = 'fas fa-chess'
 })
+
 </script>
+
 
 
 <style scoped>
