@@ -4,7 +4,7 @@
       <div class="hero-background"></div>
       <div class="chess-pattern-bg"></div>
       <div class="container position-relative z-3">
-        <div class="row justify-content-center text-center" style="min-height: 65vh;">
+        <div class="row justify-content-center text-center">
           <div class="col-lg-8">
             <div class="hero-content py-5 d-flex flex-column align-items-center">
               <div class="hero-badge mb-4">
@@ -104,9 +104,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-// --- NOTE: Check your file path for TournamentCard.vue ---
-// Your error said 'Tournament.vue', so this path should be correct.
-// If your card is in 'src/components/', it should be '../components/TournamentCard.vue'
 import TournamentCard from './TournamentCard.vue';
 
 const router = useRouter();
@@ -124,62 +121,59 @@ const pastTournaments = computed(() => displayableTournaments.value.filter(t => 
 
 
 const fetchTournaments = async () => {
-    const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv`;
-    
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Network response was not ok (${response.status}): ${errorText}`);
-        }
-        
-        const csvText = await response.text();
-        const lines = csvText.split(/\r?\n/);
-
-        if (lines.length <= 1) {
-            allTournaments.value = [];
-            return;
-        }
-
-        const headers = lines[0].split(',').map(h => h.trim());
-        const rows = lines.slice(1);
-
-        allTournaments.value = rows.map(line => {
-            if (!line.trim()) return null; 
-            const tournamentObject = {};
-            const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-
-            headers.forEach((header, index) => {
-                if (values[index]) {
-                    tournamentObject[header] = values[index].trim().replace(/^"|"$/g, '');
-                } else {
-                    tournamentObject[header] = '';
-                }
-            });
-            return tournamentObject;
-        }).filter(Boolean);
-
-    } catch (e) {
-        console.error('Failed to fetch tournaments:', e);
-        // --- THIS IS THE FIX ---
-        // Changed 'e..message' to 'e.message'
-        error.value = e.message; 
-    } finally {
-        isLoading.value = false;
+  const url = `https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv`;
+  
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Network response was not ok (${response.status}): ${errorText}`);
     }
+    
+    const csvText = await response.text();
+    const lines = csvText.split(/\r?\n/);
+
+    if (lines.length <= 1) {
+      allTournaments.value = [];
+      return;
+    }
+
+    const headers = lines[0].split(',').map(h => h.trim());
+    const rows = lines.slice(1);
+
+    allTournaments.value = rows.map(line => {
+      if (!line.trim()) return null; 
+      const tournamentObject = {};
+      const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+
+      headers.forEach((header, index) => {
+        if (values[index]) {
+          tournamentObject[header] = values[index].trim().replace(/^"|"$/g, '');
+        } else {
+          tournamentObject[header] = '';
+        }
+      });
+      return tournamentObject;
+    }).filter(Boolean);
+
+  } catch (e) {
+    console.error('Failed to fetch tournaments:', e);
+    error.value = e.message; 
+  } finally {
+    isLoading.value = false;
+  }
 };
 
-// This function has the correct route name
 const handleViewDetails = (tournament) => {
-    router.push({ 
-        name: 'generic-tournament-details', 
-        params: { id: tournament.TournamentID } 
-    });
+  router.push({ 
+    name: 'generic-tournament-details', 
+    params: { id: tournament.TournamentID } 
+  });
 };
 
 onMounted(() => {
-    document.title = 'Tournament Arena - Overview';
-    fetchTournaments();
+  document.title = 'Tournament Arena - Overview';
+  fetchTournaments();
 });
 </script>
 
@@ -193,6 +187,9 @@ onMounted(() => {
   background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0a0a0a 100%);
   padding: 6rem 0;
 }
+.tournaments-hero .row {
+  min-height: 65vh;
+}
 .hero-background {
   position: absolute; top: 0; left: 0; right: 0; bottom: 0;
   background: linear-gradient(45deg, transparent 40%, rgba(220, 53, 69, 0.05) 50%, transparent 60%), linear-gradient(-45deg, transparent 40%, rgba(255, 193, 7, 0.05) 50%, transparent 60%);
@@ -203,6 +200,15 @@ onMounted(() => {
   background-image: repeating-linear-gradient(45deg, transparent, transparent 40px, rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 80px), repeating-linear-gradient(-45deg, transparent, transparent 40px, rgba(220,53,69,0.02) 40px, rgba(220,53,69,0.02) 80px);
   opacity: 0.3;
 }
+
+/* Fixes badge icon alignment */
+.hero-badge .badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem; 
+}
+
 .hero-title {
   font-size: 4.5rem;
   font-weight: 900;
@@ -260,7 +266,7 @@ onMounted(() => {
 }
 @keyframes heroShift { 0% { transform: translateX(-2px); } 100% { transform: translateX(2px); } }
 
-.bg-dark-chess { background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%230f0f0f"/><rect width="40" height="40" fill="%231a1a1a"/><rect x="40" y="40" width="40" height="40" fill="%231a1a1a"/></svg>') repeat; background-size: 80px 80px; }
+.bg-dark-chess { background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w.org/2000/svg" width="80" height="80" viewBox="0 0 80 80"><rect width="80" height="80" fill="%230f0f0f"/><rect width="40" height="40" fill="%231a1a1a"/><rect x="40" y="40" width="40" height="40" fill="%231a1a1a"/></svg>') repeat; background-size: 80px 80px; }
 .section-title { background: linear-gradient(45deg, #FFD700, #e6b200); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 0 10px rgba(255, 215, 0, 0.3); font-weight: 800; }
 .tournament-divider { border-top: 3px solid rgba(255, 215, 0, 0.3); opacity: 1; margin: 4rem 0; }
 .upcoming-list-scroll { max-height: 500px; overflow-y: auto; padding-right: 15px; border: 1px solid rgba(255, 215, 0, 0.1); border-radius: 15px; }
@@ -271,4 +277,109 @@ onMounted(() => {
 .chess-shadow { box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.05); }
 .btn-dark-outline-gold { color: #FFD700; border-color: #FFD700; background-color: rgba(255, 215, 0, 0.05); font-size: 1.5rem; font-weight: 700; transition: all 0.3s ease; border-radius: 12px; }
 .btn-dark-outline-gold:hover { color: #0a0a0a; background-color: #FFD700; border-color: #FFD700; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4); }
+
+
+/* ============================================= */
+/* == RESPONSIVE ADJUSTMENTS FOR MOBILE/TABLET == */
+/* ============================================= */
+
+/* Tablet (Medium Screens) */
+@media (max-width: 991px) {
+  .tournaments-hero {
+    padding: 5rem 0; 
+  }
+  .hero-title {
+    font-size: 3.8rem; 
+  }
+  .hero-stats .stat-number {
+    font-size: 2.3rem; 
+  }
+}
+
+/* Mobile (Small Screens) */
+@media (max-width: 767px) {
+  .tournaments-hero {
+    padding: 4rem 0; 
+  }
+  .tournaments-hero .row {
+    min-height: auto; 
+    padding-bottom: 2rem; 
+  }
+
+  /* Make badge smaller */
+  .hero-badge .badge {
+    font-size: 0.9rem;
+    padding: 0.65rem 1rem;
+  }
+
+  /* Intentionally stack title & icon */
+  .hero-title {
+    font-size: 3rem; /* Tweak font size */
+    letter-spacing: -0.5px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem; /* Space between icon and text */
+  }
+  
+  /* Center icon and remove side margin */
+  .chess-icon {
+    font-size: 2.5rem; /* Give icon explicit size */
+    margin-right: 0; 
+  }
+
+  .hero-subtitle {
+    font-size: 1.1rem; 
+  }
+
+  /* Beautify the stats section */
+  .hero-stats {
+    flex-direction: column;
+    gap: 1rem !important; /* Space between stat items */
+    width: 100%;
+    padding: 0 1rem; /* Add side padding */
+  }
+
+  /* Turn stats into cards */
+  .hero-stats .stat-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 1rem;
+    background: rgba(255, 215, 0, 0.05); /* Faint gold bg */
+    border-radius: 8px; 
+    border-left: 4px solid #FFD700; /* Gold accent */
+    margin-bottom: 0; /* Use gap instead of margin */
+  }
+
+  /* Style the stat number */
+  .hero-stats .stat-number {
+    font-size: 2.2rem; 
+    margin-right: 1rem; /* Space between number and label */
+    line-height: 1;
+  }
+
+  /* Style the stat label */
+  .hero-stats .stat-label {
+    font-size: 0.9rem;
+    line-height: 1.2;
+    opacity: 0.9; /* Make it a bit brighter */
+  }
+
+  .section-title {
+    font-size: 2rem; 
+  }
+  .tournament-divider {
+    margin: 2.5rem 0; 
+  }
+  .upcoming-list-scroll {
+    max-height: 45vh; 
+    padding-right: 5px; 
+  }
+  .btn-dark-outline-gold {
+    font-size: 1.2rem; 
+    padding: 0.75rem 1.25rem; 
+  }
+}
 </style>
