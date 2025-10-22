@@ -2,7 +2,7 @@
   <div class="knights-conquest-page">
     <div class="container">
       <div class="page-header text-center mb-5">
-        <h1 class="tournament-title">{{ info.TournamentName || 'Tournament' }}</h1>
+  <h1 class="tournament-title">{{ tournamentTitle }}</h1>
         <p class="tournament-subtitle">{{ info.Format || 'Tournament Details' }}</p>
       </div>
 
@@ -208,7 +208,8 @@ const props = defineProps({
   gallery: Array,
   teamsPlayers: Array,
   teamMatches: Array,
-  individualGames: Array
+  individualGames: Array,
+  TournamentsList: { type: Array, default: () => [] }
 });
 
 // --- 2. ALL COMPUTED PROPERTIES AND LOGIC ---
@@ -387,6 +388,19 @@ const showTeamRecords = (team) => {
 const closeModal = () => {
   showRecordModal.value = false;
 };
+
+// --- Tournament title lookup ---
+const tournamentTitle = computed(() => {
+  const list = props.TournamentsList || [];
+  if (Array.isArray(list) && list.length && props.info) {
+    const id = props.info.TournamentID || props.info.id || props.info.ID;
+    if (id) {
+      const m = list.find(t => String(t.TournamentID || t.id || t.ID) === String(id));
+      if (m) return m.TournamentName || m.Name || m.title || props.info.TournamentName;
+    }
+  }
+  return props.info?.TournamentName || 'Tournament';
+});
 </script>
 
 <style scoped>

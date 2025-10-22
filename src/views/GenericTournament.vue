@@ -19,6 +19,7 @@
         <TeamLeagueTemplate 
           v-if="templateType === 'TeamLeague'"
           :info="tournamentData.info"
+          :TournamentsList="allTournaments"
           :documents="tournamentData.documents"
           :gallery="tournamentData.gallery"
           :teams-players="tournamentData.teamsPlayers"
@@ -29,6 +30,7 @@
         <TeamSwissTemplate 
           v-else-if="templateType === 'TeamSwiss'"
           :info="tournamentData.info"
+          :TournamentsList="allTournaments"
           :documents="tournamentData.documents"
           :gallery="tournamentData.gallery"
           :teams-players="tournamentData.teamsPlayers"
@@ -39,6 +41,7 @@
         <IndividualSwissTemplate 
           v-else-if="templateType === 'IndividualSwiss'"
           :info="tournamentData.info"
+          :TournamentsList="allTournaments"
           :documents="tournamentData.documents"
           :gallery="tournamentData.gallery"
           :players="tournamentData.players"
@@ -48,6 +51,7 @@
         <IndividualRoundRobinTemplate
           v-else-if="templateType === 'IndividualRoundRobin'"
           :info="tournamentData.info"
+          :TournamentsList="allTournaments"
           :documents="tournamentData.documents"
           :gallery="tournamentData.gallery"
           :players="tournamentData.players"
@@ -57,6 +61,7 @@
         <KnockoutTemplate 
           v-else-if="templateType === 'Knockout'"
           :info="tournamentData.info"
+          :TournamentsList="allTournaments"
           :documents="tournamentData.documents"
           :gallery="tournamentData.gallery"
           :participants="tournamentData.participants"
@@ -83,12 +88,12 @@ import { ref, onMounted } from 'vue';
 
 // --- 1. IMPORT ALL TEMPLATES ---
 // (App will error until these are created, which is normal)
-import TeamLeagueTemplate from '../components/templates/TeamLeagueTemplate.vue';
-import TeamSwissTemplate from '../components/templates/TeamSwissTemplate.vue';
-import IndividualSwissTemplate from '../components/templates/IndividualSwissTemplate.vue';
-import IndividualRoundRobinTemplate from '../components/templates/IndividualRoundRobinTemplate.vue';
-import KnockoutTemplate from '../components/templates/KnockoutTemplate.vue';
-import MultiStageEventTemplate from '../components/templates/MultiStageEventTemplate.vue';
+import TeamLeagueTemplate from '../components/Templates/TeamLeagueTemplate.vue';
+import TeamSwissTemplate from '../components/Templates/TeamSwissTemplate.vue';
+import IndividualSwissTemplate from '../components/Templates/IndividualSwissTemplate.vue';
+import IndividualRoundRobinTemplate from '../components/Templates/IndividualRoundRobinTemplate.vue';
+import KnockoutTemplate from '../components/Templates/KnockoutTemplate.vue';
+import MultiStageEventTemplate from '../components/Templates/MultiStageEventTemplate.vue';
 
 
 // --- 2. PROPS & STATE ---
@@ -273,6 +278,15 @@ async function fetchGenericTournamentData() {
         tournamentData.value[key] = data;
       }
     });
+
+    // Ensure the 'info' object always contains values from the master list
+    // (so templates can reliably read TournamentName / TournamentID).
+    if (currentTournament) {
+      tournamentData.value.info = {
+        ...currentTournament,
+        ...(tournamentData.value.info || {})
+      };
+    }
 
   } catch (e) {
     console.error(e);

@@ -3,7 +3,7 @@
     <div class="container">
       <div class="page-header text-center mb-5">
         <h1 class="tournament-title">
-          {{ info.TournamentName || "Tournament" }}
+          {{ tournamentTitle }}
         </h1>
         <p class="tournament-subtitle">
           {{ info.Format || "Tournament Details" }}
@@ -467,6 +467,7 @@ const props = defineProps({
   teamsPlayers: Array,
   teamMatches: Array,
   individualGames: Array,
+  TournamentsList: { type: Array, default: () => [] }
 });
 
 // --- STATE ---
@@ -808,6 +809,19 @@ const showTeamRecords = (team) => {
 const closeModal = () => {
   showRecordModal.value = false;
 };
+
+// Tournament title lookup
+const tournamentTitle = computed(() => {
+  const list = props.TournamentsList || [];
+  if (Array.isArray(list) && list.length && props.info) {
+    const id = props.info.TournamentID || props.info.id || props.info.ID;
+    if (id) {
+      const m = list.find(t => String(t.TournamentID || t.id || t.ID) === String(id));
+      if (m) return m.TournamentName || m.Name || m.title || props.info.TournamentName;
+    }
+  }
+  return props.info?.TournamentName || 'Tournament';
+});
 </script>
 
 <style scoped>
@@ -835,7 +849,7 @@ const closeModal = () => {
   #standings-pane .btn-check:checked+.btn-outline-warning { background-color: #FFD700; color: #0a0a0a; font-weight: 700; box-shadow: 0 0 15px rgba(255, 215, 0, 0.5); }
   #standings-pane .table thead { background: linear-gradient(45deg, #FFD700, #e6b200); color: #1a1a1a; text-transform: uppercase; }
   #standings-pane .table tbody tr { animation: fade-in-up 0.5s ease-out both; }
-  #standings-pane .table tbody tr:nth-child(even) { background-color: rgba(255,255,25Next,0.02); }
+  #standings-pane .table tbody tr:nth-child(even) { background-color: rgba(255,255,255,0.02); }
   #standings-pane .table tbody tr:hover { background-color: rgba(255, 215, 0, 0.1); }
   #standings-pane .clickable-name { cursor: pointer; text-decoration: underline dotted rgba(255, 215, 0, 0.5); transition: all 0.2s ease; }
   #standings-pane .clickable-name:hover { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); transform: scale(1.05); }
@@ -1158,7 +1172,7 @@ const closeModal = () => {
       padding: 0.25rem 1.5rem;
       box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
       font-weight: 900;
-      background: #0a0a0a;
+      color: #FFD700; background: linear-gradient(45deg, #4b0101, #2408a5);
       border: 2px solid #FFD700;
     }
     .pairing-card .list-group-item {

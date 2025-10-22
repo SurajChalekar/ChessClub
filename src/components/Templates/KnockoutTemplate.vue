@@ -2,7 +2,7 @@
   <div class="knockout-page">
     <div class="container">
       <div class="page-header text-center mb-5">
-        <h1 class="tournament-title">{{ info.TournamentName || 'Tournament' }}</h1>
+        <h1 class="tournament-title">{{ tournamentTitle }}</h1>
         <p class="tournament-subtitle">{{ info.Format || 'Tournament Details' }}</p>
       </div>
 
@@ -87,7 +87,8 @@ const props = defineProps({
   documents: Array,
   gallery: Array,
   participants: Array, // Note: This uses 'participants' prop
-  bracketMatches: Array // Note: This uses 'bracketMatches' prop
+  bracketMatches: Array, // Note: This uses 'bracketMatches' prop
+  TournamentsList: { type: Array, default: () => [] }
 });
 
 // --- 2. LOGIC ---
@@ -119,6 +120,19 @@ const bracketRounds = computed(() => {
   }
   
   return Object.values(rounds);
+});
+
+// Tournament title lookup
+const tournamentTitle = computed(() => {
+  const list = props.TournamentsList || [];
+  if (Array.isArray(list) && list.length && props.info) {
+    const id = props.info.TournamentID || props.info.id || props.info.ID;
+    if (id) {
+      const m = list.find(t => String(t.TournamentID || t.id || t.ID) === String(id));
+      if (m) return m.TournamentName || m.Name || m.title || props.info.TournamentName;
+    }
+  }
+  return props.info?.TournamentName || 'Tournament';
 });
 
 </script>
