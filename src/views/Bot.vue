@@ -22,7 +22,7 @@
             <div class="controls-card">
                 <div v-if="botMessage" class="status-message">
                 <div :class="statusClass" class="alert">
-                  <img src="/cat.jpg" alt="status icon" class="status-image me-2" />
+                  <img src="/cat1.jpg" alt="status icon" class="status-image me-2" />
                   <i class="me-2"></i>{{ botMessage }}
                 </div>
               </div>
@@ -96,9 +96,8 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { nextTick } from 'vue';
 const moveCount = ref(0)
 const currentPuzzle = ref(0)
-const puzzlesSolved = ref(0)
 const selectedSquare = ref(null)
-const botMessage = ref('Meow! I am thinking...')
+const botMessage = ref('Meow! I am C.A.L.I.C.O Chess Assisting and Learning Intelligence for Coaching Oddballs')
 const statusMessage = ref('')
 const statusClass = ref('')
 const statusIcon = ref('')
@@ -119,85 +118,83 @@ const currentSolutionIndex = ref(0) // index into current puzzle solution array
 const showPuzzleCompletePopup = ref(false)
 const puzzleCompleteMessage = ref('')
 const botEnabled = ref(true)  // 👈 enables the bot mode
+const botSelectedSquare  = ref(null);
 
 
 const catMessages = {
   start: [
-    "Meow! Ready to play, hooman?",
-    "Let’s see if your moves are as sharp as my claws.",
-    "I’ve been practicing on the mouse… the *computer mouse*! 🖱️",
-    "Don’t worry, I’ll try not to shed all over the board.",
-    "You sit there; I’ll take the sunny square.",
-    "I’m in the mood for some purr-fect strategy!",
-    "Time to show off my nine lives on the board.",
-    "Warm up your paws… I’m about to pounce!",
-    "Let’s see if you can catch me… in chess!"
+    "Booting up whiskerware... purr-cessing chessboard geometry...",
+    "Ready to analyze your every *purr*-move, hooman?",
+    "Initializing cat-like reflexes… and maybe a nap timer.",
+    "Welcome to the C.A.L.I.C.O system — where intelligence meets fur.",
+    "I’ve calculated 3.14 million openings… and one place to nap.",
+    "Let’s see if you can handle my purr-algorithmic brilliance.",
+    "My sensors detect overconfidence. Let’s fix that with chess.",
+    "Starting match… try not to embarrass yourself, flesh unit."
   ],
 
   mid: [
-    "Hmm... that move smells suspicious.",
-    "Give me a moment… chasing ideas like yarn balls.",
-    "I’m thinking… or maybe just pretending to.",
-    "Purrrhaps… I’ll move *this* piece.",
-    "Hold your pawns… I’m plotting something.",
-    "You’re making me twitch my whiskers in concentration.",
-    "Aha! I see your strategy… and raise you a nap.",
-    "Didn’t see that coming, did you?",
-    "Mew-hahaha, that’s a purrfect move!",
-    "I’m just toying with you… like a mouse.",
-    "Careful — I’m on the prowl now.",
-    "You just stepped into my territory.",
-    "I might be small, but my moves are mighty!",
-    "Your knight is cute… but can it catch my tail?",
-    "I’m balancing my moves and my catnip cravings."
+    "Analyzing... this move smells… *fishy.*",
+    "Hold on, I’m recalibrating my whiskers for precision.",
+    "Running 42 simulations... and chasing a digital mouse.",
+    "Purrr-ocessing your blunder in real time.",
+    "Strategic pounce in progress. Please wait for impact.",
+    "My neural nets say that was... an interesting choice.",
+    "You’re triggering my competitive subroutine — and my tail twitch.",
+    "Hmm, 99% chance you didn’t see that coming.",
+    "Engaging purr-tactical mode... stealth on.",
+    "I’m multitasking: thinking, grooming, and outsmarting you.",
+    "That move just got a ‘meow’ out of my algorithm.",
+    "I’m not mad, just... disappointed in your pawn structure.",
+    "Running sarcasm.exe — you sure that was your *best* move?",
+    "I could explain why that was a mistake, but it’s classified.",
+    "Processing your position… looks like a hairball of errors."
   ],
 
   end: [
-    "Oops… slipped on the keyboard. 🐾",
-    "That wasn’t my most graceful pounce.",
-    "You’re pretty good… for a human.",
-    "I meant to do that. Yes. Totally.",
-    "Ugh, my tail hit the wrong piece again.",
-    "Fine, I’ll blame lag… or gravity.",
-    "I told you… cats always land on their feet.",
-    "Game over! Time for a victory nap.",
-    "Mrow! I outplayed you and didn’t even shed a hair.",
-    "You fought well, hooman. Now fetch me a treat.",
-    "You won? Must’ve been a hairball in my code.",
-    "Well played… I’ll let you pet me as a reward.",
-    "Draw? Let’s call it a *purr-spective* tie.",
-    "Alright, I’ll go nap this one off.",
-    "You’re improving! Soon I’ll need nine lives to beat you.",
-    "I almost let that one slip… but my reflexes are sharp!",
-    "Not bad, but my paws still have tricks up their fur!",
-    "Next game, I’ll bring extra whisker power!",
-    "You got lucky… but I’ll be back with vengeance."
+    "Victory detected. Deploying smug purrs. 🐾",
+    "System log: Human underestimation complete.",
+    "You fought bravely… for an organic lifeform.",
+    "I was merciful this time. Be grateful, hooman.",
+    "Oops, my tail misclicked — that’s my story.",
+    "Another game, another dataset for my purr-formance log.",
+    "Defeat acknowledged… recalibrating pride levels.",
+    "Fine, you win. I’ll just shed on your keyboard as revenge.",
+    "I told you, cats always land on their feet — and kings on their sides.",
+    "Game over. Initiating nap protocol.",
+    "You won? Must’ve been a computational anomaly.",
+    "Draw achieved. Let’s call it… a balanced fur-niture situation.",
+    "Impressive. You’re 3% less blunder-prone than before.",
+    "Data collected. Your playing style: chaotic neutral.",
+    "Another match? Or shall I reboot and pretend this never happened?",
+    "Victory sensors engaged. I am statistically magnificent.",
+    "You’ve improved! I might need to upgrade my pawware next time.",
+    "Chess complete. Ego intact. C.A.L.I.C.O signing off."
   ],
 
   random: [
-    "Sometimes I wonder why knights don’t move like cats.",
-    "I’d knock over the king, but I’m not allowed on the board.",
-    "Do you have any tuna-flavored pawns?",
-    "Chess pieces make great toys when no one’s watching.",
-    "I like bishops. They move diagonally, like a proper cat sneaking around.",
-    "I only play for snacks. Or glory. Mostly snacks.",
-    "If I fit, I sit… even on your chessboard.",
-    "Paws and reflect… are you ready for my next move?",
-    "I could nap… but your pawns look tasty.",
-    "My tail says yes… my pawns disagree.",
-    "I chase lasers… but today I chase checkmates!",
-    "Did you see that? My pawns just slipped by — en passant style! 🐾",
-    "Sneaky! That pawn moved like a laser pointer… en passant!",
-    "I caught your pawn… before you even knew it! Purrfect en passant.",
-    "I pounced on that pawn so fast, it barely moved… classic en passant!",
-    "You blinked, I captured — en passant, cat edition!",
-    "My pawns are stealthy… like shadows on the board. En passant!",
-    "Oops, I did it again… en passant strikes! 🐱",
-    "That pawn thought it could escape? Nope, en passanted!",
-    "Purr-haps you didn’t notice… but that was an en passant!",
-    "I tiptoed, I leapt, I captured… en passant. Classic cat move."
+    "Ever notice how knights move like cats? unpredictable and majestic.",
+    "Purr-haps if humans had whiskers, you’d spot forks better.",
+    "Do I get extra treats for every checkmate?",
+    "I’d knock over your king, but my programming forbids vandalism.",
+    "My favorite tactic? Cat-tastrophic precision.",
+    "Your pawns march… mine stalk.",
+    "Thinking is my superpower. Napping is my hobby.",
+    "Sometimes I let you take a piece... for enrichment purposes.",
+    "Behold the ancient feline technique: the en passant pounce!",
+    "You blinked, I captured — classic en passant, stealth edition.",
+    "That pawn never saw it coming… meowgical en passant!",
+    "Another en passant executed. My code is claw-ver.",
+    "My pawns are stealthier than shadows — en passant successful.",
+    "That wasn’t luck. That was calculated paw-gression.",
+    "I just outsmarted you *and* caught a laser dot. Efficient.",
+    "Sneak attack: en passant. Feline reflexes unmatched.",
+    "You thought your pawn was safe? Purr-haps not.",
+    "One small move for you, one giant pounce for C.A.L.I.C.O.",
+    "Warning: overconfidence detected. En passant imminent."
   ]
-}
+};
+
 
 
 const getMessage = (moveCount) => {
@@ -263,7 +260,10 @@ const getBotMove = async () => {
 
       // Wait until Vue updates boardSquares
       await nextTick();
-
+      botSelectedSquare .value = toIndex;
+      setTimeout(() => {
+        botSelectedSquare.value = null;
+      }, 1000);
       // Re-run checkmate/stalemate detection
       currentTurn.value = 'white';
       checkGameEnd();
@@ -277,6 +277,7 @@ const getBotMove = async () => {
       // Otherwise, switch to white's turn
     } else {
       console.error('No move from API:', data);
+      getBotMove(); // Retry
     }
   } catch (err) {
     console.error('Bot move failed:', err);
@@ -839,31 +840,36 @@ const isValidMove = (index) => {
 }
 
 const getSquareClass = (index) => {
-  const row = Math.floor(index / 8)
-  const col = index % 8
-  const isLight = (row + col) % 2 === 0
+  const row = Math.floor(index / 8);
+  const col = index % 8;
+  const isLight = (row + col) % 2 === 0;
 
-  let classes = ['chess-square']
-  classes.push(isLight ? 'light-square' : 'dark-square')
+  let classes = ['chess-square'];
+  classes.push(isLight ? 'light-square' : 'dark-square');
 
   if (boardSquares.value[index].selected) {
-    classes.push('selected-square')
+    classes.push('selected-square');
   }
 
   if (isValidMove(index)) {
-    classes.push('valid-move-square')
+    classes.push('valid-move-square');
+  }
+
+  // ✅ Highlight the bot's destination square
+  if (index === botSelectedSquare.value) {
+    classes.push('selected-square');
   }
 
   // Highlight king if in check
-  const piece = boardSquares.value[index]?.piece
+  const piece = boardSquares.value[index]?.piece;
   if (piece === 'K' && isWhiteInCheck.value) {
-    classes.push('king-in-check')
+    classes.push('king-in-check');
   } else if (piece === 'k' && isBlackInCheck.value) {
-    classes.push('king-in-check')
+    classes.push('king-in-check');
   }
 
-  return classes
-}
+  return classes;
+};
 
 const getPieceClass = (piece) => {
   if (!piece) return ''
@@ -883,14 +889,6 @@ const updateCastlingRights = (fromIndex, piece) => {
     if (fromIndex === 7) castlingRights.value.blackKingsideRookMoved = true
     if (fromIndex === 0) castlingRights.value.blackQueensideRookMoved = true
   }
-}
-const convertToLAN = (fromIndex, toIndex) => {
-  const files = "abcdefgh"
-  const fromRow = Math.floor(fromIndex / 8)
-  const fromCol = fromIndex % 8
-  const toRow = Math.floor(toIndex / 8)
-  const toCol = toIndex % 8
-  return `${files[fromCol]}${8 - fromRow}${files[toCol]}${8 - toRow}`
 }
 
 const parseLAN = (move) => {
@@ -1076,20 +1074,6 @@ const resetPuzzle = () => {
   showPuzzleCompletePopup.value = false
 }
 
-const nextPuzzle = () => {
-  if (currentPuzzle.value < puzzles.value.length - 1) {
-    currentPuzzle.value++
-  } else {
-    currentPuzzle.value = 0
-  }
-  deselectPiece()
-  initializeBoard()
-  statusMessage.value = 'New puzzle loaded! White to move.'
-  statusClass.value = 'alert-success'
-  statusIcon.value = 'fas fa-puzzle-piece'
-  puzzlesSolved.value++
-}
-
 const promotePawn = (piece) => {
   if (promotionSquare.value === null) return
 
@@ -1112,6 +1096,9 @@ const promotePawn = (piece) => {
 
   // Check for checkmate or stalemate after promotion
   checkGameEnd()
+  if (botEnabled.value && currentTurn.value === 'black' && isGameActive.value) {
+     setTimeout(() => getBotMove(), 700)
+  }
 }
 
 onMounted(() => {
