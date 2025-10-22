@@ -38,7 +38,7 @@
 
     <section class="events-content py-5">
       <div class="container">
-        <div class="row mb-5" v-if="featuredEvent">
+        <div class="row mb-5" v-if="featuredEvents.length">
           <div class="col-12">
             <div class="section-header text-center mb-4">
               <div class="section-badge mb-3">
@@ -47,25 +47,26 @@
                 </span>
               </div>
             </div>
-            <div class="featured-event-card">
+
+            <div v-for="item in featuredEvents" :key="item.id" class="featured-event-card mb-4">
               <div class="featured-bg"></div>
               <div class="row align-items-center">
                 <div class="col-lg-8">
                   <div class="featured-content p-5">
-                    <h2 class="featured-title mb-3">{{ featuredEvent.title }}</h2>
-                    <p class="featured-description mb-4">{{ featuredEvent.description }}</p>
+                    <h2 class="featured-title mb-3">{{ item.title }}</h2>
+                    <p class="featured-description mb-4">{{ item.description }}</p>
                     <div class="featured-details d-flex flex-wrap gap-4 mb-4">
                       <div class="detail-item">
                         <i class="fas fa-calendar-alt me-2"></i>
-                        <strong>{{ formatDate(featuredEvent.date) }}</strong>
+                        <strong>{{ formatDate(item.date) }}</strong>
                       </div>
                       <div class="detail-item">
                         <i class="fas fa-clock me-2"></i>
-                        <strong>{{ featuredEvent.time }}</strong>
+                        <strong>{{ item.time }}</strong>
                       </div>
                       <div class="detail-item">
                         <i class="fas fa-users me-2"></i>
-                        <strong>{{ featuredEvent.participants }} members interested</strong>
+                        <strong>{{ item.participants }} members interested</strong>
                       </div>
                     </div>
                   </div>
@@ -73,12 +74,13 @@
                 <div class="col-lg-4 d-none d-lg-block">
                   <div class="featured-visual text-center p-4">
                     <div class="featured-icon">
-                      <span class="display-1">{{ featuredEvent.icon }}</span>
+                      <span class="display-1">{{ item.icon }}</span>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -160,11 +162,25 @@ const events = ref([
     type: 'Open League Championship',
     level: 'All',
     description: 'IPL-like Franchise based featured league tournament of IISER TVM',
-    participants: 40,
+    participants: 53,
     location: 'CDH 2',
     status: 'Ongoing',
     featured: true, 
     icon: '♛' // 🎯 Queen Icon
+  },
+  {
+    id: 4,
+    title: "ITSAV",
+    date: '17-10-2025', 
+    time: 'Friday:21:00,Sat-Sun: 15:00',
+    type: 'Open Arena Championship',
+    level: 'All',
+    description: 'The ultimate test of chess supremacy. Battle of 4 teams in a 10v10v10v10 swiss Arena conquest. Winner takes the crown.',
+    participants: 47,
+    location: 'CDH 2',
+    status: 'Completed',
+    featured: true, 
+    icon: '♛'
   },
   /*{ // ♟️ LATEST COMMUNIQUE (Newest) - ICON: PAWN
     id: 4,
@@ -212,16 +228,28 @@ const events = ref([
   },
 ])
 
-const featuredEvent = computed(() => events.value.find(event => event.featured))
+const parseDDMMYYYY = (d) => {
+  if (!d) return new Date(0);
+  const m = String(d).match(/(\d{1,2})-(\d{1,2})-(\d{4})/);
+  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+  const alt = new Date(d);
+  return isNaN(alt.getTime()) ? new Date(0) : alt;
+};
+
+const featuredEvents = computed(() => {
+  const featured = events.value.filter(e => e.featured);
+  return featured.sort((a, b) => parseDDMMYYYY(b.date) - parseDDMMYYYY(a.date));
+});
 const upcomingEvents = computed(() => events.value.filter(event => new Date(event.date) > new Date()))
 const totalParticipants = computed(() => events.value.reduce((sum, event) => sum + event.participants, 0))
 
 const filteredEvents = computed(() => {
   let list = events.value.filter(event => {
-    // Filters out the featured event and applies user filters
-    const typeMatch = selectedType.value === 'all' || event.type === selectedType.value
-    const levelMatch = selectedLevel.value === 'all' || event.level === selectedLevel.value || event.level === 'all'
-    return typeMatch && levelMatch && !event.featured // Excludes the single featured item
+    // Exclude any featured items and apply user filters
+    const isFeatured = !!event.featured;
+    const typeMatch = selectedType.value === 'all' || event.type === selectedType.value;
+    const levelMatch = selectedLevel.value === 'all' || event.level === selectedLevel.value || event.level === 'all';
+    return typeMatch && levelMatch && !isFeatured;
   })
 
   // Sorts the list by date, newest date first (descending)
@@ -374,13 +402,8 @@ onMounted(() => {
   padding: 2rem;
 }
 
-.filter-group {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
 
+  
 .filter-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -633,6 +656,17 @@ onMounted(() => {
   .featured-title {
     font-size: 2rem;
   }
+
+  /* Make featured visual visible on mobile and center it above content */
+  .featured-visual { display: block; text-align: center; padding: 1rem 0; }
+  .featured-icon { font-size: 3.5rem; display: inline-block; }
+
+  .featured-event-card .row {
+    display: flex;
+    flex-direction: column;
+  }
+  .featured-event-card .col-lg-4 { display: block; }
+  .featured-content { padding: 1.25rem; }
   
   .filter-card {
     padding: 1.5rem;
@@ -652,9 +686,43 @@ onMounted(() => {
     flex-direction: column;
     gap: 1rem;
   }
-}
 
-@media (max-width: 576px) {
+  .hero-stats {
+    flex-direction: column;
+    gap: 1rem !important; /* Space between stat items */
+    width: 100%;
+    padding: 0 1rem; /* Add side padding */
+  }
+
+  .hero-stats .stat-item {
+   display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    text-align: left;
+    padding: 1rem;
+    background: rgba(255, 215, 0, 0.05); /* Faint gold bg */
+    border-radius: 8px; 
+    border-left: 4px solid #FFD700; /* Gold accent */
+    margin-bottom: 0;
+  }
+
+  .hero-stats .stat-number {
+    font-size: 3.2rem !important;
+    font-weight: 900;
+    color: #ff8a00;
+    -webkit-text-fill-color: unset;
+    margin: 20px ;
+    line-height: 1;
+  }
+
+ .hero-stats .stat-label {
+    font-size: 1.3rem;
+    line-height: 1.2;
+    opacity: 0.9; /* Make it a bit brighter */
+  }
+
+
+
   .events-grid {
     grid-template-columns: 1fr;
   }
@@ -670,6 +738,61 @@ onMounted(() => {
   .section-title {
     font-size: 2rem;
   }
+}
+
+/* Tablet specific adjustments: 769px - 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  /* Slightly reduce the hero title for tablets */
+  .hero-title {
+    font-size: 3.2rem;
+  }
+
+  /* Featured card tweaks: show visual on tablets and keep a comfortable side-by-side layout */
+  .featured-title {
+    font-size: 2.2rem;
+  }
+  .featured-visual { display: block; text-align: center; padding: 1rem 0; }
+  .featured-icon { font-size: 4rem; display: inline-block; }
+
+  .featured-event-card .row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+  }
+  /* Ensure the visual column (hidden on small) is visible on tablet */
+  .featured-event-card .col-lg-4 { display: block; }
+  .featured-content { padding: 2.5rem; }
+
+  /* Hero stats: keep horizontal but increase spacing a bit */
+  .hero-stats {
+    flex-direction: row;
+    gap: 2rem;
+    justify-content: center;
+    align-items: center;
+    width: auto;
+    padding: 0;
+  }
+  .hero-stats .stat-number {
+    font-size: 3rem;
+  }
+  .hero-stats .stat-item {
+    padding: 0.75rem 1rem;
+    background: transparent;
+    border-left: none;
+    border-radius: 8px;
+  }
+
+  /* Events grid: two columns on tablet for better balance */
+  .events-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.75rem;
+  }
+  .event-card {
+    padding: 1.75rem;
+  }
+
+  .section-title { font-size: 2.6rem; }
 }
 
 /* Animations */

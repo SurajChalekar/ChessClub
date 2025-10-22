@@ -216,11 +216,11 @@ onMounted(() => {
   margin-bottom: 1.5rem;
 }
 .text-glow {
-  background: linear-gradient(45deg, #ff8800, #ffc837); /* Vibrant Orange/Yellow */
+  background: linear-gradient(45deg, #dc3545, #ffc107, #f72585);
   -webkit-background-clip: text;
-  background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 30px rgba(255, 165, 0, 0.7);
+  background-clip: text;
+  text-shadow: 0 0 40px rgba(220, 53, 69, 0.5);
   animation: titlePulse 4s ease-in-out infinite;
 }
 .hero-subtitle {
@@ -277,6 +277,21 @@ onMounted(() => {
 .chess-shadow { box-shadow: 0 0 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(255, 215, 0, 0.05); }
 .btn-dark-outline-gold { color: #FFD700; border-color: #FFD700; background-color: rgba(255, 215, 0, 0.05); font-size: 1.5rem; font-weight: 700; transition: all 0.3s ease; border-radius: 12px; }
 .btn-dark-outline-gold:hover { color: #0a0a0a; background-color: #FFD700; border-color: #FFD700; transform: translateY(-2px); box-shadow: 0 5px 20px rgba(255, 215, 0, 0.4); }
+
+/* When Past Tournaments is expanded, tone down the glow so it's not overpowering */
+.btn-dark-outline-gold[aria-expanded="true"] {
+  transform: none; /* avoid floating effect when expanded */
+  background-color: rgba(255,215,0,0.08); /* subtle background */
+  color: #FFD700;
+  border-color: rgba(255,215,0,0.25);
+  box-shadow: 0 2px 8px rgba(255, 215, 0, 0.16) !important; /* much softer glow */
+}
+
+/* Also reduce focus ring/glow when expanded to keep it subtle */
+.btn-dark-outline-gold[aria-expanded="true"]:focus {
+  box-shadow: 0 2.1px 10px rgba(255,215,0,0.18) !important;
+  outline: none;
+}
 
 
 /* ============================================= */

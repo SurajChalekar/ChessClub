@@ -39,16 +39,18 @@ import { computed } from 'vue';
 // --- 1. DEFINE PROPS ---
 const props = defineProps({
   parentId: String,
-  allTournaments: Array
+  allTournaments: Array,
+  TournamentsList: { type: Array, default: () => [] }
 });
 
 // --- 2. LOGIC ---
-const parentTournament = computed(() => {
-  return props.allTournaments.find(t => t.TournamentID === props.parentId) || {};
-});
+const sourceList = computed(() => (Array.isArray(props.TournamentsList) && props.TournamentsList.length ? props.TournamentsList : props.allTournaments || []));
 
+const parentTournament = computed(() => {
+  return sourceList.value.find(t => t.TournamentID === props.parentId) || {};
+});
 const childTournaments = computed(() => {
-  return props.allTournaments.filter(t => t.ParentEventID === props.parentId);
+  return sourceList.value.filter(t => t.ParentEventID === props.parentId);
 });
 
 // Placeholder for combined standings logic
