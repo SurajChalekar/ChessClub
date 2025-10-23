@@ -655,7 +655,7 @@ const resetFilters = () => {
 .featured-icon-wrapper {
   position: absolute;
   top: 15%;
-  right: 2.5rem;
+  right: 1.35rem;
   transform: translateY(-50%);
   width: 4rem;
   height: 4rem;
