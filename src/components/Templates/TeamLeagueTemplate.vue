@@ -1280,7 +1280,7 @@ onBeforeUnmount(() => {
     
     #standings-pane .table {
       white-space: nowrap; 
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       margin-bottom: 0;
     }
     #standings-pane .table th,
@@ -1425,9 +1425,9 @@ onBeforeUnmount(() => {
         'board board board'
         'playerA result playerB';
       grid-template-columns: 1fr auto 1fr;
-      gap: 0.5rem 0.5rem;
+      gap: 0.4rem 0.4rem;
       padding: 1rem 0.75rem;
-      font-size: 1rem;
+      font-size: 0.84rem;
       white-space: normal;
       border-bottom: 1px solid #333;
     }
@@ -1437,22 +1437,22 @@ onBeforeUnmount(() => {
     .board-number {
       grid-area: board;
       justify-self: center;
-      font-size: 0.9rem;
-      padding-bottom: 0.5rem;
+      font-size: 0.8rem;
+      padding-bottom: 0.4rem;
       color: #FFD700;
       text-align: center;
       width: 100%;
     }
     .pairing-card .list-group-item > span:nth-child(2) {
       grid-area: playerA;
-      text-align: right;
-      font-weight: 600;
+      text-align: left;
+      font-weight: 500;
     }
     .pairing-card .list-group-item > span:nth-child(3) {
       grid-area: result;
       justify-self: center;
       font-weight: 900;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #FFD700;
       background: rgba(0,0,0,0.4);
       padding: 0.25rem 0.6rem;
@@ -1462,8 +1462,8 @@ onBeforeUnmount(() => {
     }
     .pairing-card .list-group-item > span:nth-child(4) {
       grid-area: playerB;
-      text-align: left;
-      font-weight: 600;
+      text-align: right;
+      font-weight: 500;
     }
 
     /* --- Teams Pane --- */
