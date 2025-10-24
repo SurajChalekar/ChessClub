@@ -734,67 +734,90 @@ const pairingsForSelectedRoundOrStage = computed(() => {
 });
 
 const teamsList = computed(() => {
-  if (!props.teamsPlayers?.length) return [];
-  const teamsMap = new Map();
+    // Return empty array if player data is missing or empty
+    if (!props.teamsPlayers?.length) return [];
+    
+    const teamsMap = new Map();
 
-  // Group players by team and separate by type
-  props.teamsPlayers.forEach((p) => {
-    if (!teamsMap.has(p.TeamID)) {
-      teamsMap.set(p.TeamID, {
-        TeamID: p.TeamID,
-        TeamName: p.TeamName,
-        captains: [],
-        owners: [],
-        players: [],
-      });
-    }
-    const team = teamsMap.get(p.TeamID);
-    if (p.PlayerType === "Captain") team.captains.push(p);
-    else if (p.PlayerType === "Owner") team.owners.push(p);
-    else team.players.push(p);
-  });
+    // Group players by team and separate by type
+    props.teamsPlayers.forEach((p) => {
+        // Basic validation: skip if essential data is missing
+        if (!p || !p.TeamID || !p.TeamName) {
+            console.warn("Skipping invalid player/team data:", p);
+            return; // Skip this player entry
+        }
 
-  // Sort players within each group
-  teamsMap.forEach((team) => {
-    team.captains.sort((a, b) => a.PlayerName.localeCompare(b.PlayerName));
-    team.owners.sort((a, b) => a.PlayerName.localeCompare(b.PlayerName));
-    team.players.sort((a, b) => a.PlayerName.localeCompare(b.PlayerName));
-  });
+        // Initialize team entry if it doesn't exist
+        if (!teamsMap.has(p.TeamID)) {
+            teamsMap.set(p.TeamID, {
+                TeamID: p.TeamID,
+                TeamName: p.TeamName,
+                captains: [],
+                owners: [],
+                players: [],
+            });
+        }
+        const team = teamsMap.get(p.TeamID);
 
-  // Get team performance ranks from teamStandings
-  const standings = teamStandings.value;
-  const rankMap = new Map(
-    standings.map((t) => [
-      t.TeamID,
-      { rank: t.rank, matchPoints: t.matchPoints, gamePoints: t.gamePoints },
-    ])
-  );
+        // Ensure player object has PlayerName before adding, provide default if missing
+        const playerName = p.PlayerName || 'Unknown Player'; 
+        const playerToAdd = { ...p, PlayerName: playerName }; // Create a new object with guaranteed PlayerName
 
-  const teamsArray = Array.from(teamsMap.values());
+        // Add player to the correct group based on PlayerType
+        if (p.PlayerType === "Captain") team.captains.push(playerToAdd);
+        else if (p.PlayerType === "Owner") team.owners.push(playerToAdd);
+        else team.players.push(playerToAdd);
+    });
 
-  // Sort teams based on rank, then match points, then game points
-  teamsArray.sort((a, b) => {
-    const teamAStats = rankMap.get(a.TeamID) || {
-      rank: Infinity,
-      matchPoints: -1,
-      gamePoints: -1,
-    };
-    const teamBStats = rankMap.get(b.TeamID) || {
-      rank: Infinity,
-      matchPoints: -1,
-      gamePoints: -1,
-    };
+    // Safe sort function to handle potential missing names
+    const safeSort = (a, b) => (a.PlayerName || '').localeCompare(b.PlayerName || '');
 
-    if (teamAStats.rank !== teamBStats.rank) return teamAStats.rank - teamBStats.rank;
-    if (teamAStats.matchPoints !== teamBStats.matchPoints)
-      return teamBStats.matchPoints - teamAStats.matchPoints;
-    if (teamAStats.gamePoints !== teamBStats.gamePoints)
-      return teamBStats.gamePoints - teamAStats.gamePoints;
-    return 0;
-  });
+    // Sort players alphabetically within each group using safe sort
+    teamsMap.forEach((team) => {
+        team.captains.sort(safeSort);
+        team.owners.sort(safeSort);
+        team.players.sort(safeSort);
+    });
 
-  return teamsArray;
-});
+    // Get team performance ranks from teamStandings
+    const standings = teamStandings.value; // Assuming teamStandings computed property exists
+    const rankMap = new Map(
+        standings.map((t) => [
+            t.TeamID,
+            { rank: t.rank, matchPoints: t.matchPoints, gamePoints: t.gamePoints },
+        ])
+    );
+
+    const teamsArray = Array.from(teamsMap.values());
+
+    // Sort teams based on rank, then match points, then game points
+    teamsArray.sort((a, b) => {
+        // Use default high rank/low points if team not found in standings
+        const teamAStats = rankMap.get(a.TeamID) || {
+            rank: Infinity,
+            matchPoints: -1,
+            gamePoints: -1,
+        };
+        const teamBStats = rankMap.get(b.TeamID) || {
+            rank: Infinity,
+            matchPoints: -1,
+            gamePoints: -1,
+        };
+
+        // Sort by rank (ascending)
+        if (teamAStats.rank !== teamBStats.rank) return teamAStats.rank - teamBStats.rank;
+        // Then by match points (descending)
+        if (teamAStats.matchPoints !== teamBStats.matchPoints)
+            return teamBStats.matchPoints - teamAStats.matchPoints;
+        // Then by game points (descending)
+        if (teamAStats.gamePoints !== teamBStats.gamePoints)
+            return teamBStats.gamePoints - teamAStats.gamePoints;
+        // Maintain relative order if all tie-breakers are equal
+        return 0; 
+    });
+
+    return teamsArray; // Return the sorted array of team objects
+}); // End of computed property
 
 // --- METHODS ---
 const showPlayerRecords = (player) => {

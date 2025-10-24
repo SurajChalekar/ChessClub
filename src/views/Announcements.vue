@@ -206,90 +206,86 @@ const selectedLevel = ref('all')
 // --- 2. DATA FETCHING ---
 
 // !!! PASTE YOUR "PUBLISH TO WEB" .TSV LINK HERE !!!
-const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXKR8fjcvYBwbZNjWj0b2f6wK7csX3ZW5-dHlFZJZRFZUBSisySWpO_zggkCtc4_e9xPsdp1KV1xQC/pub?output=tsv'
+const SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSXKR8fjcvYBwbZNjWj0b2f6wK7csX3ZW5-dHlFZJZRFZUBSisySWpO_zggkCtc4_e9xPsdp1KV1xQC/pub?gid=0&single=true&output=csv'
 
 /**
  * FIXED: A robust TSV-to-JSON parser.
  * This reads Tab-Separated Values to avoid errors with commas.
  * It also converts headers to lowercase and filters drafts.
  */
-function tsvToJSON(tsv) {
-  const lines = tsv.split(/\r?\n/)
-  if (lines.length < 2) return [] // No data or headers
+/**
+ * Converts CSV text to a JSON array of objects.
+ * Handles commas within double-quoted fields.
+ * Converts headers to lowercase and filters drafts/empty rows.
+ */
+function csvToJSON(csv) {
+  const lines = csv.split(/\r?\n/).filter(line => line.trim() !== ''); // Filter empty lines
+  if (lines.length < 2) return []; // No data or only headers
 
-  const result = []
-  // Get headers, trim, and convert to lowercase for robust matching
-  const headers = lines[0].split('\t').map(h => h.trim().toLowerCase())
+  const result = [];
+  // Get headers, trim, and convert to lowercase
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase().replace(/"/g, ''));
 
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i].trim()
-    
-    // 1. Skip empty lines
-    if (line.length === 0) {
-      continue
-    }
-    
-    const obj = {}
-    const currentline = line.split('\t')
+    const obj = {};
+    // Regex to split by comma unless inside quotes
+    const values = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
 
-    // 2. Build the object
+    // Build the object, cleaning values
     for (let j = 0; j < headers.length; j++) {
-      const header = headers[j]
-      const value = currentline[j] ? currentline[j].trim() : ''
+      const header = headers[j];
+      if (!header) continue; // Skip if header is empty
 
-      // Convert data types
+      const rawValue = values[j] || '';
+      // Trim whitespace and remove surrounding quotes ONLY
+      const value = rawValue.trim().replace(/^"|"$/g, '');
+
+      // Convert data types based on header
       if (header === 'id' || header === 'participants') {
-        obj[header] = Number(value) || 0 // Default to 0 if blank
-      } 
-      else if (header === 'featured' || header === 'draft') {
-        // Handle 'TRUE', 'True', 'true'
-        obj[header] = value.toUpperCase() === 'TRUE' 
+        obj[header] = Number(value) || 0;
+      } else if (header === 'featured' || header === 'draft') {
+        obj[header] = value.toUpperCase() === 'TRUE';
       } else {
-        obj[header] = value
+        obj[header] = value;
       }
     }
-    
-    // 3. Filter out drafts and empty rows
+
+    // Filter out drafts and rows without a title
     if (obj.draft === true) {
-      continue
+      continue;
     }
-    // Skip if it doesn't even have a title (likely an empty row)
     if (!obj.title || obj.title.length === 0) {
-      continue
+      continue;
     }
 
-    result.push(obj)
+    result.push(obj);
   }
-  return result
+  return result;
 }
 
 onMounted(async () => {
-  if (SHEET_URL === 'YOUR_NEW_TSV_LINK_GOES_HERE') {
-    error.value = "Please update the SHEET_URL in the component's script."
-    loading.value = false
-    return
-  }
-
   try {
-    const response = await fetch(SHEET_URL)
+    loading.value = true; // Set loading true at the start
+    error.value = null; // Reset error
+
+    const response = await fetch(SHEET_URL);
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
-    const tsvText = await response.text()
-    
-    // Call the new TSV parser
-    const jsonData = tsvToJSON(tsvText)
-    
-    // FIXED: Assign directly. Parser already filtered drafts/empty rows.
-    events.value = jsonData
-    
+    const csvText = await response.text(); // Use csvText variable
+
+    // Call the new CSV parser
+    const jsonData = csvToJSON(csvText); // Use csvToJSON function
+
+    events.value = jsonData;
+
   } catch (e) {
-    console.error('Error fetching sheet data:', e)
-    error.value = 'Could not fetch or parse data from the Google Sheet.'
+    console.error('Error fetching sheet data:', e);
+    error.value = 'Could not fetch or parse data from the Google Sheet.';
   } finally {
-    loading.value = false
+    loading.value = false;
   }
-})
+});
 
 // --- 3. COMPUTED PROPERTIES ---
 // These computed props will now work correctly
@@ -731,6 +727,8 @@ const resetFilters = () => {
   background: radial-gradient(circle at center, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
   opacity: 0;
   transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .event-card:hover .card-glow {
