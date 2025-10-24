@@ -753,6 +753,7 @@ const teamsList = computed(() => {
       });
     }
     const team = teamsMap.get(p.TeamID);
+    console.log(team);
     if (p.PlayerType === "Captain") team.captains.push(p);
     else if (p.PlayerType === "Owner") team.owners.push(p);
     else team.players.push(p);

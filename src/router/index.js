@@ -13,7 +13,7 @@ const routes = [
   {
     path: '/anouncements',
     name: 'anouncements',
-    component: () => import('../views/Anouncements.vue')
+    component: () => import('../views/Announcements.vue')
   },
   { path: '/bot-mobile', name: 'bot-mobile', component: () => import('../views/BotMobile.vue'), meta: { requiresAuth: true } },
   { path: '/bot', name: 'bot', component: () => import('../views/Bot.vue'), meta: { requiresAuth: true, specialNavbar: true } },
