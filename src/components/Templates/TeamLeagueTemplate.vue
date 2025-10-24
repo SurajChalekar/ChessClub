@@ -9,7 +9,7 @@
           {{ info.Format || "Tournament Details" }}
         </p>
       </div>
-</div>
+
       <ul class="nav nav-tabs nav-fill" id="tournamentTab" role="tablist">
         <li class="nav-item" role="presentation">
           <button
@@ -128,93 +128,94 @@
             </div>
           </div>
         </div>
-
-      <div class="tab-pane fade p-4" id="standings-pane" role="tabpanel">
-  <div class="standings-desktop-toggle d-flex justify-content-center mb-4">
-    <div class="btn-group" role="group">
-      <input
-        type="radio"
-        class="btn-check"
-        name="standingsToggleDesktop"
-        id="teamToggle"
-        autocomplete="off"
-        :checked="activeStandingsView === 'team'"
-        @change="activeStandingsView = 'team'"
-      />
-      <label class="btn btn-outline-warning" for="teamToggle">Team Standings</label>
       
-      <input
-        type="radio"
-        class="btn-check"
-        name="standingsToggleDesktop"
-        id="individualToggle"
-        autocomplete="off"
-        :checked="activeStandingsView === 'individual'"
-        @change="activeStandingsView = 'individual'"
-      />
-      <label class="btn btn-outline-warning" for="individualToggle">Individual Leaderboard</label>
-    </div>
-  </div>
 
-  <div class="standings-select-wrapper">
-    <select v-model="activeStandingsView" class="standings-select">
-      <option value="team">Team Standings</option>
-      <option value="individual">Individual Leaderboard</option>
-    </select>
-  </div>
+       <div class="tab-pane fade p-4" id="standings-pane" role="tabpanel">
+        <div class="standings-desktop-toggle d-flex justify-content-center mb-4">
+          <div class="btn-group" role="group">
+            <input
+              type="radio"
+              class="btn-check"
+              name="standingsToggleDesktop"
+              id="teamToggle"
+              autocomplete="off"
+              :checked="activeStandingsView === 'team'"
+              @change="activeStandingsView = 'team'"
+              />
+
+           <label class="btn btn-outline-warning" for="teamToggle">Team Standings</label>
+      
+            <input
+              type="radio"
+              class="btn-check"
+              name="standingsToggleDesktop"
+              id="individualToggle"
+              autocomplete="off"
+              :checked="activeStandingsView === 'individual'"
+              @change="activeStandingsView = 'individual'"
+            />
+           <label class="btn btn-outline-warning" for="individualToggle">Individual Leaderboard</label>
+          </div>
+        </div>
+        <div class="standings-select-wrapper">
+            <select v-model="activeStandingsView" class="standings-select">
+              <option value="team">Team Standings</option>
+              <option value="individual">Individual Leaderboard</option>
+            </select>
+         </div>
 
 
-  <div v-if="activeStandingsView === 'team'">
-    <h3 class="text-center mb-3">Team Points Table</h3>
-    <div class="table-responsive table-sticky-col">
-      <table class="table table-dark table-hover align-middle text-center">
-        <thead>
-          <tr>
-            <th>Rank</th>
-            <th>Team</th>
-            <th>Match Points</th>
-            <th>Tie-Breaks</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="team in teamStandings" :key="team.TeamID">
-            <td>{{ team.rank }}</td>
-            <td @click="showTeamRecords(team)" class="clickable-name">
-              {{ team.TeamName }}
-            </td>
-            <td>{{ team.matchPoints }}</td>
-            <td>{{ team.gamePoints.toFixed(1) }}</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
+        <div v-if="activeStandingsView === 'team'">
+          <h3 class="text-center mb-3">Team Points Table</h3>
+          <div class="table-responsive table-sticky-col">
+            <table class="table table-dark table-hover align-middle text-center">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Team</th>
+                  <th>Match Points</th>
+                  <th>Tie-Breaks</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="team in teamStandings" :key="team.TeamID">
+                  <td>{{ team.rank }}</td>
+                  <td @click="showTeamRecords(team)" class="clickable-name">
+                    {{ team.TeamName }}
+                  </td>
+                  <td>{{ team.matchPoints }}</td>
+                  <td>{{ team.gamePoints.toFixed(1) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
 
-  <div v-if="activeStandingsView === 'individual'">
-    <h3 class="text-center mb-3">Individual Leaderboard (All Stages)</h3>
-    <table class="table table-dark table-hover align-middle text-center individual-leaderboard-table">
-      <thead>
-        <tr>
-          <th>Rank</th>
-          <th>Player</th>
-          <th>Team</th>
-          <th>Points</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="player in individualStandings" :key="player.PlayerID">
-          <td>{{ player.rank }}</td>
-          <td @click="showPlayerRecords(player)" class="clickable-name">
-            {{ player.PlayerName }}
-            <span v-if="player.PlayerType === 'Captain'" class="captain-tag"> (C)</span>
-          </td>
-          <td>{{ player.TeamName }}</td>
-          <td>{{ player.points.toFixed(1) }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+        <div v-if="activeStandingsView === 'individual'">
+          <h3 class="text-center mb-3">Individual Leaderboard (All Stages)</h3>
+          <table class="table table-dark table-hover align-middle text-center individual-leaderboard-table">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Player</th>
+                <th>Team</th>
+                <th>Points</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="player in individualStandings" :key="player.PlayerID">
+                <td>{{ player.rank }}</td>
+                <td @click="showPlayerRecords(player)" class="clickable-name">
+                  {{ player.PlayerName }}
+                  <span v-if="player.PlayerType === 'Captain'" class="captain-tag"> (C)</span>
+                </td>
+                <td>{{ player.TeamName }}</td>
+                <td>{{ player.points.toFixed(1) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        </div>
 
         <div class="tab-pane fade p-4" id="pairings-pane" role="tabpanel">
           <div class="d-flex justify-content-center mb-4">
@@ -266,12 +267,10 @@
         
         <div class="tab-pane fade p-4" id="playoffs-pane" role="tabpanel">
             <h2 class="tab-title text-center mb-4">Playoff Bracket</h2>
-      <!-- Always-show IPL style bracket; use actual data when available, otherwise show dummy placeholders -->
-            <div class="playoff-container">
-                <div class="ipl-bracket-wrapper">
-                  <div class="ipl-bracket-columns">
-                    <!-- Left column: Semifinals stacked vertically (same X position) -->
-                    <div class="ipl-column semifinals-column">
+        <div class="playoff-container">
+          <div class="ipl-bracket-wrapper">
+            <div class="ipl-bracket-columns">
+             <div class="ipl-column semifinals-column">
                       <div class="ipl-stage semi1 stacked-stage" data-node="semi1">
                         <h5>Semifinal 1</h5>
                         <div class="matchup" v-if="playoffs.semi1">
@@ -295,14 +294,11 @@
                           </div>
                         </div>
                       </div>
-                    </div>
+             </div>
+             <div class="ipl-column third-column" aria-hidden="true"></div>
 
-                    <!-- Middle column: (empty placeholder for spacing) -->
-                    <div class="ipl-column third-column" aria-hidden="true"></div>
-
-                    <!-- Right column: Final (stacked with 3rd place below) -->
-                    <div class="ipl-column final-column stacked-final-column">
-                      <div class="ipl-stage final center-stage" data-node="final">
+             <div class="ipl-column final-column stacked-final-column">
+              <div class="ipl-stage final center-stage" data-node="final">
                         <h5>Final</h5>
                         <div class="matchup" v-if="playoffs.final">
                           <div class="participant" :class="{winner: playoffs.final.winner === 'A'}">
@@ -323,10 +319,9 @@
                           <div class="participant" :class="{winner: playoffs.thirdMatch.winner === 'B'}">
                             {{ playoffs.thirdMatch.teamB.name }} <span>{{ playoffs.thirdMatch.teamB.score }}</span>
                           </div>
+                        </div>
                       </div>
-                    </div>
 
-                    <!-- Dynamic SVG connectors drawn from DOM node positions -->
                     <svg class="ipl-connectors" ref="connectorsSvg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
                       <defs>
                         <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
@@ -336,10 +331,12 @@
                       <path v-for="(p, i) in svgPaths" :key="i" :d="p.d" class="connector" :class="p.cls" :marker-end="p.arrow ? 'url(#arrow)' : null" />
                     </svg>
 
-              </div>
+                  </div>
                 </div>
               </div>
         </div>
+        </div>
+
         <div class="tab-pane fade p-4" id="teams-pane" role="tabpanel">
           <div class="accordion" id="teamsAccordion">
             <div v-for="team in teamsList" :key="team.TeamID" class="accordion-item">
@@ -429,8 +426,8 @@
         </div>
       </div>
     </div>
-
-    <div v-if="showRecordModal" class="modal-backdrop" @click.self="closeModal">
+  </div>
+  <div v-if="showRecordModal" class="modal-backdrop" @click.self="closeModal">
       <div class="modal-container">
         <div class="modal-header">
           <h5 class="modal-title">{{ modalTitle }}</h5>
@@ -482,7 +479,6 @@
           </table>
         </div>
       </div>
-    </div>
   </div>
 </template>
 
