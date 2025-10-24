@@ -9,7 +9,7 @@
           {{ info.Format || "Tournament Details" }}
         </p>
       </div>
-
+</div>
       <ul class="nav nav-tabs nav-fill" id="tournamentTab" role="tablist">
         <li class="nav-item" role="presentation">
           <button
@@ -266,52 +266,79 @@
         
         <div class="tab-pane fade p-4" id="playoffs-pane" role="tabpanel">
             <h2 class="tab-title text-center mb-4">Playoff Bracket</h2>
-            <div v-if="hasPlayoffs" class="playoff-container">
-                <div class="round semifinals">
-                    <h4 class="round-title">Semifinals</h4>
-                    <div class="matches">
-                        <div v-for="match in playoffMatches.semifinals" :key="match.TeamMatchID" class="matchup">
-                            <div class="participant" :class="{ 'winner': match.MatchResult === 'Team A Won' }">
-                                {{ match.TeamA.TeamName }} <span>{{ match.TeamA_Score }}</span>
-                            </div>
-                            <div class="participant" :class="{ 'winner': match.MatchResult === 'Team B Won' }">
-                                {{ match.TeamB.TeamName }} <span>{{ match.TeamB_Score }}</span>
-                            </div>
+      <!-- Always-show IPL style bracket; use actual data when available, otherwise show dummy placeholders -->
+            <div class="playoff-container">
+                <div class="ipl-bracket-wrapper">
+                  <div class="ipl-bracket-columns">
+                    <!-- Left column: Semifinals stacked vertically (same X position) -->
+                    <div class="ipl-column semifinals-column">
+                      <div class="ipl-stage semi1 stacked-stage" data-node="semi1">
+                        <h5>Semifinal 1</h5>
+                        <div class="matchup" v-if="playoffs.semi1">
+                          <div class="participant" :class="{winner: playoffs.semi1.winner === 'A'}">
+                            {{ playoffs.semi1.teamA.name }} <span>{{ playoffs.semi1.teamA.score }}</span>
+                          </div>
+                          <div class="participant" :class="{winner: playoffs.semi1.winner === 'B'}">
+                            {{ playoffs.semi1.teamB.name }} <span>{{ playoffs.semi1.teamB.score }}</span>
+                          </div>
                         </div>
+                      </div>
+
+                      <div class="ipl-stage semi2 stacked-stage" data-node="semi2">
+                        <h5>Semifinal 2</h5>
+                        <div class="matchup" v-if="playoffs.semi2">
+                          <div class="participant" :class="{winner: playoffs.semi2.winner === 'A'}">
+                            {{ playoffs.semi2.teamA.name }} <span>{{ playoffs.semi2.teamA.score }}</span>
+                          </div>
+                          <div class="participant" :class="{winner: playoffs.semi2.winner === 'B'}">
+                            {{ playoffs.semi2.teamB.name }} <span>{{ playoffs.semi2.teamB.score }}</span>
+                          </div>
+                        </div>
+                      </div>
                     </div>
+
+                    <!-- Middle column: (empty placeholder for spacing) -->
+                    <div class="ipl-column third-column" aria-hidden="true"></div>
+
+                    <!-- Right column: Final (stacked with 3rd place below) -->
+                    <div class="ipl-column final-column stacked-final-column">
+                      <div class="ipl-stage final center-stage" data-node="final">
+                        <h5>Final</h5>
+                        <div class="matchup" v-if="playoffs.final">
+                          <div class="participant" :class="{winner: playoffs.final.winner === 'A'}">
+                            {{ playoffs.final.teamA.name }} <span>{{ playoffs.final.teamA.score }}</span>
+                          </div>
+                          <div class="participant" :class="{winner: playoffs.final.winner === 'B'}">
+                            {{ playoffs.final.teamB.name }} <span>{{ playoffs.final.teamB.score }}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div class="ipl-stage third-match center-stage below-final" data-node="third">
+                        <h5>3rd_Match</h5>
+                        <div class="matchup" v-if="playoffs.thirdMatch">
+                          <div class="participant" :class="{winner: playoffs.thirdMatch.winner === 'A'}">
+                            {{ playoffs.thirdMatch.teamA.name }} <span>{{ playoffs.thirdMatch.teamA.score }}</span>
+                          </div>
+                          <div class="participant" :class="{winner: playoffs.thirdMatch.winner === 'B'}">
+                            {{ playoffs.thirdMatch.teamB.name }} <span>{{ playoffs.thirdMatch.teamB.score }}</span>
+                          </div>
+                      </div>
+                    </div>
+
+                    <!-- Dynamic SVG connectors drawn from DOM node positions -->
+                    <svg class="ipl-connectors" ref="connectorsSvg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
+                      <defs>
+                        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffb300" />
+                        </marker>
+                      </defs>
+                      <path v-for="(p, i) in svgPaths" :key="i" :d="p.d" class="connector" :class="p.cls" :marker-end="p.arrow ? 'url(#arrow)' : null" />
+                    </svg>
+
+              </div>
                 </div>
-                
-                <div class="round finals">
-                    <div v-if="playoffMatches.final.length > 0">
-                        <h4 class="round-title">Final</h4>
-                        <div class="matches">
-                            <div v-for="match in playoffMatches.final" :key="match.TeamMatchID" class="matchup final">
-                                <div class="participant" :class="{ 'winner': match.MatchResult === 'Team A Won' }">
-                                    {{ match.TeamA.TeamName }} <span>{{ match.TeamA_Score }}</span>
-                                </div>
-                                <div class="participant" :class="{ 'winner': match.MatchResult === 'Team B Won' }">
-                                    {{ match.TeamB.TeamName }} <span>{{ match.TeamB_Score }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div v-if="playoffMatches.thirdPlace.length > 0">
-                        <h4 class="round-title" style="padding-top: 0px">3rd/4th Place</h4>
-                        <div class="matches">
-                            <div v-for="match in playoffMatches.thirdPlace" :key="match.TeamMatchID" class="matchup third-place">
-                                <div class="participant" :class="{ 'winner': match.MatchResult === 'Team A Won' }">
-                                    {{ match.TeamA.TeamName }} <span>{{ match.TeamA_Score }}</span>
-                                </div>
-                                <div class="participant" :class="{ 'winner': match.MatchResult === 'Team B Won' }">
-                                    {{ match.TeamB.TeamName }} <span>{{ match.TeamB_Score }}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <p v-else class="text-center text-muted">Playoff matches have not been determined yet.</p>
+              </div>
         </div>
         <div class="tab-pane fade p-4" id="teams-pane" role="tabpanel">
           <div class="accordion" id="teamsAccordion">
@@ -355,7 +382,8 @@
                         class="captain-item"
                         @click="showPlayerRecords(captain)"
                       >
-                        {{ captain.PlayerName }} (C) </li>
+                        {{ captain.PlayerName }} (C)
+                      </li>
                     </ul>
                   </div>
 
@@ -372,10 +400,12 @@
                     </ul>
                     <p v-else class="text-muted small">No other players listed.</p>
                   </div>
+
                 </div>
               </div>
             </div>
           </div>
+        
         </div>
 
         <div class="tab-pane fade p-4" id="gallery-pane" role="tabpanel">
@@ -457,7 +487,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, reactive } from "vue";
 
 // --- PROPS ---
 const props = defineProps({
@@ -611,6 +641,71 @@ const hasPlayoffs = computed(() => {
     playoffMatches.value.final.length > 0 ||
     playoffMatches.value.thirdPlace.length > 0
   );
+});
+
+// Build playoffs slots (Semifinal 1, Semifinal 2, 3rd_Match, Final)
+const playoffs = computed(() => {
+  const slot = (teamAName, teamAScore, teamBName, teamBScore, winner) => ({
+    teamA: { name: teamAName || 'TBD', score: teamAScore ?? '-', },
+    teamB: { name: teamBName || 'TBD', score: teamBScore ?? '-', },
+    winner: winner || null
+  });
+
+  const semis = playoffMatches.value.semifinals || [];
+  const finals = playoffMatches.value.final || [];
+  const third = playoffMatches.value.thirdPlace || [];
+
+  const out = {
+    semi1: slot('Team A', '-', 'Team D', '-', null),
+    semi2: slot('Team B', '-', 'Team C', '-', null),
+    thirdMatch: slot('Loser SF1', '-', 'Loser SF2', '-', null),
+    final: slot('Winner SF1', '-', 'Winner SF2', '-', null)
+  };
+
+  if (semis.length >= 1) {
+    const m = semis[0];
+    out.semi1 = slot(
+      m.TeamA?.TeamName || getTeamDetails(m.TeamA_ID).TeamName,
+      m.TeamA_Score,
+      m.TeamB?.TeamName || getTeamDetails(m.TeamB_ID).TeamName,
+      m.TeamB_Score,
+      m.MatchResult === 'Team A Won' ? 'A' : m.MatchResult === 'Team B Won' ? 'B' : null
+    );
+  }
+  if (semis.length >= 2) {
+    const m = semis[1];
+    out.semi2 = slot(
+      m.TeamA?.TeamName || getTeamDetails(m.TeamA_ID).TeamName,
+      m.TeamA_Score,
+      m.TeamB?.TeamName || getTeamDetails(m.TeamB_ID).TeamName,
+      m.TeamB_Score,
+      m.MatchResult === 'Team A Won' ? 'A' : m.MatchResult === 'Team B Won' ? 'B' : null
+    );
+  }
+
+  if (third.length >= 1) {
+    const m = third[0];
+    out.thirdMatch = slot(
+      m.TeamA?.TeamName || getTeamDetails(m.TeamA_ID).TeamName,
+      m.TeamA_Score,
+      m.TeamB?.TeamName || getTeamDetails(m.TeamB_ID).TeamName,
+      m.TeamB_Score,
+      m.MatchResult === 'Team A Won' ? 'A' : m.MatchResult === 'Team B Won' ? 'B' : null
+    );
+  }
+
+  if (finals.length >= 1) {
+    const m = finals[0];
+    out.final = slot(
+      m.TeamA?.TeamName || getTeamDetails(m.TeamA_ID).TeamName,
+      m.TeamA_Score,
+      m.TeamB?.TeamName || getTeamDetails(m.TeamB_ID).TeamName,
+      m.TeamB_Score,
+      m.MatchResult === 'Team A Won' ? 'A' : m.MatchResult === 'Team B Won' ? 'B' : null
+    );
+  }
+
+  return out;
 });
 // --- END OF NEW PLAYOFFS LOGIC ---
 
@@ -822,6 +917,117 @@ const tournamentTitle = computed(() => {
   }
   return props.info?.TournamentName || 'Tournament';
 });
+
+// --- DYNAMIC SVG CONNECTORS ---
+const connectorsSvg = ref(null);
+const svgPaths = reactive([]);
+
+function makeCubicPath(x1, y1, x2, y2, side = 'right') {
+  // keep cubic helper as fallback (not used for elbow routing by default)
+  const dx = Math.abs(x2 - x1);
+  const curvature = Math.min(120, dx * 0.4);
+  const cx1 = side === 'right' ? x1 + curvature : x1 - curvature;
+  const cx2 = side === 'right' ? x2 - curvature : x2 + curvature;
+  return `M ${x1} ${y1} C ${cx1} ${y1}, ${cx2} ${y2}, ${x2} ${y2}`;
+}
+
+function makeElbowPath(x1, y1, x2, y2, opts = {}) {
+  // produce a right-angle elbow path: horizontal -> vertical -> horizontal
+  // opts: {startOffset, endOffset, viaX}
+  const startOffset = opts.startOffset ?? 120; // how far from node to start horizontal
+  const endOffset = opts.endOffset ?? 120; // how far from target to end horizontal
+  const startX = x1 + (opts.side === 'left' ? -startOffset : startOffset);
+  const endX = x2 - (opts.side === 'left' ? -endOffset : endOffset);
+
+  // pick a viaX between startX and endX; prefer closer to end for nicer elbow
+  const viaX = opts.viaX ?? (startX + endX) / 2;
+
+  // Construct path with L segments so joints look angular; rounded stroke-linecap hides sharp corners
+  return `M ${x1} ${y1} L ${startX} ${y1} L ${viaX} ${y2} L ${endX} ${y2} L ${x2} ${y2}`;
+}
+
+function computeSvgPaths() {
+  svgPaths.length = 0; // clear
+  if (!connectorsSvg.value) return;
+  const wrapper = connectorsSvg.value.parentElement; // bracket wrapper
+  const rect = wrapper.getBoundingClientRect();
+
+  // If wrapper has zero size (tab hidden or not yet laid out), retry shortly
+  if (rect.width === 0 || rect.height === 0) {
+    // schedule a single retry after a short delay and bail for now
+    setTimeout(() => {
+      // only retry if component still mounted
+      if (connectorsSvg.value) computeSvgPaths();
+    }, 120);
+    return;
+  }
+
+  const getNodeCenter = (name) => {
+    const el = wrapper.querySelector(`[data-node="${name}"]`);
+    if (!el) return null;
+    const r = el.getBoundingClientRect();
+    // center relative to wrapper (SVG coords normalized to 1000x300 by viewBox)
+    const x = ((r.left + r.right) / 2 - rect.left) / rect.width * 1000;
+    const y = ((r.top + r.bottom) / 2 - rect.top) / rect.height * 300;
+    return { x, y, r };
+  };
+
+  const n1 = getNodeCenter('semi1');
+  const n2 = getNodeCenter('semi2');
+  const n3 = getNodeCenter('third');
+  const nf = getNodeCenter('final');
+  if (!n1 || !n2 || !n3 || !nf) {
+    // missing nodes: maybe DOM not rendered yet; try again soon
+    setTimeout(() => { if (connectorsSvg.value) computeSvgPaths(); }, 80);
+    return;
+  }
+
+  // Use elbow paths for a broadcast-style fixed-angle look
+  // Tunable offsets (reduced for a tighter elbow closer to broadcast look)
+  const startOffset = 80;
+  const endOffset = 80;
+
+  // Semifinal 1 -> Final (top path)
+  try {
+  const p1 = makeElbowPath(n1.x, n1.y - 12, nf.x, nf.y - 20, { startOffset, endOffset, viaX: nf.x - 120 });
+    if (!/NaN/.test(p1)) svgPaths.push({ d: p1, cls: 'c-sf1-to-final', arrow: true });
+  } catch (e) { /* ignore invalid path */ }
+  // Semifinal 2 -> Final (bottom path)
+  try {
+  const p2 = makeElbowPath(n2.x, n2.y + 12, nf.x, nf.y + 20, { startOffset, endOffset, viaX: nf.x - 120 });
+    if (!/NaN/.test(p2)) svgPaths.push({ d: p2, cls: 'c-sf2-to-final', arrow: true });
+  } catch (e) { }
+
+  // Losers to 3rd_Match (elbow paths)
+  try {
+  const p3 = makeElbowPath(n1.x, n1.y + 12, n3.x, n3.y - 10, { startOffset, endOffset, viaX: n3.x - 120 });
+    if (!/NaN/.test(p3)) svgPaths.push({ d: p3, cls: 'c-loser-sf1-to-3rd', arrow: true });
+  } catch (e) { }
+  try {
+  const p4 = makeElbowPath(n2.x, n2.y - 12, n3.x, n3.y + 10, { startOffset, endOffset, viaX: n3.x - 120 });
+    if (!/NaN/.test(p4)) svgPaths.push({ d: p4, cls: 'c-loser-sf2-to-3rd', arrow: true });
+  } catch (e) { }
+
+  // Optional: Eliminator or other connectors could be added similarly
+}
+
+let resizeObserver = null;
+onMounted(async () => {
+  await nextTick();
+  computeSvgPaths();
+  // recompute on window resize
+  window.addEventListener('resize', computeSvgPaths);
+  // watch wrapper size via ResizeObserver for more accuracy
+  if (window.ResizeObserver) {
+    resizeObserver = new ResizeObserver(() => computeSvgPaths());
+    if (connectorsSvg.value && connectorsSvg.value.parentElement) resizeObserver.observe(connectorsSvg.value.parentElement);
+  }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', computeSvgPaths);
+  if (resizeObserver && connectorsSvg.value && connectorsSvg.value.parentElement) resizeObserver.unobserve(connectorsSvg.value.parentElement);
+});
 </script>
 
 <style scoped>
@@ -899,6 +1105,44 @@ const tournamentTitle = computed(() => {
 
   /* --- Playoffs Pane --- */
   .playoff-container { display: flex; justify-content: center; gap: 5rem; padding: 1rem; overflow-x: auto; position: relative; }
+  .ipl-bracket-wrapper { position: relative; width: 100%; max-width: 1100px; }
+  /* New columns layout */
+  .ipl-bracket-columns { display: flex; gap: 2.5rem; align-items: flex-start; padding: 1rem; }
+  .ipl-column { display: flex; flex-direction: column; align-items: center; min-width: 220px; }
+  .semifinals-column { justify-content: space-between; gap: 2.5rem;  }
+  .stacked-semifinals-column.below-semifinals { margin-top : 0.5rem; }
+  .third-column, .final-column { justify-content: center; }
+  .stacked-final-column { justify-content: flex-start; gap: 3rem; }
+  .stacked-final-column .center-stage { width: 240px; }
+  .stacked-final-column .below-final { margin-top: 4.5rem; }
+  .ipl-stage { width: 100%; }
+  /* stacked-stage forces its children to occupy the same X by centering and providing fixed width */
+  .stacked-stage { display: flex; flex-direction: column; gap: 2.8rem; width: 220px; min-height: 160px; justify-content: flex-start; }
+  .center-stage { display: flex; flex-direction: column; gap: 1rem; width: 220px; }
+
+  /* SVG connectors overlay */
+  .ipl-connectors { position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; z-index: 20; display: block; }
+  .ipl-connectors .connector { fill: none; stroke: #ffb300; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; opacity: 1; filter: drop-shadow(0 6px 18px rgba(0,0,0,0.7)); mix-blend-mode: screen; }
+
+  /* Draw animation */
+  .ipl-connectors .connector { stroke-dasharray: 1000; stroke-dashoffset: 1000; animation: drawLine 1.2s ease forwards; }
+  .ipl-connectors .c-q1-to-elim { animation-delay: 0.1s; }
+  .ipl-connectors .c-q1-to-elim-bottom { animation-delay: 0.15s; }
+  .ipl-connectors .c-elim-to-q2 { animation-delay: 0.35s; }
+  .ipl-connectors .c-elim-to-q2-bottom { animation-delay: 0.4s; }
+  .ipl-connectors .c-q2-to-final { animation-delay: 0.6s; }
+  .ipl-connectors .c-q2-to-final-bottom { animation-delay: 0.65s; }
+
+  @keyframes drawLine {
+    to { stroke-dashoffset: 0; }
+  }
+
+  /* Glow effect after draw */
+  .ipl-connectors .connector { animation: drawLine 1.2s ease forwards, glow 1.2s ease 1.2s forwards; }
+
+  @keyframes glow {
+    to { filter: drop-shadow(0 6px 18px rgba(255,179,0,0.25)); }
+  }
   .round { display: flex; flex-direction: column; flex-shrink: 0; width: 280px; position: relative; }
   .round.semifinals { justify-content: space-around; }
   .round.finals { justify-content: space-around; }
@@ -1036,7 +1280,7 @@ const tournamentTitle = computed(() => {
     
     #standings-pane .table {
       white-space: nowrap; 
-      font-size: 0.68rem;
+      font-size: 0.75rem;
       margin-bottom: 0;
     }
     #standings-pane .table th,
@@ -1181,9 +1425,9 @@ const tournamentTitle = computed(() => {
         'board board board'
         'playerA result playerB';
       grid-template-columns: 1fr auto 1fr;
-      gap: 0.5rem 0.5rem;
+      gap: 0.4rem 0.4rem;
       padding: 1rem 0.75rem;
-      font-size: 1rem;
+      font-size: 0.84rem;
       white-space: normal;
       border-bottom: 1px solid #333;
     }
@@ -1193,22 +1437,22 @@ const tournamentTitle = computed(() => {
     .board-number {
       grid-area: board;
       justify-self: center;
-      font-size: 0.9rem;
-      padding-bottom: 0.5rem;
+      font-size: 0.8rem;
+      padding-bottom: 0.4rem;
       color: #FFD700;
       text-align: center;
       width: 100%;
     }
     .pairing-card .list-group-item > span:nth-child(2) {
       grid-area: playerA;
-      text-align: right;
-      font-weight: 600;
+      text-align: left;
+      font-weight: 500;
     }
     .pairing-card .list-group-item > span:nth-child(3) {
       grid-area: result;
       justify-self: center;
       font-weight: 900;
-      font-size: 1.1rem;
+      font-size: 1rem;
       color: #FFD700;
       background: rgba(0,0,0,0.4);
       padding: 0.25rem 0.6rem;
@@ -1218,8 +1462,8 @@ const tournamentTitle = computed(() => {
     }
     .pairing-card .list-group-item > span:nth-child(4) {
       grid-area: playerB;
-      text-align: left;
-      font-weight: 600;
+      text-align: right;
+      font-weight: 500;
     }
 
     /* --- Teams Pane --- */
@@ -1244,6 +1488,25 @@ const tournamentTitle = computed(() => {
       padding: 1rem 0.5rem;
       overflow-x: hidden;
     }
+    /* Mobile: stack the bracket columns vertically and enlarge touch areas */
+  .ipl-bracket-columns { display: flex; flex-direction: column; gap: 1.25rem; align-items: center; padding: 0.5rem; }
+  .ipl-column { min-width: auto; width: 100%; display: flex; justify-content: center; }
+  .stacked-stage, .center-stage { width: 100%; max-width: 420px; min-height: 120px; gap: 1rem; }
+  .matchup { width: 100%; box-shadow: 0 8px 30px rgba(0,0,0,0.35); border-radius: 12px; }
+  .participant { height: 3.4rem; padding: 0.85rem 1rem; font-size: 1rem; }
+  /* Create a centered vertical timeline feel (disabled: line & markers hidden on mobile) */
+  .ipl-bracket-wrapper { padding-left: 0.5rem; padding-right: 0.5rem; }
+  /* hide timeline line on mobile */
+  .ipl-bracket-columns::before { display: none !important; }
+  /* remove zig-zag offsets on mobile for exact vertical stacking */
+  .ipl-column:nth-child(odd) .stacked-stage, .ipl-column:nth-child(odd) .center-stage { transform: none; }
+  .ipl-column:nth-child(even) .stacked-stage, .ipl-column:nth-child(even) .center-stage { transform: none; }
+  /* remove marker dots on mobile */
+  .ipl-stage::after { display: none !important; }
+  /* ensure final spacing and breathing room */
+  .stacked-stage { margin-bottom: 0.5rem; }
+  /* Hide the SVG connectors on mobile for clarity */
+  .ipl-connectors { display: none !important; }
     .round {
       width: 100%;
     }
