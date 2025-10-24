@@ -197,7 +197,7 @@
           &copy; 2025 IISER TVM Chess Club. All Rights Reserved.
         </p>
         <p class="credits mb-0">
-          Co-created by: Suraj Chalekar & Shubham Sharma
+          Co-developed by: Suraj Chalekar & Shubham Sharma
         </p>
       </div>
     </footer>
