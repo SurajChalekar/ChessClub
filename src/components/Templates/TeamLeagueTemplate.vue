@@ -749,7 +749,6 @@ const teamsList = computed(() => {
       });
     }
     const team = teamsMap.get(p.TeamID);
-    console.log(team);
     if (p.PlayerType === "Captain") team.captains.push(p);
     else if (p.PlayerType === "Owner") team.owners.push(p);
     else team.players.push(p);
@@ -1424,7 +1423,7 @@ onBeforeUnmount(() => {
       grid-template-columns: 1fr auto 1fr;
       gap: 0.4rem 0.4rem;
       padding: 1rem 0.75rem;
-      font-size: 0.84rem;
+      font-size: 0.78rem;
       white-space: normal;
       border-bottom: 1px solid #333;
     }
