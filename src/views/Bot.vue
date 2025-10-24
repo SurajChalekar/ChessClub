@@ -22,7 +22,7 @@
             <div class="controls-card">
                 <div v-if="botMessage" class="status-message">
                 <div :class="stateconst" class="alert">
-                  <img src="/billa.png" alt="status icon" class="status-image me-2" />
+                  <img src="/caaat.png" alt="status icon" class="status-image me-2" />
                   <i class="me-2"></i>{{ botMessage }}
                 </div>
               </div>
