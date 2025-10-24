@@ -1,6 +1,5 @@
 <template>
   <div class="home">
-    <!-- Hero Section -->
     <section class="hero-section position-relative overflow-hidden">
       <div class="hero-background"></div>
       <div class="chess-pattern"></div>
@@ -8,7 +7,6 @@
         <div class="row align-items-center min-vh-100">
           <div class="col-lg-8 col-xl-6 mx-auto text-center">
             <div class="hero-content py-5">
-
               <h1 class="hero-title mb-4">
                 <span class="chess-icon">♔</span>
                 <span class="text-glow">IISER TVM Chess Club</span>
@@ -17,12 +15,20 @@
                 Master the art of Sacrifice. Join our elite community of chess
                 players and elevate your game beyond mortal limits.
               </p>
-              <div class="hero-buttons d-flex gap-4 justify-content-center flex-wrap">
-                <router-link to="/tournament" class="btn btn-glow btn-warning btn-lg px-5 py-3">
+              <div
+                class="hero-buttons d-flex gap-4 justify-content-center flex-wrap"
+              >
+                <router-link
+                  to="/tournament"
+                  class="btn btn-glow btn-warning btn-lg px-5 py-3"
+                >
                   <i class="fas fa-trophy me-2"></i>Tournaments
                   <div class="btn-shine"></div>
                 </router-link>
-                <router-link to="/anouncements" class="btn btn-outline-neon btn-lg px-5 py-3">
+                <router-link
+                  to="/anouncements"
+                  class="btn btn-outline-neon btn-lg px-5 py-3"
+                >
                   <i class="fas fa-calendar-alt me-2"></i>View Anouncements
                 </router-link>
               </div>
@@ -31,7 +37,6 @@
         </div>
       </div>
 
-      <!-- Floating Chess Pieces -->
       <div class="floating-pieces">
         <div class="chess-piece piece-1">♛</div>
         <div class="chess-piece piece-2">♜</div>
@@ -41,14 +46,13 @@
       </div>
     </section>
 
-    <!-- Features Section -->
     <section class="features-section py-5">
       <div class="container">
         <div class="section-header text-center mb-5">
-
           <h2 class="section-title mb-4">Dominate the Board</h2>
           <p class="section-subtitle">
-            Experience the perfect fusion of tactical brilliance, strategic mastery.
+            Experience the perfect fusion of tactical brilliance, strategic
+            mastery.
           </p>
         </div>
 
@@ -77,7 +81,8 @@
                 </div>
                 <h4 class="card-title mb-3">Elite Tournaments</h4>
                 <p class="card-text">
-                  Battle in high-stakes tournaments where only the strongest survive.
+                  Battle in high-stakes tournaments where only the strongest
+                  survive.
                 </p>
               </div>
             </div>
@@ -92,7 +97,8 @@
                 </div>
                 <h4 class="card-title mb-3">Advanced Training</h4>
                 <p class="card-text">
-                  Become part of elite circle of chess club. Practise weekly against Top players.
+                  Become part of elite circle of chess club. Practise weekly
+                  against Top players.
                 </p>
               </div>
             </div>
@@ -101,7 +107,6 @@
       </div>
     </section>
 
-    <!-- Stats Section -->
     <section class="stats-section py-5 position-relative overflow-hidden">
       <div class="stats-bg"></div>
       <div class="container position-relative z-2">
@@ -134,23 +139,20 @@
       </div>
     </section>
 
-    <!-- Events Preview -->
     <section class="events-section py-5">
       <div class="container">
         <div class="section-header text-center mb-5">
           <h2 class="section-title mb-4">The Arena Awaits</h2>
           <p class="section-subtitle">
-            Join the Tournaments and show your Brilliance in these legendary contests
+            Join the Tournaments and show your Brilliance in these legendary
+            contests
           </p>
         </div>
         <div class="hero-stats row g-4 justify-content-center text-center">
-
           <div class="col-lg-6">
             <div class="event-card h-100">
               <div class="card-header">
-                <div class="event-type">
-                  👑 IISM
-                </div>
+                <div class="event-type">👑 IISM</div>
               </div>
               <div class="card-body p-4">
                 <h5 class="card-title">Inter-IISER Sports Meet</h5>
@@ -158,30 +160,28 @@
                 <div class="event-date mb-3">
                   <i class="fas fa-calendar-alt me-2"></i>December, 2025
                 </div>
-                <p class="card-text">
-                  The ultimate test of chess supremacy.
-                </p>
+                <p class="card-text">The ultimate test of chess supremacy.</p>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
-    <!-- CTA Section -->
+
     <section class="cta-section py-5 position-relative overflow-hidden">
       <div class="cta-bg"></div>
       <div class="container position-relative z-3">
         <div class="row">
           <div class="col-lg-8 mx-auto text-center">
             <div class="cta-content">
-              <h2 class="cta-title mb-4">
-                Become a Member now
-              </h2>
+              <h2 class="cta-title mb-4">Become a Member now</h2>
               <p class="cta-subtitle mb-5">
                 Your journey into chess mastery begins with a single move.
               </p>
-              <button class="btn btn-cta btn-lg px-5 py-3" @click="loginWithGoogle">
+              <button
+                class="btn btn-cta btn-lg px-5 py-3"
+                @click="loginWithGoogle"
+              >
                 <i class="fas fa-chess-king me-2"></i>Join the Club
                 <div class="btn-shine"></div>
               </button>
@@ -191,7 +191,16 @@
       </div>
     </section>
 
-
+    <footer class="site-footer py-5">
+      <div class="container text-center">
+        <p class="mb-2">
+          &copy; 2025 IISER TVM Chess Club. All Rights Reserved.
+        </p>
+        <p class="credits mb-0">
+          Co-created by: Suraj Chalekar & Shubham Sharma
+        </p>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -220,7 +229,6 @@ const loginWithGoogle = async () => {
 
     userEmail.value = user.email
     alert(`Welcome ${user.displayName || user.email}!`)
-
   } catch (error) {
     console.error(error)
     errorMessage.value = 'Login failed. Please try again.'
@@ -249,7 +257,12 @@ onMounted(() => {
 .hero-section {
   min-height: 100vh;
   position: relative;
-  background: radial-gradient(ellipse at center, #1a1a2e 0%, #16213e 50%, #0a0a0a 100%);
+  background: radial-gradient(
+    ellipse at center,
+    #1a1a2e 0%,
+    #16213e 50%,
+    #0a0a0a 100%
+  );
 }
 
 .hero-background {
@@ -258,9 +271,18 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    linear-gradient(45deg, transparent 40%, rgba(255, 193, 7, 0.03) 50%, transparent 60%),
-    linear-gradient(-45deg, transparent 40%, rgba(220, 53, 69, 0.03) 50%, transparent 60%);
+  background: linear-gradient(
+      45deg,
+      transparent 40%,
+      rgba(255, 193, 7, 0.03) 50%,
+      transparent 60%
+    ),
+    linear-gradient(
+      -45deg,
+      transparent 40%,
+      rgba(220, 53, 69, 0.03) 50%,
+      transparent 60%
+    );
   animation: backgroundShift 20s ease-in-out infinite alternate;
 }
 
@@ -270,9 +292,20 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background-image:
-    repeating-linear-gradient(0deg, transparent, transparent 50px, rgba(255, 255, 255, 0.01) 50px, rgba(255, 255, 255, 0.01) 100px),
-    repeating-linear-gradient(90deg, transparent, transparent 50px, rgba(255, 255, 255, 0.01) 50px, rgba(255, 255, 255, 0.01) 100px);
+  background-image: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 50px,
+      rgba(255, 255, 255, 0.01) 50px,
+      rgba(255, 255, 255, 0.01) 100px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 50px,
+      rgba(255, 255, 255, 0.01) 50px,
+      rgba(255, 255, 255, 0.01) 100px
+    );
   opacity: 0.3;
 }
 
@@ -392,7 +425,12 @@ onMounted(() => {
   left: -100%;
   width: 100%;
   height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
   transition: left 0.6s ease;
 }
 
@@ -426,7 +464,11 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: radial-gradient(circle at center, rgba(255, 193, 7, 0.1) 0%, transparent 70%);
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 193, 7, 0.1) 0%,
+    transparent 70%
+  );
   opacity: 0;
   transition: opacity 0.4s ease;
 }
@@ -455,7 +497,11 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(45deg, rgba(220, 53, 69, 0.05), rgba(255, 193, 7, 0.05));
+  background: linear-gradient(
+    45deg,
+    rgba(220, 53, 69, 0.05),
+    rgba(255, 193, 7, 0.05)
+  );
 }
 
 .stat-number {
@@ -513,7 +559,12 @@ onMounted(() => {
 
 /* CTA Section */
 .cta-section {
-  background: radial-gradient(ellipse at center, #2a1810 0%, #1a0f0a 70%, #0a0a0a 100%);
+  background: radial-gradient(
+    ellipse at center,
+    #2a1810 0%,
+    #1a0f0a 70%,
+    #0a0a0a 100%
+  );
   padding: 8rem 0;
 }
 
@@ -523,9 +574,16 @@ onMounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background:
-    radial-gradient(circle at 20% 30%, rgba(255, 193, 7, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(220, 53, 69, 0.1) 0%, transparent 50%);
+  background: radial-gradient(
+      circle at 20% 30%,
+      rgba(255, 193, 7, 0.1) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(220, 53, 69, 0.1) 0%,
+      transparent 50%
+    );
 }
 
 .cta-title {
@@ -558,6 +616,25 @@ onMounted(() => {
 .btn-cta:hover {
   transform: translateY(-5px);
   box-shadow: 0 20px 40px rgba(255, 193, 7, 0.5);
+}
+
+/* NEW: Footer Section */
+.site-footer {
+  background-color: #050505; /* A slightly darker black for separation */
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  color: #a0a0a0; /* Muted color, doesn't grab attention */
+  font-size: 0.9rem;
+}
+
+.site-footer .credits {
+  font-size: 1rem;
+  opacity: 0.89;
+  transition: all 0.3s ease;
+}
+
+.site-footer .credits:hover {
+  opacity: 1;
+  color: #ffc107; /* Add a little "glow" on hover */
 }
 
 /* Modal */
@@ -606,7 +683,6 @@ onMounted(() => {
 
 /* Animations */
 @keyframes float {
-
   0%,
   100% {
     transform: translateY(0px) rotate(0deg);
@@ -625,7 +701,8 @@ onMounted(() => {
   }
 
   100% {
-    text-shadow: 0 0 40px rgba(255, 193, 7, 0.8), 0 0 60px rgba(220, 53, 69, 0.3);
+    text-shadow: 0 0 40px rgba(255, 193, 7, 0.8),
+      0 0 60px rgba(220, 53, 69, 0.3);
   }
 }
 
