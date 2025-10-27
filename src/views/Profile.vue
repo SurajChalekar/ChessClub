@@ -1,139 +1,196 @@
 <template>
-  <section class="profile-content py-5">
-  <div class="container">
-    <div class="row g-4">
-
-      <div class="col-lg-8">
-        <div v-if="isListLoading" class="text-center text-warning py-5 profile-placeholder">
-          <div class="spinner-border" role="status"></div>
-          <p class="mt-2">Loading member and tournament lists...</p>
-        </div>
-
-        <div v-if="error" class="alert alert-danger text-center">
-          {{ error }}
-        </div>
-
-        <div v-if="!isListLoading && !myProfile" class="text-center text-muted py-5 profile-placeholder">
-          <i class="fas fa-user-slash fa-3x mb-3"></i>
-          <h4 class="text-white">Profile Not Found</h4>
-          <p>Your email ({{ auth.currentUser?.email }}) was not found in the Club Members sheet.</p>
-          <p>Please contact an admin to be added.</p>
-        </div>
-        
-        <div v-if="displayedProfile" class="profile-card-container">
-          <div class="profile-card bg-dark-secondary rounded shadow-lg p-4 p-md-5 mb-4">
-            
-            <button v-if="searchResult" @click="showMyProfile" class="btn btn-sm btn-outline-warning mb-3">
-              <i class="fas fa-arrow-left me-2"></i>Back to My Profile
-            </button>
-            
-            <div class="row g-4 align-items-center">
-              <div class="col-md-4 text-center">
-                <img 
-                  :src="displayedProfile.ProfileImageURL || 'https://placehold.co/150x150/2a2a2a/FFD700?text=No+Photo'" 
-                  alt="Profile Picture" 
-                  class="profile-img img-fluid rounded-circle border border-warning border-3"
-                >
+  <div class="profile-page py-5">
+    <section class="profile-hero position-relative overflow-hidden">
+      <div class="hero-background"></div>
+      <div class="chess-pattern-bg"></div>
+      <div class="container position-relative z-3">
+        <div class="row justify-content-center text-center">
+          <div class="col-lg-8">
+            <div class="hero-content py-5">
+              <div class="hero-badge mb-4">
+                <span class="badge bg-gradient-success px-4 py-3 fs-6 rounded-pill">
+                  <i class="fas fa-id-card me-2"></i>Club Members
+                </span>
               </div>
-              <div class="col-md-8">
-                <h2 class="profile-name text-warning mb-1">{{ displayedProfile.PlayerName }}</h2>
-                <h4 v-if="displayedProfile.Title" class="profile-title text-danger mb-3">{{ displayedProfile.Title }}</h4>
-                <p class="profile-bio text-light fs-5">{{ displayedProfile.Bio || 'No bio available.' }}</p>
-                <hr class="border-warning opacity-25">
-                <div class="profile-stats d-flex justify-content-around">
-                    <div class="stat-item text-center">
-                        <div class="stat-label">Rating</div>
-                        <div class="stat-value text-info">{{ displayedProfile.Rating || 'N/A' }}</div>
+              <h1 class="hero-title mb-4">
+                <span class="chess-icon">👤</span>
+                <span class="text-glow-success">Player Profiles</span>
+              </h1>
+              <p class="hero-subtitle mb-4">
+                View your stats or search for other club members.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="profile-content py-5">
+      <div class="container">
+        <div class="row g-4">
+
+          <div class="col-lg-8">
+            <div v-if="isListLoading" class="text-center text-warning py-5 profile-placeholder">
+              <div class="spinner-border" role="status"></div>
+              <p class="mt-2">Loading member and tournament lists...</p>
+            </div>
+
+            <div v-if="error" class="alert alert-danger text-center">
+              {{ error }}
+            </div>
+
+            <div v-if="!isListLoading && !myProfile" class="text-center text-muted py-5 profile-placeholder">
+              <i class="fas fa-user-slash fa-3x mb-3"></i>
+              <h4 class="text-white">Profile Not Found</h4>
+              <p>Your email ({{ auth.currentUser?.email }}) was not found in the Club Members sheet.</p>
+              <p>Please contact an admin to be added.</p>
+            </div>
+            
+            <div v-if="displayedProfile" class="profile-card-container">
+              <div class="profile-card bg-dark-secondary rounded shadow-lg p-4 p-md-5 mb-4">
+                
+                <button v-if="searchResult" @click="showMyProfile" class="btn btn-sm btn-outline-warning mb-3">
+                  <i class="fas fa-arrow-left me-2"></i>Back to My Profile
+                </button>
+                
+                <div class="row g-4 align-items-center">
+                  <div class="col-md-4 text-center">
+                    <img 
+                      :src="displayedProfile.ProfileImageURL || 'https://placehold.co/150x150/2a2a2a/FFD700?text=No+Photo'" 
+                      alt="Profile Picture" 
+                      class="profile-img img-fluid rounded-circle border border-warning border-3"
+                    >
+                  </div>
+                  <div class="col-md-8">
+                    <h2 class="profile-name text-warning mb-1">{{ displayedProfile.PlayerName }}</h2>
+                    <h4 v-if="displayedProfile.Title" class="profile-title text-danger mb-3">{{ displayedProfile.Title }}</h4>
+                    <p class="profile-bio text-light fs-5">{{ displayedProfile.Bio || 'No bio available.' }}</p>
+                    <hr class="border-warning opacity-25">
+                    <div class="profile-stats d-flex justify-content-around">
+                        <div class="stat-item text-center">
+                            <div class="stat-label">Rating</div>
+                            <div class="stat-value text-info">{{ displayedProfile.Rating || 'N/A' }}</div>
+                        </div>
+                        <div class="stat-item text-center">
+                            <div class="stat-label">Joined</div>
+                            <div class="stat-value">{{ displayedProfile.JoinedDate || 'N/A' }}</div>
+                        </div>
                     </div>
-                    <div class="stat-item text-center">
-                        <div class="stat-label">BAtch</div>
-                        <div class="stat-value">{{ displayedProfile.Batch || 'N/A' }}</div>
-                    </div>
+                  </div>
+                </div>
+              </div> <div class="tournament-history bg-dark-secondary rounded shadow-lg p-4 p-md-5">
+                <h3 class="section-title text-center mb-4">Past Tournament Performance</h3>
+                
+                <div v-if="isHistoryLoading" class="text-center text-warning py-3">
+                  <div class="spinner-border spinner-border-sm" role="status"></div>
+                  <p class="mt-2 mb-0">Scanning tournament archives...</p>
+                </div>
+
+                <div v-else-if="!isHistoryLoading && displayedHistory.length > 0">
+                  <ul class="list-group list-group-flush">
+                    <li 
+                      v-for="item in displayedHistory" 
+                      :key="item.tournamentName" 
+                      class="list-group-item bg-transparent text-light"
+                      @click="toggleTournament(item.tournamentName)"
+                    >
+                      <div class="d-flex justify-content-between align-items-center history-summary">
+                        <div>
+                          <h5 class="history-title mb-0">{{ item.tournamentName }}</h5>
+                          <small v-if="item.team" class="history-team text-muted">Team: {{ item.team }}</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                          <span class="history-score text-warning fs-4 fw-bold me-3">{{ item.points }}/{{ item.total }}</span>
+                          <i class="fas" :class="expandedTournament === item.tournamentName ? 'fa-chevron-up' : 'fa-chevron-down'"></i>
+                        </div>
+                      </div>
+                      
+                      <div v-if="expandedTournament === item.tournamentName" class="game-details mt-3">
+                        <table class="table table-sm table-dark table-striped align-middle">
+                          <thead>
+                            <tr>
+                              <th>Color</th>
+                              <th>Opponent</th>
+                              <th>Result</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr v-for="(game, index) in item.games" :key="index">
+                              <td>
+                                <i class="fas fa-square" :class="game.color === 'White' ? 'text-white' : 'text-dark-gray'"></i>
+                                {{ game.color }}
+                              </td>
+                              <td>{{ game.opponentName }}</td>
+                              <td :class="game.result === 'Win' ? 'text-success' : game.result === 'Loss' ? 'text-danger' : 'text-muted'">
+                                {{ game.result }}
+                              </td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      </div>
+                      </li>
+                  </ul>
+                </div>
+
+                <div v-else-if="!isHistoryLoading && displayedHistory.length === 0">
+                  <p class="text-center text-muted">No past tournament data found for this player.</p>
+                </div>
+
+              </div> </div> </div>
+
+          <div class="col-lg-4">
+            <div class="search-sidebar bg-dark-secondary rounded shadow-lg p-4">
+              <h4 class="section-title text-center mb-4">Find Player</h4>
+              
+              <div class="position-relative">
+                <div class="input-group">
+                  <input
+                    type="text"
+                    class="form-control bg-dark text-light border-secondary"
+                    placeholder="Search by name or PlayerID..."
+                    aria-label="Search player"
+                    v-model="searchQuery"
+                    @focus="searchPerformed = true" 
+                    @blur="() => setTimeout(() => searchPerformed = false, 200)"
+                  >
+                  <button class="btn btn-outline-warning" type="button" @click="performSearch">
+                    <i class="fas fa-search"></i>
+                  </button>
+                </div>
+                
+                <div 
+                  v-if="liveSearchResults.length > 0 && searchQuery.length > 1 && searchPerformed" 
+                  class="search-results list-group"
+                >
+                  <button
+                    type="button"
+                    v-for="player in liveSearchResults"
+                    :key="player.PlayerID"
+                    class="list-group-item list-group-item-action list-group-item-dark"
+                    @mousedown="selectPlayer(player)"
+                  >
+                    <strong>{{ player.PlayerName }}</strong>
+                    <span class="text-muted small d-block player-id">{{ player.PlayerID }}</span>
+                  </button>
+                </div>
+                
+                <div
+                  v-if="liveSearchResults.length === 0 && searchQuery.length > 1 && searchPerformed"
+                  class="search-results list-group"
+                >
+                  <span class="list-group-item list-group-item-dark text-muted">No players found.</span>
                 </div>
               </div>
             </div>
-          </div> <div class="tournament-history bg-dark-secondary rounded shadow-lg p-4 p-md-5">
-            <h3 class="section-title text-center mb-4">Past Tournament Performance</h3>
-            
-            <div v-if="isHistoryLoading" class="text-center text-warning py-3">
-              <div class="spinner-border spinner-border-sm" role="status"></div>
-              <p class="mt-2 mb-0">Scanning tournament archives...</p>
-            </div>
-
-            <div v-else-if="!isHistoryLoading && displayedHistory.length > 0">
-              <ul class="list-group list-group-flush">
-                <li v-for="item in displayedHistory" :key="item.tournamentName" class="list-group-item bg-transparent text-light">
-                  <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                      <h5 class="history-title mb-0">{{ item.tournamentName }}</h5>
-                      <small v-if="item.team" class="history-team text-muted">Team: {{ item.team }}</small>
-                    </div>
-                    <span class="history-score text-warning fs-4 fw-bold">{{ item.points }}/{{ item.total }}</span>
-                  </div>
-                </li>
-              </ul>
-            </div>
-
-            <div v-else-if="!isHistoryLoading && displayedHistory.length === 0">
-              <p class="text-center text-muted">No past tournament data found for this player.</p>
-            </div>
-
-          </div> </div> </div>
-
-      <div class="col-lg-4">
-        <div class="search-sidebar bg-dark-secondary rounded shadow-lg p-4">
-          <h4 class="section-title text-center mb-4">Find Player</h4>
-          
-          <div class="position-relative">
-            <div class="input-group">
-              <input
-                type="text"
-                class="form-control bg-dark text-light border-secondary"
-                placeholder="Search by name or PlayerID..."
-                aria-label="Search player"
-                v-model="searchQuery"
-                @focus="searchPerformed = true" 
-                @blur="() => setTimeout(() => searchPerformed = false, 200)"
-              >
-              <button class="btn btn-outline-warning" type="button" @click="performSearch">
-                <i class="fas fa-search"></i>
-              </button>
-            </div>
-            
-            <div 
-              v-if="liveSearchResults.length > 0 && searchQuery.length > 1 && searchPerformed" 
-              class="search-results list-group"
-            >
-              <button
-                type="button"
-                v-for="player in liveSearchResults"
-                :key="player.PlayerID"
-                class="list-group-item list-group-item-action list-group-item-dark"
-                @mousedown="selectPlayer(player)"
-              >
-                <strong>{{ player.PlayerName }}</strong>
-                <span class="text-muted small d-block player-id">{{ player.PlayerID }}</span>
-              </button>
-            </div>
-            
-            <div
-              v-if="liveSearchResults.length === 0 && searchQuery.length > 1 && searchPerformed"
-              class="search-results list-group"
-            >
-              <span class="list-group-item list-group-item-dark text-muted">No players found.</span>
-            </div>
           </div>
-          
         </div>
       </div>
-
-    </div>
+    </section>
   </div>
-  </section>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'; // Import computed
+import { ref, onMounted, computed } from 'vue';
 import { auth } from '@/firebase';
 import { onAuthStateChanged } from "firebase/auth";
 
@@ -142,15 +199,18 @@ const allPlayers = ref([]);
 const allTournamentsList = ref([]);
 const searchQuery = ref('');
 const lastQuery = ref('');
-const searchResult = ref(null); // Holds the found *searched* player
-const myProfile = ref(null); // Holds the *logged-in user's* profile
-const displayedProfile = ref(null); // The profile currently being shown
+const searchResult = ref(null);
+const myProfile = ref(null);
+const displayedProfile = ref(null);
 const displayedHistory = ref([]);
-const searchPerformed = ref(false); // Flag to show/hide search dropdown
+const searchPerformed = ref(false);
 const isListLoading = ref(true);
 const isHistoryLoading = ref(false);
 const error = ref(null);
-// We no longer need searchError, it's handled by the dropdown
+
+// --- NEW ---
+// Holds the name of the tournament that is currently expanded
+const expandedTournament = ref(null); 
 
 // --- CONFIGURATION ---
 const PROFILE_SHEET_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTXXoxwbItOcDtty4QKH7PZVeO2dZTizbcTWeptay7RqrChD_gqSGpO1L2WSVri_YF_EeyA-taAqecv/pub?gid=0&single=true&output=csv'; 
@@ -201,19 +261,17 @@ onMounted(() => {
   });
 });
 
-// --- NEW: COMPUTED PROPERTY FOR LIVE SEARCH ---
+// --- COMPUTED PROPERTY FOR LIVE SEARCH ---
 const liveSearchResults = computed(() => {
   if (searchQuery.value.length < 2) {
-    return []; // Don't search until at least 2 chars are typed
+    return [];
   }
-  
   const query = searchQuery.value.toLowerCase();
-  
   return allPlayers.value.filter(player => {
     const nameMatch = player.PlayerName && player.PlayerName.toLowerCase().includes(query);
     const idMatch = player.PlayerID && player.PlayerID.toLowerCase().includes(query);
     return nameMatch || idMatch;
-  }).slice(0, 5); // Limit to showing 5 results
+  }).slice(0, 5);
 });
 
 // --- METHODS ---
@@ -253,38 +311,47 @@ function loadMyProfile(userEmail) {
   }
 }
 
-// --- UPDATED: Search button now just selects the top result ---
 const performSearch = () => {
   if (liveSearchResults.value.length > 0) {
-    // Select the first item in the dropdown
     selectPlayer(liveSearchResults.value[0]);
   }
 };
 
-// --- NEW: Function to handle clicking a search result ---
 const selectPlayer = (player) => {
-  searchResult.value = player; // Set this to show the "Back to My Profile" button
-  displayedProfile.value = player; // Change the display
-  fetchPlayerHistory(player.PlayerID); // Fetch new history
-  searchQuery.value = ''; // Clear the search bar
-  searchPerformed.value = false; // Hide the dropdown
+  searchResult.value = player;
+  displayedProfile.value = player;
+  fetchPlayerHistory(player.PlayerID);
+  searchQuery.value = '';
+  searchPerformed.value = false;
+  expandedTournament.value = null; // Close any open tabs
 };
 
-// --- NEW: Function to go back to your own profile ---
 const showMyProfile = () => {
-    searchResult.value = null; // Clear the search result
+    searchResult.value = null;
     searchQuery.value = '';
     searchPerformed.value = false;
-    displayedProfile.value = myProfile.value; // Switch display back
-    fetchPlayerHistory(myProfile.value.PlayerID); // Re-fetch "My" history
+    displayedProfile.value = myProfile.value;
+    fetchPlayerHistory(myProfile.value.PlayerID);
+    expandedTournament.value = null; // Close any open tabs
 };
 
-// --- History Fetching Function (Unchanged) ---
+// --- NEW: Function to toggle the expandable section ---
+const toggleTournament = (tournamentName) => {
+  if (expandedTournament.value === tournamentName) {
+    expandedTournament.value = null; // Close it if it's already open
+  } else {
+    expandedTournament.value = tournamentName; // Open it
+  }
+};
+
+// --- UPDATED: History Fetching Function (Now includes game details) ---
 async function fetchPlayerHistory(playerID) {
   if (!playerID) return;
+
   isHistoryLoading.value = true;
   displayedHistory.value = [];
   const history = [];
+
   const pastTournaments = allTournamentsList.value.filter(t => 
       (t.Status === 'Completed' || t.Status === 'Ongoing') &&
       (t.DisplayStatus === 'Primary' || !t.DisplayStatus)
@@ -295,7 +362,8 @@ async function fetchPlayerHistory(playerID) {
         tournamentName: tournament.TournamentName,
         points: 0,
         total: 0,
-        team: null
+        team: null,
+        games: [] // --- NEW: Array to store individual games ---
     };
     let playerFound = false;
 
@@ -315,21 +383,22 @@ async function fetchPlayerHistory(playerID) {
       let playersData = [], gamesData = [];
       let playersUrl, gamesUrl;
 
-      if (templateType === 'TeamLeague' || templateType === 'TeamSwiss') {
-        playersUrl = urlMap.get('Teams_Players');
-        gamesUrl = urlMap.get('Individual_Games');
-      } else if (templateType === 'IndividualSwissTeamArena') {
-        playersUrl = urlMap.get('Players_Teams');
-        gamesUrl = urlMap.get('Pairings_Results');
+      // Determine tabs to fetch
+      if (templateType === 'TeamLeague' || templateType === 'TeamSwiss' || templateType === 'IndividualSwissTeamArena') {
+        playersUrl = urlMap.get('Players_Teams') || urlMap.get('Teams_Players'); // Get players list
+        gamesUrl = (templateType === 'IndividualSwissTeamArena') ? urlMap.get('Pairings_Results') : urlMap.get('Individual_Games');
       } else if (templateType === 'IndividualSwiss' || templateType === 'IndividualRoundRobin') {
         playersUrl = urlMap.get('Players');
         gamesUrl = urlMap.get('Pairings_Results');
-      } else if (templateType === 'Knockout') {
-         continue;
+      } else {
+         continue; // Skip Knockout
       }
       
       if (playersUrl) playersData = await fetchAndParseSheet(playersUrl);
       if (gamesUrl) gamesData = await fetchAndParseSheet(gamesUrl);
+
+      // Create a quick lookup map for player names
+      const playerMap = new Map(playersData.map(p => [p.PlayerID, p.PlayerName]));
 
       const playerInfo = playersData.find(p => p.PlayerID === playerID);
       if (playerInfo) {
@@ -350,13 +419,37 @@ async function fetchPlayerHistory(playerID) {
           total = gameList.length;
 
           gameList.forEach(game => {
+              let color, opponentID, result, resultString;
+              
               if (game.White_PlayerID === playerID) {
-                  if (game.Result === '1-0') points += 1;
-                  if (game.Result.includes('1/2') || game.Result.includes('0.5')) points += 0.5;
-              } else if (game.Black_PlayerID === playerID) {
-                  if (game.Result === '0-1') points += 1;
-                  if (game.Result.includes('1/2') || game.Result.includes('0.5')) points += 0.5;
+                  color = 'White';
+                  opponentID = game.Black_PlayerID;
+                  result = game.Result;
+              } else {
+                  color = 'Black';
+                  opponentID = game.White_PlayerID;
+                  result = game.Result; // Result is from White's perspective
               }
+
+              // Convert result to Win/Loss/Draw
+              if ((color === 'White' && result === '1-0') || (color === 'Black' && result === '0-1')) {
+                  points += 1;
+                  resultString = 'Win';
+              } else if (result.includes('1/2') || result.includes('0.5')) {
+                  points += 0.5;
+                  resultString = 'Draw';
+              } else if ((color === 'White' && result === '0-1') || (color === 'Black' && result === '1-0')) {
+                  resultString = 'Loss';
+              } else {
+                  resultString = 'N/A'; // Handle other cases (e.g. forfeits)
+              }
+              
+              // --- NEW: Add game details to the games array ---
+              performance.games.push({
+                  opponentName: playerMap.get(opponentID) || 'Unknown Opponent',
+                  color: color,
+                  result: resultString
+              });
           });
           
           if (total > 0) {
@@ -530,13 +623,33 @@ async function fetchPlayerHistory(playerID) {
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
 
+/* ... (Keep all your existing styles) ... */
+
+/* --- Tournament History (Updates) --- */
 .list-group-item {
   border-bottom: 1px solid rgba(255, 215, 0, 0.1);
   padding: 1rem 0.5rem;
+  cursor: pointer; /* Make list items clickable */
+  transition: background-color 0.2s ease-in-out;
+}
+.list-group-item:hover .history-summary {
+  transform: translateX(5px);
 }
 .list-group-item:last-child {
   border-bottom: none;
 }
+.history-summary {
+  transition: transform 0.2s ease-in-out;
+}
+.history-summary i {
+  color: #FFD700;
+  transition: transform 0.3s ease;
+}
+/* This selector might need adjustment if you have other icons */
+.list-group-item[aria-expanded="true"] .fa-chevron-down {
+   transform: rotate(180deg);
+}
+
 .history-title {
   color: #eee;
   font-size: 1.1rem;
@@ -549,6 +662,29 @@ async function fetchPlayerHistory(playerID) {
   font-family: 'Courier New', Courier, monospace;
 }
 
+/* --- NEW: Expanded Game Details Table --- */
+.game-details {
+  animation: fadeIn 0.4s ease;
+  padding: 0.5rem;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+.game-details .table {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+.game-details .table th {
+  color: #adb5bd;
+  text-transform: uppercase;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+.game-details .text-dark-gray {
+  color: #495057; /* For the black piece icon */
+}
+
+/* ... (Keep your @keyframes fadeIn) ... */
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
