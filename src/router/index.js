@@ -4,6 +4,9 @@ import { auth } from '../firebase'
 
 import Tournament from '../views/Tournament.vue' 
 import GenericTournament from '../views/GenericTournament.vue'
+import Analysis from '../views/Analysis.vue'
+import Profile from '../views/Profile.vue'
+
 const routes = [
   {
     path: '/',
@@ -25,11 +28,13 @@ const routes = [
   },
   
   {
-    path: '/tournaments/:id',           // The URL structure
-    name: 'generic-tournament-details', // <<< The name being looked for
-    component: GenericTournament,       // The component to load
-    props: true                         // Pass URL params as props
+    path: '/tournaments/:id',           
+    name: 'generic-tournament-details', 
+    component: GenericTournament,      
+    props: true                         
   },
+  { path: '/analysis', name: 'analysis', component: Analysis },
+  { path: '/profile', name: 'profile', component: Profile },
  
   { path: '/puzzle-mobile', name: 'puzzle-mobile', component: () => import('../views/PuzzlesMobile.vue'), meta: { requiresAuth: true } },
   { path: '/puzzles', name: 'puzzles', component: () => import('../views/Puzzles.vue'), meta: { requiresAuth: true, specialNavbar: true } }
