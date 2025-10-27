@@ -46,8 +46,8 @@
                         <div class="stat-value text-info">{{ displayedProfile.Rating || 'N/A' }}</div>
                     </div>
                     <div class="stat-item text-center">
-                        <div class="stat-label">Joined</div>
-                        <div class="stat-value">{{ displayedProfile.JoinedDate || 'N/A' }}</div>
+                        <div class="stat-label">BAtch</div>
+                        <div class="stat-value">{{ displayedProfile.Batch || 'N/A' }}</div>
                     </div>
                 </div>
               </div>
@@ -524,6 +524,11 @@ async function fetchPlayerHistory(playerID) {
   font-size: 1.8rem;
 }
 
+.btn-outline-warning:hover {
+  background: #FFD700;
+  color: #000;
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+}
 
 .list-group-item {
   border-bottom: 1px solid rgba(255, 215, 0, 0.1);
@@ -549,4 +554,29 @@ async function fetchPlayerHistory(playerID) {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+@media (max-width: 992px) {
+  .row.g-4 {
+    flex-direction: column-reverse; /* Search first, profile second */
+  }
+  .search-sidebar {
+    position: relative;
+    top: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-img {
+    width: 120px;
+    height: 120px;
+  }
+  .section-title {
+    font-size: 1.8rem;
+  }
+  .profile-card, .tournament-history, .search-sidebar {
+    padding: 1.5rem;
+  }
+}
+
+
 </style>
