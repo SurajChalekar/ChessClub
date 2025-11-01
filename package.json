@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.1",
+    "@mliebelt/pgn-parser": "^1.4.19",
     "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
     "chess.js": "^1.4.0",
