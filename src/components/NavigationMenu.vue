@@ -118,8 +118,8 @@ const loginWithGoogle = async () => {
     }
     alert(`Welcome ${user.displayName || user.email}!`)
   } catch (e) {
-    console.error(e)
-    alert('Login failed.')
+    console.error('Login error:', e)
+    alert(`Login failed: ${e.message || e.code || 'Unknown error'}`)
   }
 }
 

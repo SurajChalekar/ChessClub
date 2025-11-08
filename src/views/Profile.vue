@@ -39,7 +39,14 @@
               {{ error }}
             </div>
 
-            <div v-if="!isListLoading && !myProfile" class="text-center text-muted py-5 profile-placeholder">
+            <div v-if="!isListLoading && !myProfile && !auth.currentUser" class="text-center text-muted py-5 profile-placeholder">
+              <i class="fas fa-search fa-3x mb-3 text-warning"></i>
+              <h4 class="text-white">Search for Players</h4>
+              <p>You can search for club members using the search box on the right.</p>
+              <p class="text-info">Log in to view your own profile and tournament history.</p>
+            </div>
+            
+            <div v-if="!isListLoading && !myProfile && auth.currentUser" class="text-center text-muted py-5 profile-placeholder">
               <i class="fas fa-user-slash fa-3x mb-3"></i>
               <h4 class="text-white">Profile Not Found</h4>
               <p>Your email ({{ auth.currentUser?.email }}) was not found in the Club Members sheet.</p>
@@ -121,7 +128,7 @@
                                 {{ game.color }}
                               </td>
                               <td>{{ game.opponentName }}</td>
-                              <td :class="game.result === 'Win' ? 'text-success' : game.result === 'Loss' ? 'text-danger' : 'text-muted'">
+                              <td :class="game.result === 'Win' ? 'text-success' : game.result === 'Loss' ? 'text-danger' : 'text-warning'">
                                 {{ game.result }}
                               </td>
                             </tr>
@@ -151,7 +158,8 @@
                     aria-label="Search player"
                     v-model="searchQuery"
                     @focus="searchPerformed = true" 
-                    @blur="() => setTimeout(() => searchPerformed = false, 200)"
+                    @blur="handleSearchBlur"
+                    @keyup.enter="performSearch"
                   >
                   <button class="btn btn-outline-warning" type="button" @click="performSearch">
                     <i class="fas fa-search"></i>
@@ -218,19 +226,32 @@ const MASTER_TOURNAMENT_LIST_URL = 'https://docs.google.com/spreadsheets/d/e/2PA
 
 // --- CSV PARSING FUNCTION ---
 async function fetchAndParseSheet(url) {
+  console.log('Fetching sheet from URL:', url);
+  
   if (!url || url.startsWith('YOUR_')) {
     throw new Error("A required Sheet URL is missing in the script setup.");
   }
   try {
     const response = await fetch(url);
+    console.log('Fetch response status:', response.status, response.statusText);
+    
     if (!response.ok) throw new Error(`Network error: ${response.status} - ${response.statusText}`);
 
     const csvText = await response.text();
+    console.log('CSV text length:', csvText.length);
+    console.log('CSV preview (first 500 chars):', csvText.substring(0, 500));
+    
     const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
+    console.log('Total lines after split:', lines.length);
 
-    if (lines.length < 2) return [];
+    if (lines.length < 2) {
+      console.warn('Not enough lines in CSV (need at least 2)');
+      return [];
+    }
 
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    console.log('Headers found:', headers);
+    
     const data = lines.slice(1).map(line => {
       const rowObject = {};
       const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
@@ -241,6 +262,10 @@ async function fetchAndParseSheet(url) {
       });
       return rowObject;
     });
+    
+    console.log('Parsed data rows:', data.length);
+    console.log('First row sample:', data[0]);
+    
     return data;
   } catch (e) {
     console.error(`Failed to fetch or parse sheet data from ${url}:`, e);
@@ -250,13 +275,20 @@ async function fetchAndParseSheet(url) {
 
 // --- LIFECYCLE HOOK ---
 onMounted(() => {
+  console.log('Profile page mounted');
   document.title = 'Player Profiles - IISER TVM Chess Club';
+  
+  console.log('Setting up auth state listener...');
   onAuthStateChanged(auth, async (user) => {
+    console.log('Auth state changed, user:', user ? user.email : 'null');
+    
     if (user) {
+      console.log('User is logged in, loading data...');
       await loadInitialData(user.email);
     } else {
-      error.value = "Please log in to view your profile.";
-      isListLoading.value = false;
+      console.log('No user logged in, but loading player list for search...');
+      // Still load the player list so search works
+      await loadInitialData(null);
     }
   });
 });
@@ -267,27 +299,51 @@ const liveSearchResults = computed(() => {
     return [];
   }
   const query = searchQuery.value.toLowerCase();
-  return allPlayers.value.filter(player => {
+  console.log('Searching for:', query);
+  console.log('Total players:', allPlayers.value.length);
+  
+  const results = allPlayers.value.filter(player => {
     const nameMatch = player.PlayerName && player.PlayerName.toLowerCase().includes(query);
     const idMatch = player.PlayerID && player.PlayerID.toLowerCase().includes(query);
     return nameMatch || idMatch;
   }).slice(0, 5);
+  
+  console.log('Search results:', results);
+  return results;
 });
 
 // --- METHODS ---
 async function loadInitialData(userEmail) {
   try {
+    console.log('=== LOADING INITIAL DATA ===');
+    console.log('User email:', userEmail || 'Not logged in');
+    console.log('Profile sheet URL:', PROFILE_SHEET_URL);
+    console.log('Tournament list URL:', MASTER_TOURNAMENT_LIST_URL);
+    
     isListLoading.value = true;
     error.value = null;
+    
     const [players, tournaments] = await Promise.all([
       fetchAndParseSheet(PROFILE_SHEET_URL),
       fetchAndParseSheet(MASTER_TOURNAMENT_LIST_URL)
     ]);
+    
     allPlayers.value = players;
     allTournamentsList.value = tournaments;
-    console.log(`Loaded ${allPlayers.value.length} players and ${allTournamentsList.value.length} tournaments.`);
-    loadMyProfile(userEmail);
+    
+    console.log(`✓ Loaded ${allPlayers.value.length} players and ${allTournamentsList.value.length} tournaments.`);
+    console.log('All players:', allPlayers.value);
+    
+    // Only try to load user's profile if they're logged in
+    if (userEmail) {
+      loadMyProfile(userEmail);
+    } else {
+      // Show message that they can search but need to log in to see their profile
+      error.value = null; // Clear any previous errors
+      console.log('Player list loaded. User can search but needs to log in to see their profile.');
+    }
   } catch (e) {
+    console.error('Error loading initial data:', e);
     error.value = e.message;
   } finally {
     isListLoading.value = false;
@@ -295,19 +351,27 @@ async function loadInitialData(userEmail) {
 }
 
 function loadMyProfile(userEmail) {
+  console.log('Loading profile for email:', userEmail);
+  
   if (!userEmail) {
     error.value = "Could not get user email from login.";
     return;
   }
+  
+  console.log('Searching in', allPlayers.value.length, 'players');
+  
   const foundProfile = allPlayers.value.find(player => 
     player.Email && player.Email.toLowerCase() === userEmail.toLowerCase()
   );
+  
   if (foundProfile) {
+    console.log('Profile found:', foundProfile);
     myProfile.value = foundProfile;
     displayedProfile.value = myProfile.value;
     fetchPlayerHistory(myProfile.value.PlayerID);
   } else {
     console.warn(`User ${userEmail} not found in Club_Members sheet.`);
+    console.log('Available emails:', allPlayers.value.map(p => p.Email));
   }
 }
 
@@ -333,6 +397,12 @@ const showMyProfile = () => {
     displayedProfile.value = myProfile.value;
     fetchPlayerHistory(myProfile.value.PlayerID);
     expandedTournament.value = null; // Close any open tabs
+};
+
+const handleSearchBlur = () => {
+  setTimeout(() => {
+    searchPerformed.value = false;
+  }, 300);
 };
 
 // --- NEW: Function to toggle the expandable section ---
@@ -691,6 +761,11 @@ async function fetchPlayerHistory(playerID) {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* ========================================
+   MOBILE RESPONSIVE STYLES
+   ======================================== */
+
+/* Tablets and smaller */
 @media (max-width: 992px) {
   .row.g-4 {
     flex-direction: column-reverse; /* Search first, profile second */
@@ -698,19 +773,208 @@ async function fetchPlayerHistory(playerID) {
   .search-sidebar {
     position: relative;
     top: 0;
+    margin-bottom: 1.5rem;
+  }
+  
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1rem;
   }
 }
 
+/* Mobile devices */
 @media (max-width: 768px) {
+  .profile-page {
+    padding: 0.5rem 0 !important;
+  }
+  
+  .profile-hero {
+    padding: 2rem 0;
+  }
+  
+  .hero-title {
+    font-size: 2rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.95rem;
+  }
+  
+  .chess-icon {
+    font-size: 0.8em;
+  }
+  
+  .profile-content {
+    padding: 1.5rem 0 !important;
+  }
+  
   .profile-img {
     width: 120px;
     height: 120px;
   }
+  
+  .profile-name {
+    font-size: 1.5rem;
+  }
+  
+  .profile-title {
+    font-size: 1.1rem;
+  }
+  
+  .profile-bio {
+    font-size: 1rem;
+  }
+  
   .section-title {
+    font-size: 1.5rem;
+  }
+  
+  .search-sidebar .section-title {
+    font-size: 1.3rem;
+  }
+  
+  .profile-card, .tournament-history, .search-sidebar {
+    padding: 1rem !important;
+  }
+  
+  .profile-stats {
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .stat-item {
+    width: 100%;
+  }
+  
+  .stat-value {
+    font-size: 1.3rem;
+  }
+  
+  /* Tournament history */
+  .history-title {
+    font-size: 1rem;
+  }
+  
+  .history-score {
+    font-size: 1.2rem !important;
+  }
+  
+  .game-details .table {
+    font-size: 0.85rem;
+  }
+  
+  .game-details .table th {
+    font-size: 0.75rem;
+  }
+  
+  /* Search */
+  .input-group .form-control {
+    font-size: 0.9rem;
+  }
+  
+  .search-results {
+    font-size: 0.9rem;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 576px) {
+  .container {
+    padding: 0.5rem;
+  }
+  
+  .hero-title {
+    font-size: 1.75rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 0.9rem;
+  }
+  
+  .profile-card, .tournament-history, .search-sidebar {
+    padding: 0.75rem !important;
+  }
+  
+  .profile-img {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .profile-name {
+    font-size: 1.3rem;
+  }
+  
+  .profile-title {
+    font-size: 1rem;
+  }
+  
+  .profile-bio {
+    font-size: 0.9rem;
+  }
+  
+  .section-title {
+    font-size: 1.3rem;
+  }
+  
+  .stat-label {
+    font-size: 0.75rem;
+  }
+  
+  .stat-value {
+    font-size: 1.1rem;
+  }
+  
+  .history-title {
+    font-size: 0.9rem;
+  }
+  
+  .history-score {
+    font-size: 1rem !important;
+    margin-right: 0.5rem !important;
+  }
+  
+  .history-team {
+    font-size: 0.8rem;
+  }
+  
+  .game-details {
+    padding: 0.35rem;
+  }
+  
+  .game-details .table {
+    font-size: 0.8rem;
+  }
+  
+  .game-details .table th,
+  .game-details .table td {
+    padding: 0.4rem;
+  }
+  
+  .btn-outline-warning {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .input-group .form-control {
+    font-size: 0.85rem;
+    padding: 0.5rem;
+  }
+}
+
+/* Landscape orientation on mobile */
+@media (max-width: 767.98px) and (orientation: landscape) {
+  .profile-hero {
+    padding: 1.5rem 0;
+  }
+  
+  .hero-title {
     font-size: 1.8rem;
   }
-  .profile-card, .tournament-history, .search-sidebar {
-    padding: 1.5rem;
+  
+  .profile-content {
+    padding: 1rem 0 !important;
   }
 }
 
