@@ -230,8 +230,9 @@ const loginWithGoogle = async () => {
     userEmail.value = user.email
     alert(`Welcome ${user.displayName || user.email}!`)
   } catch (error) {
-    console.error(error)
-    errorMessage.value = 'Login failed. Please try again.'
+    console.error('Login error:', error)
+    errorMessage.value = `Login failed: ${error.message || error.code || 'Please try again.'}`
+    alert(errorMessage.value)
   }
 }
 // Page effects

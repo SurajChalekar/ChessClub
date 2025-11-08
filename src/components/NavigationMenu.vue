@@ -34,6 +34,14 @@
           </li>
           <li class="nav-item">
             <router-link
+              to="/profile"
+              class="nav-link nav-link-custom"  
+              active-class="active"
+              @click="menuOpen = false"
+            >Profile</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link
               to="/anouncements"
               class="nav-link nav-link-custom"
               active-class="active"
@@ -47,6 +55,14 @@
               active-class="active"
               @click="menuOpen = false"
             >Tournaments</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link
+              to="/analysis"
+              class="nav-link nav-link-custom" 
+              active-class="active"
+              @click="menuOpen = false"
+            >Analysis</router-link>
           </li>
           <li class="nav-item">
             <router-link
@@ -102,8 +118,8 @@ const loginWithGoogle = async () => {
     }
     alert(`Welcome ${user.displayName || user.email}!`)
   } catch (e) {
-    console.error(e)
-    alert('Login failed.')
+    console.error('Login error:', e)
+    alert(`Login failed: ${e.message || e.code || 'Unknown error'}`)
   }
 }
 
