@@ -53,11 +53,11 @@
               <h4 class="round-title">{{ round.name }}</h4>
               <div v-for="match in round.matches" :key="match.MatchID" class="matchup">
                 <div class="match-participant" :class="{ 'winner': match.Result === 'Player A Won' }">
-                  <span>{{ getParticipantDetails(match.PlayerA_ID).Name }}</span>
+                  <span @click="showPlayerRecords(getParticipantDetails(match.PlayerA_ID))" class="clickable-name">{{ getParticipantDetails(match.PlayerA_ID).Name }}</span>
                   <span class="score">{{ getScore(match.Score, 'A') }}</span>
                 </div>
                 <div class="match-participant" :class="{ 'winner': match.Result === 'Player B Won' }">
-                  <span>{{ getParticipantDetails(match.PlayerB_ID).Name }}</span>
+                  <span @click="showPlayerRecords(getParticipantDetails(match.PlayerB_ID))" class="clickable-name">{{ getParticipantDetails(match.PlayerB_ID).Name }}</span>
                   <span class="score">{{ getScore(match.Score, 'B') }}</span>
                 </div>
               </div>
@@ -75,11 +75,40 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showRecordModal" class="modal-backdrop" @click.self="closeModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+          <button @click="closeModal" type="button" class="btn-close btn-close-white"></button>
+        </div>
+        <div class="modal-body">
+          <p v-if="modalRecords.length === 0" class="text-center">No match data available.</p>
+          <table v-else class="table table-dark table-sm table-striped">
+            <thead>
+              <tr>
+                <th>Stage</th>
+                <th>Opponent</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="record in modalRecords" :key="record.id">
+                <td>{{ record.stage }}</td>
+                <td>{{ record.opponentName }}</td>
+                <td>{{ record.result }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { ref, computed } from 'vue';
 
 // --- 1. DEFINE PROPS ---
 const props = defineProps({
@@ -92,6 +121,11 @@ const props = defineProps({
 });
 
 // --- 2. LOGIC ---
+const showRecordModal = ref(false);
+const modalTitle = ref('');
+const modalRecords = ref([]);
+const isPlayerRecord = ref(false);
+const isTeamRecord = ref(false);
 const getParticipantDetails = (playerId) => {
   // Use props.participants
   return props.participants.find(p => p.PlayerID === playerId) || { Name: 'TBD' };
@@ -134,6 +168,50 @@ const tournamentTitle = computed(() => {
   }
   return props.info?.TournamentName || 'Tournament';
 });
+
+// --- MODAL FUNCTIONS ---
+const showPlayerRecords = (participant) => {
+  if (!participant || participant.Name === 'TBD') return;
+  
+  modalTitle.value = `Match History: ${participant.Name}`;
+  modalRecords.value = props.bracketMatches
+    .filter(match => match.PlayerA_ID === participant.PlayerID || match.PlayerB_ID === participant.PlayerID)
+    .map(match => {
+      const isPlayerA = match.PlayerA_ID === participant.PlayerID;
+      const opponentID = isPlayerA ? match.PlayerB_ID : match.PlayerA_ID;
+      const opponent = getParticipantDetails(opponentID);
+
+      let matchOutcome = '-';
+      if (match.Result === 'Draw') matchOutcome = 'Draw';
+      else if ((isPlayerA && match.Result === 'Player A Won') || (!isPlayerA && match.Result === 'Player B Won'))
+        matchOutcome = 'Win';
+      else if ((isPlayerA && match.Result === 'Player B Won') || (!isPlayerA && match.Result === 'Player A Won'))
+        matchOutcome = 'Loss';
+
+      return {
+        id: match.MatchID,
+        stage: match.Round,
+        opponentName: opponent.Name,
+        result: matchOutcome,
+      };
+    })
+    .sort((a, b) => {
+      // Define bracket stage order
+      const stageOrder = ['Round of 16', 'Quarterfinals', 'Semifinals', 'Final', '3rd Place'];
+      const indexA = stageOrder.indexOf(a.stage);
+      const indexB = stageOrder.indexOf(b.stage);
+      if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+      return String(a.stage).localeCompare(String(b.stage));
+    });
+
+  isPlayerRecord.value = true;
+  isTeamRecord.value = false;
+  showRecordModal.value = true;
+};
+
+const closeModal = () => {
+  showRecordModal.value = false;
+};
 
 </script>
 
@@ -197,4 +275,37 @@ const tournamentTitle = computed(() => {
 .score {
   font-weight: bold;
 }
+.clickable-name {
+  cursor: pointer;
+  text-decoration: underline dotted rgba(255, 215, 0, 0.5);
+  transition: all 0.2s ease;
+}
+.clickable-name:hover {
+  color: #FFD700;
+  text-shadow: 0 0 8px rgba(255, 215, 0, 0.7);
+  transform: scale(1.05);
+}
+
+/* Modal Styles */
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes modal-fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal-backdrop {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+  display: flex; justify-content: center; align-items: center; z-index: 1050;
+  animation: fade-in-up 0.3s ease;
+}
+.modal-container {
+  background: #212529; border: 1px solid #FFD700; border-radius: 10px; color: #e0e0e0;
+  width: 90%; max-width: 600px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.3);
+  animation: modal-fade-in 0.4s ease-out;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 1rem;
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent);
+  border-bottom: 1px solid #FFD700;
+}
+.modal-title { color: #FFD700; margin-bottom: 0; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+.modal-body { padding: 1rem; max-height: 70vh; overflow-y: auto; }
 </style>

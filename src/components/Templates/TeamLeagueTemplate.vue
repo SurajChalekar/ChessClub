@@ -322,14 +322,39 @@
                         </div>
                       </div>
 
+                    <!-- CONNECTING LINES - COMMENTED OUT FOR LATER WORK -->
+                    <!-- 
+                    <button @click="computeSvgPaths" style="position: absolute; top: 10px; right: 10px; z-index: 100; padding: 8px 16px; background: #FFD700; color: #000; border: none; border-radius: 4px; cursor: pointer; font-weight: bold;">
+                      🔄 Recompute Paths ({{ svgPaths.length }})
+                    </button>
+                    
                     <svg class="ipl-connectors" ref="connectorsSvg" viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">
                       <defs>
                         <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffb300" />
+                          <path d="M 0 0 L 10 5 L 0 10 z" fill="#FFD700" />
                         </marker>
+                        <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                          <stop offset="0%" style="stop-color:#FFD700;stop-opacity:0.6" />
+                          <stop offset="100%" style="stop-color:#FFA500;stop-opacity:0.9" />
+                        </linearGradient>
                       </defs>
-                      <path v-for="(p, i) in svgPaths" :key="i" :d="p.d" class="connector" :class="p.cls" :marker-end="p.arrow ? 'url(#arrow)' : null" />
+                      <path 
+                        v-for="(p, i) in svgPaths" 
+                        :key="i" 
+                        :d="p.d" 
+                        :class="['connector', p.cls]"
+                        :marker-end="p.arrow ? 'url(#arrow)' : null"
+                        fill="none"
+                        :stroke="p.cls.includes('virtual') ? 'url(#goldGradient)' : '#FFD700'"
+                        :stroke-width="p.cls.includes('virtual') ? '2.5' : '3'"
+                        :stroke-dasharray="p.cls.includes('virtual') ? '8,4' : 'none'"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        :opacity="p.cls.includes('virtual') ? '0.7' : '0.85'"
+                        style="filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.5)); transition: all 0.3s ease;"
+                      />
                     </svg>
+                    -->
 
                   </div>
                 </div>
@@ -483,7 +508,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount, nextTick, reactive } from "vue";
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, reactive, watch } from "vue";
 
 // --- PROPS ---
 const props = defineProps({
@@ -937,9 +962,19 @@ const tournamentTitle = computed(() => {
   return props.info?.TournamentName || 'Tournament';
 });
 
-// --- DYNAMIC SVG CONNECTORS ---
+// --- DYNAMIC SVG CONNECTORS - COMMENTED OUT FOR LATER WORK ---
+/*
 const connectorsSvg = ref(null);
 const svgPaths = reactive([]);
+let retryCount = 0;
+const MAX_RETRIES = 3;
+
+// Watch svgPaths for changes
+watch(() => svgPaths.length, (newLen, oldLen) => {
+  if (newLen !== oldLen) {
+    console.log(`🔔 [Watch] svgPaths length changed: ${oldLen} -> ${newLen}`);
+  }
+}, { immediate: false });
 
 function makeCubicPath(x1, y1, x2, y2, side = 'right') {
   // keep cubic helper as fallback (not used for elbow routing by default)
@@ -953,41 +988,76 @@ function makeCubicPath(x1, y1, x2, y2, side = 'right') {
 function makeElbowPath(x1, y1, x2, y2, opts = {}) {
   // produce a right-angle elbow path: horizontal -> vertical -> horizontal
   // opts: {startOffset, endOffset, viaX}
-  const startOffset = opts.startOffset ?? 120; // how far from node to start horizontal
-  const endOffset = opts.endOffset ?? 120; // how far from target to end horizontal
+  const startOffset = opts.startOffset ?? 120;
+  const endOffset = opts.endOffset ?? 120;
   const startX = x1 + (opts.side === 'left' ? -startOffset : startOffset);
   const endX = x2 - (opts.side === 'left' ? -endOffset : endOffset);
-
-  // pick a viaX between startX and endX; prefer closer to end for nicer elbow
   const viaX = opts.viaX ?? (startX + endX) / 2;
 
-  // Construct path with L segments so joints look angular; rounded stroke-linecap hides sharp corners
+  // Construct path with L segments
   return `M ${x1} ${y1} L ${startX} ${y1} L ${viaX} ${y2} L ${endX} ${y2} L ${x2} ${y2}`;
 }
+*/
 
+/*
 function computeSvgPaths() {
+  console.log(`🔵 [SVG] computeSvgPaths() called (retry ${retryCount}/${MAX_RETRIES})`);
   svgPaths.length = 0; // clear
-  if (!connectorsSvg.value) return;
-  const wrapper = connectorsSvg.value.parentElement; // bracket wrapper
+  
+  if (!connectorsSvg.value) {
+    console.warn('⚠️ [SVG] connectorsSvg.value is null/undefined');
+    return;
+  }
+  
+  // Get the bracket wrapper (need to go up to ipl-bracket-columns to find all nodes)
+  let wrapper = connectorsSvg.value.closest('.ipl-bracket-columns');
+  if (!wrapper) {
+    console.warn('⚠️ [SVG] .ipl-bracket-columns not found, trying .ipl-bracket-wrapper');
+    wrapper = connectorsSvg.value.closest('.ipl-bracket-wrapper');
+  }
+  if (!wrapper) {
+    console.warn('⚠️ [SVG] wrapper not found');
+    return;
+  }
+  
+  console.log('✅ [SVG] Wrapper found:', wrapper.className);
+  
+  // Use the wrapper for positioning calculations (all nodes are relative to this)
   const rect = wrapper.getBoundingClientRect();
+  console.log('📐 [SVG] Wrapper dimensions:', { 
+    width: rect.width.toFixed(2), 
+    height: rect.height.toFixed(2)
+  });
 
   // If wrapper has zero size (tab hidden or not yet laid out), retry shortly
   if (rect.width === 0 || rect.height === 0) {
-    // schedule a single retry after a short delay and bail for now
-    setTimeout(() => {
-      // only retry if component still mounted
-      if (connectorsSvg.value) computeSvgPaths();
-    }, 120);
+    if (retryCount < MAX_RETRIES) {
+      retryCount++;
+      console.warn(`⚠️ [SVG] Wrapper has zero size, retrying in 200ms... (${retryCount}/${MAX_RETRIES})`);
+      setTimeout(() => {
+        if (connectorsSvg.value) computeSvgPaths();
+      }, 200);
+    } else {
+      console.error('❌ [SVG] Max retries reached for zero-size wrapper');
+      retryCount = 0;
+    }
     return;
   }
 
   const getNodeCenter = (name) => {
+    // Search in the entire bracket wrapper, not just immediate children
     const el = wrapper.querySelector(`[data-node="${name}"]`);
-    if (!el) return null;
+    if (!el) {
+      console.warn(`⚠️ [SVG] Node "${name}" not found in DOM`);
+      // Debug: show what nodes ARE available
+      const allNodes = wrapper.querySelectorAll('[data-node]');
+      console.log(`   Available nodes:`, Array.from(allNodes).map(n => n.getAttribute('data-node')));
+      return null;
+    }
     const r = el.getBoundingClientRect();
-    // center relative to wrapper (SVG coords normalized to 1000x300 by viewBox)
     const x = ((r.left + r.right) / 2 - rect.left) / rect.width * 1000;
     const y = ((r.top + r.bottom) / 2 - rect.top) / rect.height * 300;
+    console.log(`📍 [SVG] Node "${name}":`, { x: x.toFixed(2), y: y.toFixed(2) });
     return { x, y, r };
   };
 
@@ -995,58 +1065,205 @@ function computeSvgPaths() {
   const n2 = getNodeCenter('semi2');
   const n3 = getNodeCenter('third');
   const nf = getNodeCenter('final');
-  if (!n1 || !n2 || !n3 || !nf) {
-    // missing nodes: maybe DOM not rendered yet; try again soon
-    setTimeout(() => { if (connectorsSvg.value) computeSvgPaths(); }, 80);
+  
+  // Check if we have the essential nodes (third and final)
+  if (!n3 || !nf) {
+    if (retryCount < MAX_RETRIES) {
+      retryCount++;
+      console.warn(`⚠️ [SVG] Missing essential nodes (third/final), retrying in 150ms... (${retryCount}/${MAX_RETRIES})`, {
+        third: !!n3, final: !!nf
+      });
+      setTimeout(() => { 
+        if (connectorsSvg.value) computeSvgPaths();
+      }, 150);
+    } else {
+      console.error('❌ [SVG] Max retries reached. Missing essential nodes:', {
+        third: !!n3, final: !!nf
+      });
+      retryCount = 0;
+    }
     return;
   }
 
-  // Use elbow paths for a broadcast-style fixed-angle look
-  // Tunable offsets (reduced for a tighter elbow closer to broadcast look)
-  const startOffset = 80;
-  const endOffset = 80;
+  // Reset retry count on success
+  retryCount = 0;
+  
+  // Check if we have semifinals
+  if (n1 && n2) {
+    console.log('✅ [SVG] All nodes found, computing full bracket paths...');
+    
+    // Calculate connection points on the right edge of semifinal boxes
+    const sf1RightY = n1.y;  // Center of semifinal 1
+    const sf2RightY = n2.y;  // Center of semifinal 2
+    
+    // Calculate connection points on the left edge of final/third boxes
+    const finalLeftYTop = nf.y - 15;    // Top connection point of final
+    const finalLeftYBottom = nf.y + 15; // Bottom connection point of final
+    const thirdLeftYTop = n3.y - 15;    // Top connection point of third
+    const thirdLeftYBottom = n3.y + 15; // Bottom connection point of third
+    
+    // Calculate the vertical line position (midpoint between semifinals and finals)
+    const midX = (n1.x + nf.x) / 2;
+    
+    // Semifinal 1 -> Final (winner path)
+    // Horizontal from SF1 -> Vertical line -> Horizontal to Final top
+    try {
+      const path = `M ${n1.x} ${sf1RightY} L ${midX} ${sf1RightY} L ${midX} ${finalLeftYTop} L ${nf.x} ${finalLeftYTop}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-sf1-to-final', arrow: true });
+      }
+    } catch (e) { 
+      console.error('❌ [SVG] Error creating SF1->Final path:', e);
+    }
+    
+    // Semifinal 2 -> Final (winner path)
+    // Horizontal from SF2 -> Vertical line -> Horizontal to Final bottom
+    try {
+      const path = `M ${n2.x} ${sf2RightY} L ${midX} ${sf2RightY} L ${midX} ${finalLeftYBottom} L ${nf.x} ${finalLeftYBottom}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-sf2-to-final', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating SF2->Final path:', e);
+    }
 
-  // Semifinal 1 -> Final (top path)
-  try {
-  const p1 = makeElbowPath(n1.x, n1.y - 12, nf.x, nf.y - 20, { startOffset, endOffset, viaX: nf.x - 120 });
-    if (!/NaN/.test(p1)) svgPaths.push({ d: p1, cls: 'c-sf1-to-final', arrow: true });
-  } catch (e) { /* ignore invalid path */ }
-  // Semifinal 2 -> Final (bottom path)
-  try {
-  const p2 = makeElbowPath(n2.x, n2.y + 12, nf.x, nf.y + 20, { startOffset, endOffset, viaX: nf.x - 120 });
-    if (!/NaN/.test(p2)) svgPaths.push({ d: p2, cls: 'c-sf2-to-final', arrow: true });
-  } catch (e) { }
+    // Calculate the vertical line position for losers bracket
+    const loserMidX = (n1.x + n3.x) / 2;
+    
+    // Semifinal 1 loser -> Third place (loser path)
+    try {
+      const path = `M ${n1.x} ${sf1RightY} L ${loserMidX} ${sf1RightY} L ${loserMidX} ${thirdLeftYTop} L ${n3.x} ${thirdLeftYTop}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-loser-sf1-to-3rd', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating SF1->3rd path:', e);
+    }
+    
+    // Semifinal 2 loser -> Third place (loser path)
+    try {
+      const path = `M ${n2.x} ${sf2RightY} L ${loserMidX} ${sf2RightY} L ${loserMidX} ${thirdLeftYBottom} L ${n3.x} ${thirdLeftYBottom}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-loser-sf2-to-3rd', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating SF2->3rd path:', e);
+    }
+  } else {
+    console.log('⚠️ [SVG] Semifinals not found, creating virtual semifinal connectors...');
+    
+    // Create virtual semifinal positions based on final and third positions
+    const midY = (nf.y + n3.y) / 2;  // Midpoint between final and third
+    const virtualSemi1Y = midY - 60;  // Above midpoint
+    const virtualSemi2Y = midY + 60;  // Below midpoint
+    const virtualSemiX = 150;  // Fixed left position
+    
+    console.log('📍 [SVG] Virtual semi1:', { x: virtualSemiX, y: virtualSemi1Y });
+    console.log('📍 [SVG] Virtual semi2:', { x: virtualSemiX, y: virtualSemi2Y });
+    
+    // Calculate connection points
+    const finalLeftYTop = nf.y - 15;
+    const finalLeftYBottom = nf.y + 15;
+    const thirdLeftYTop = n3.y - 15;
+    const thirdLeftYBottom = n3.y + 15;
+    
+    // Calculate vertical line positions
+    const midX = (virtualSemiX + nf.x) / 2;
+    const loserMidX = (virtualSemiX + n3.x) / 2;
+    
+    // Virtual Semifinal 1 -> Final (winner path)
+    try {
+      const path = `M ${virtualSemiX} ${virtualSemi1Y} L ${midX} ${virtualSemi1Y} L ${midX} ${finalLeftYTop} L ${nf.x} ${finalLeftYTop}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-virtual-sf1-to-final', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating virtual SF1->Final path:', e);
+    }
+    
+    // Virtual Semifinal 2 -> Final (winner path)
+    try {
+      const path = `M ${virtualSemiX} ${virtualSemi2Y} L ${midX} ${virtualSemi2Y} L ${midX} ${finalLeftYBottom} L ${nf.x} ${finalLeftYBottom}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-virtual-sf2-to-final', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating virtual SF2->Final path:', e);
+    }
+    
+    // Virtual Semifinal 1 loser -> Third place
+    try {
+      const path = `M ${virtualSemiX} ${virtualSemi1Y} L ${loserMidX} ${virtualSemi1Y} L ${loserMidX} ${thirdLeftYTop} L ${n3.x} ${thirdLeftYTop}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-virtual-sf1-to-3rd', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating virtual SF1->3rd path:', e);
+    }
+    
+    // Virtual Semifinal 2 loser -> Third place
+    try {
+      const path = `M ${virtualSemiX} ${virtualSemi2Y} L ${loserMidX} ${virtualSemi2Y} L ${loserMidX} ${thirdLeftYBottom} L ${n3.x} ${thirdLeftYBottom}`;
+      if (!/NaN/.test(path)) {
+        svgPaths.push({ d: path, cls: 'c-virtual-sf2-to-3rd', arrow: true });
+      }
+    } catch (e) {
+      console.error('❌ [SVG] Error creating virtual SF2->3rd path:', e);
+    }
+  }
 
-  // Losers to 3rd_Match (elbow paths)
-  try {
-  const p3 = makeElbowPath(n1.x, n1.y + 12, n3.x, n3.y - 10, { startOffset, endOffset, viaX: n3.x - 120 });
-    if (!/NaN/.test(p3)) svgPaths.push({ d: p3, cls: 'c-loser-sf1-to-3rd', arrow: true });
-  } catch (e) { }
-  try {
-  const p4 = makeElbowPath(n2.x, n2.y - 12, n3.x, n3.y + 10, { startOffset, endOffset, viaX: n3.x - 120 });
-    if (!/NaN/.test(p4)) svgPaths.push({ d: p4, cls: 'c-loser-sf2-to-3rd', arrow: true });
-  } catch (e) { }
-
-  // Optional: Eliminator or other connectors could be added similarly
+  console.log(`🎯 [SVG] Total paths created: ${svgPaths.length}`);
 }
 
 let resizeObserver = null;
 onMounted(async () => {
+  console.log('🚀 [Lifecycle] onMounted called');
   await nextTick();
-  computeSvgPaths();
+  console.log('🚀 [Lifecycle] After nextTick, calling computeSvgPaths');
+  
+  // Add a small delay to ensure tab content is visible
+  setTimeout(() => {
+    console.log('🚀 [Lifecycle] Delayed call to computeSvgPaths (300ms)');
+    computeSvgPaths();
+  }, 300);
+  
   // recompute on window resize
-  window.addEventListener('resize', computeSvgPaths);
+  window.addEventListener('resize', () => {
+    console.log('📏 [Event] Window resize detected');
+    computeSvgPaths();
+  });
+  
   // watch wrapper size via ResizeObserver for more accuracy
   if (window.ResizeObserver) {
-    resizeObserver = new ResizeObserver(() => computeSvgPaths());
-    if (connectorsSvg.value && connectorsSvg.value.parentElement) resizeObserver.observe(connectorsSvg.value.parentElement);
+    console.log('👁️ [Observer] Setting up ResizeObserver');
+    resizeObserver = new ResizeObserver(() => {
+      console.log('👁️ [Observer] ResizeObserver triggered');
+      computeSvgPaths();
+    });
+    if (connectorsSvg.value && connectorsSvg.value.parentElement) {
+      resizeObserver.observe(connectorsSvg.value.parentElement);
+      console.log('👁️ [Observer] Observing wrapper element');
+    }
+  }
+  
+  // Also listen for tab changes
+  const playoffsTab = document.getElementById('playoffs-tab');
+  if (playoffsTab) {
+    playoffsTab.addEventListener('shown.bs.tab', () => {
+      console.log('🔄 [Tab] Playoffs tab shown, recomputing paths');
+      setTimeout(() => computeSvgPaths(), 100);
+    });
   }
 });
 
 onBeforeUnmount(() => {
+  console.log('🛑 [Lifecycle] onBeforeUnmount called');
   window.removeEventListener('resize', computeSvgPaths);
-  if (resizeObserver && connectorsSvg.value && connectorsSvg.value.parentElement) resizeObserver.unobserve(connectorsSvg.value.parentElement);
+  if (resizeObserver && connectorsSvg.value && connectorsSvg.value.parentElement) {
+    resizeObserver.unobserve(connectorsSvg.value.parentElement);
+  }
 });
+*/
 </script>
 
 <style scoped>
