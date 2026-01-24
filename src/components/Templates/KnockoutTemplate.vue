@@ -127,23 +127,31 @@
             <div v-for="round in bracketRounds" :key="round.name" class="bracket-round">
               <h4 class="round-title">{{ round.name }}</h4>
               <div class="round-matches">
-                <div v-for="match in round.matches" :key="match.MatchID" class="matchup">
-                  <div class="match-participant" :class="{ 'winner': match.Result === 'Player 1 wins' }">
-                    <span @click="showPlayerRecords(getParticipantDetails(match.PlayerA_ID))" class="clickable-name">
-                      {{ getParticipantDetails(match.PlayerA_ID).name || getParticipantDetails(match.PlayerA_ID).Name }}
-                    </span>
-                    <span class="score">{{ getScore(match.Score, 'A') }}</span>
+                <div v-for="match in round.matches" :key="match.MatchID" class="matchup d-flex">
+                  <div
+                    class="board-number d-flex align-items-center justify-content-center p-2 border-end border-secondary">
+                    <span class="small fw-bold">#{{ match.MatchNumber }}</span>
                   </div>
-                  <div class="match-participant" :class="{ 'winner': match.Result === 'Player 2 wins' }">
-                    <span @click="showPlayerRecords(getParticipantDetails(match.PlayerB_ID))" class="clickable-name">
-                      {{ getParticipantDetails(match.PlayerB_ID).name || getParticipantDetails(match.PlayerB_ID).Name }}
-                    </span>
-                    <span class="score">{{ getScore(match.Score, 'B') }}</span>
-                  </div>
-                  <div v-if="isArbiter && lifecycleStatus !== 'LOCKED' && isCurrentRound(match)"
-                    class="p-2 border-top border-secondary text-center">
-                    <button @click="openEditModal(match)" class="btn btn-xxs btn-outline-warning w-100">Update
-                      Score</button>
+                  <div class="flex-grow-1">
+                    <div class="match-participant" :class="{ 'winner': match.Result === 'Player 1 wins' }">
+                      <span @click="showPlayerRecords(getParticipantDetails(match.PlayerA_ID))" class="clickable-name">
+                        {{ getParticipantDetails(match.PlayerA_ID).name || getParticipantDetails(match.PlayerA_ID).Name
+                        }}
+                      </span>
+                      <span class="score">{{ getScore(match.Score, 'A') }}</span>
+                    </div>
+                    <div class="match-participant" :class="{ 'winner': match.Result === 'Player 2 wins' }">
+                      <span @click="showPlayerRecords(getParticipantDetails(match.PlayerB_ID))" class="clickable-name">
+                        {{ getParticipantDetails(match.PlayerB_ID).name || getParticipantDetails(match.PlayerB_ID).Name
+                        }}
+                      </span>
+                      <span class="score">{{ getScore(match.Score, 'B') }}</span>
+                    </div>
+                    <div v-if="isArbiter && lifecycleStatus !== 'LOCKED' && isCurrentRound(match)"
+                      class="p-2 border-top border-secondary text-center">
+                      <button @click="openEditModal(match)" class="btn btn-xxs btn-outline-warning w-100">Update
+                        Score</button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -166,7 +174,7 @@
     <div v-if="showLoginModal" class="modal-backdrop" @click.self="showLoginModal = false">
       <div class="modal-container login-modal">
         <div class="modal-header">
-          <h5 class="modal-title">Arbiter Authentication</h5>
+          <h5 class="modal-title">{{ isSignUp ? 'Arbiter Registration' : 'Arbiter Authentication' }}</h5>
           <button @click="showLoginModal = false" class="btn-close btn-close-white"></button>
         </div>
         <div class="modal-body">
@@ -174,7 +182,16 @@
             placeholder="Email">
           <input v-model="loginPassword" type="password" class="form-control bg-dark text-white border-secondary mb-3"
             placeholder="Password">
-          <button @click="handleLogin" :disabled="isLoggingIn" class="btn btn-warning w-100">Sign In</button>
+          <div class="d-grid gap-2">
+            <button v-if="!isSignUp" @click="handleLogin" :disabled="isLoggingIn" class="btn btn-warning">Sign
+              In</button>
+            <button v-else @click="handleSignUp" :disabled="isLoggingIn" class="btn btn-warning">Sign Up</button>
+          </div>
+          <p class="text-center mt-3 mb-0 small">
+            <a href="#" @click.prevent="isSignUp = !isSignUp" class="text-secondary text-decoration-none">
+              {{ isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up' }}
+            </a>
+          </p>
         </div>
       </div>
     </div>
@@ -253,6 +270,7 @@ const showLoginModal = ref(false);
 const loginEmail = ref('');
 const loginPassword = ref('');
 const isLoggingIn = ref(false);
+const isSignUp = ref(false);
 
 const showEditModal = ref(false);
 const selectedMatch = ref(null);
@@ -278,8 +296,7 @@ async function handleLifecycleAction() {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     const functionUrl = `${supabaseUrl}/functions/v1/tournament-pairings`;
 
-    console.log('[DEBUG] Calling edge function with token in body...');
-    console.log('[DEBUG] Action:', lifecycleStatus.value);
+
 
     // Use anon key for Authorization header (required by relay), pass user token in body
     const response = await fetch(functionUrl, {
@@ -296,11 +313,11 @@ async function handleLifecycleAction() {
       })
     });
 
-    console.log('[DEBUG] Response status:', response.status);
+
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('[DEBUG] Error response:', errorText);
+
       try {
         const errJson = JSON.parse(errorText);
         throw new Error(errJson.error || errJson.message || errorText);
@@ -312,7 +329,7 @@ async function handleLifecycleAction() {
     const data = await response.json();
     emit('refresh');
   } catch (err) {
-    console.error('[DEBUG] Error:', err);
+
     alert("Pairing Error: " + err.message);
   } finally {
     isProcessing.value = false;
@@ -363,8 +380,7 @@ const isCurrentRound = (match) => {
   const maxR = Math.max(...props.bracketMatches.map(m => Number(m.round_number) || 0));
   const currentMatchRound = Number(match.round_number);
 
-  // Debug log to help you verify in the console
-  console.log(`[DEBUG] Comparing Match Round ${currentMatchRound} to Max Round ${maxR}`);
+
 
   return currentMatchRound === maxR;
 };
@@ -443,6 +459,24 @@ const handleLogin = async () => {
     location.reload();
   }
 };
+
+const handleSignUp = async () => {
+  isLoggingIn.value = true;
+  const { data, error } = await supabase.auth.signUp({
+    email: loginEmail.value,
+    password: loginPassword.value,
+  });
+  isLoggingIn.value = false;
+
+  if (error) alert(error.message);
+  else {
+    alert("Check your email for the confirmation link!");
+    isSignUp.value = false; // Switch back to login view
+  }
+};
+
+
+
 
 const openEditModal = (match) => {
   selectedMatch.value = match;
@@ -648,6 +682,12 @@ const handleLogout = async () => { await supabase.auth.signOut(); location.reloa
   border-radius: 8px;
   /* Removed margin-bottom: 1.5rem; to rely on space-around */
   border: 1px solid #444;
+}
+
+.board-number {
+  min-width: 40px;
+  color: #ffffff;
+  background-color: #0000003b;
 }
 
 .match-participant {

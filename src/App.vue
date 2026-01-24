@@ -21,11 +21,13 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabase'
 import NavigationMenu from './components/NavigationMenu.vue'
 import SpecialNavbar from './components/NavigationPuzzle.vue'
 
 const route = useRoute()
+const router = useRouter()
 const isMobile = ref(window.innerWidth <= 768)
 
 const handleResize = () => {
@@ -34,6 +36,10 @@ const handleResize = () => {
 
 onMounted(() => {
   window.addEventListener('resize', handleResize)
+
+  supabase.auth.onAuthStateChange((event, session) => {
+    // Auth state changed
+  });
 })
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
@@ -49,7 +55,8 @@ onUnmounted(() => {
 }
 
 .main-content {
-  padding-top: 76px; /* Space for fixed navbar */
+  padding-top: 76px;
+  /* Space for fixed navbar */
   min-height: calc(100vh - 76px);
 }
 
