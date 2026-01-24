@@ -15,6 +15,7 @@
     "@fortawesome/fontawesome-free": "^7.0.1",
     "@mliebelt/pgn-parser": "^1.4.19",
     "@popperjs/core": "^2.11.8",
+    "@supabase/supabase-js": "^2.91.0",
     "bootstrap": "^5.3.8",
     "chess.js": "^1.4.0",
     "chessboardjsx": "^2.4.7",
@@ -28,7 +29,12 @@
   "devDependencies": {
     "@types/node": "^24.9.1",
     "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/test-utils": "^2.4.6",
+    "fast-check": "^4.5.3",
+    "jsdom": "^27.4.0",
+    "supabase": "^2.72.8",
     "vite": "^7.0.6",
-    "vite-plugin-vue-devtools": "^8.0.0"
+    "vite-plugin-vue-devtools": "^8.0.0",
+    "vitest": "^4.0.18"
   }
 }

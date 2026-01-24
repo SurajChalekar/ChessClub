@@ -206,9 +206,9 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-
 import { auth, provider } from '@/firebase'
 import { signInWithPopup, signOut } from 'firebase/auth'
+
 
 const errorMessage = ref('')
 const userEmail = ref('')
@@ -235,7 +235,8 @@ const loginWithGoogle = async () => {
     alert(errorMessage.value)
   }
 }
-// Page effects
+
+
 onMounted(() => {
   document.title = 'IISER-TVM Chess Club'
 

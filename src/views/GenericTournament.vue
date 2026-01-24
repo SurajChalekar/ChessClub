@@ -75,8 +75,8 @@
           :gallery="tournamentData.gallery"
           :participants="tournamentData.participants"
           :bracket-matches="tournamentData.bracketMatches"
+          @refresh="fetchFromSupabase(props.id)"
         />
-
         <MultiStageEventTemplate 
           v-else-if="templateType === 'MultiStageEvent'"
           :parent-id="props.id"
@@ -94,8 +94,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
+// --- STEP 2 INTEGRATION: Import Supabase Client ---
+import { supabase } from '@/lib/supabase';
 
-// --- TEMPLATE IMPORTS (Remain the same) ---
+// --- TEMPLATE IMPORTS ---
 import TeamLeagueTemplate from '../components/Templates/TeamLeagueTemplate.vue';
 import TeamSwissTemplate from '../components/Templates/TeamSwissTemplate.vue';
 import IndividualSwissTemplate from '../components/Templates/IndividualSwissTemplate.vue';
@@ -104,12 +106,12 @@ import KnockoutTemplate from '../components/Templates/KnockoutTemplate.vue';
 import MultiStageEventTemplate from '../components/Templates/MultiStageEventTemplate.vue';
 import IndividualSwissTeamArenaTemplate from '../components/Templates/IndividualSwissTeamArenaTemplate.vue';
 
-// --- PROPS & STATE (Remain the same) ---
+// --- PROPS & STATE ---
 const props = defineProps({ id: String });
 const isLoading = ref(true);
 const error = ref(null);
 const templateType = ref(null);
-const allTournaments = ref([]); // Holds the full list from the master sheet
+const allTournaments = ref([]); 
 const tournamentData = ref({
   info: {},
   documents: [],
@@ -119,16 +121,14 @@ const tournamentData = ref({
   individualGames: [],
   players: [],
   pairingsResults: [],
-  playersTeams: [], // For Arena Swiss
+  playersTeams: [], 
   participants: [],
   bracketMatches: []
 });
 
-// --- MASTER LIST URL (Remains the same) ---
-const MASTER_TOURNAMENT_LIST_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv'; // Replace with your actual Master List URL
+// --- MASTER LIST URL ---
+const MASTER_TOURNAMENT_LIST_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTR0IoPJT90A5D4QX8zfnB6-v8OB5i1KXD7j2yfGA4eFnNRuXel-nYkaEWtcSw7ZqxD3LnK5_Q3lTpy/pub?gid=0&single=true&output=csv';
 
-// --- REQUIRED SHEET NAMES PER TEMPLATE ---
-// Defines which 'SheetName' values are needed for each template type
 const REQUIRED_SHEET_NAMES = {
   TeamLeague: ['Info', 'Documents', 'Gallery', 'Teams_Players', 'Team_Matches', 'Individual_Games'],
   TeamSwiss: ['Info', 'Documents', 'Gallery', 'Teams_Players', 'Team_Matches', 'Individual_Games'],
@@ -136,80 +136,106 @@ const REQUIRED_SHEET_NAMES = {
   IndividualRoundRobin: ['Info', 'Documents', 'Gallery', 'Players', 'Pairings_Results'],
   Knockout: ['Info', 'Documents', 'Gallery', 'Participants', 'Bracket_Matches'],
   IndividualSwissTeamArena: ['Info', 'Documents', 'Gallery', 'Players_Teams', 'Pairings_Results']
-  // MultiStageEvent does not use this
 };
 
-// --- DATA KEY MAPPING (Maps SheetName to tournamentData key) ---
-// This translates the 'SheetName' value from your index to the internal key used in tournamentData
 const DATA_KEY_MAP = {
     'Info': 'info',
     'Documents': 'documents',
     'Gallery': 'gallery',
-    'Teams_Players': 'teamsPlayers', // Used by TeamLeague, TeamSwiss
+    'Teams_Players': 'teamsPlayers',
     'Team_Matches': 'teamMatches',
     'Individual_Games': 'individualGames',
-    'Players': 'players',             // Used by IndividualSwiss, IndividualRoundRobin
-    'Pairings_Results': 'pairingsResults', // Used by multiple Templates
-    'Players_Teams': 'playersTeams',     // Used by IndividualSwissTeamArena
-    'Participants': 'participants',     // Used by Knockout
+    'Players': 'players',
+    'Pairings_Results': 'pairingsResults',
+    'Players_Teams': 'playersTeams',
+    'Participants': 'participants',
     'Bracket_Matches': 'bracketMatches'
 };
 
+// --- HYBRID FETCHING: SUPABASE LOGIC ---
+async function fetchFromSupabase(tournamentId) {
+  console.log(`[DEBUG] Initializing Supabase Fetch for TournamentID: ${tournamentId}`);
+  try {
+    // 1. Fetch info separately to handle the ".single()" error gracefully
+    const { data: infoData, error: infoError } = await supabase
+      .from('tournament_info')
+      .select('*')
+      .eq('tournament_id', tournamentId)
+      .maybeSingle(); // Use maybeSingle to avoid 406 errors if not found
 
-// --- SHARED CSV PARSING FUNCTION (Revised for Info Tab with Headers) ---
-// Handles both the SheetIndex (standard CSV) and the Info tab (header row)
+    if (infoError) console.warn("[DEBUG] tournament_info fetch warning:", infoError);
+
+    // 2. Fetch the rest in parallel
+    const [matchesReq, participantsReq, galleryReq] = await Promise.all([
+      supabase.from('matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: true }),
+      supabase.from('participants').select('*'), // Currently global, add .eq() if you added tournament_id to participants
+      supabase.from('gallery').select('*').eq('tournament_id', tournamentId)
+    ]);
+
+    // Check for critical errors in the required tables
+    if (matchesReq.error) throw matchesReq.error;
+    if (participantsReq.error) throw participantsReq.error;
+
+    // Mapping to internal structure
+    tournamentData.value.info = infoData || {};
+    tournamentData.value.participants = participantsReq.data || [];
+    tournamentData.value.gallery = galleryReq.data || [];
+    tournamentData.value.bracketMatches = matchesReq.data || [];
+
+    console.log('[DEBUG] Supabase Data Mapped Successfully:', {
+      infoFound: !!infoData,
+      matchesCount: tournamentData.value.bracketMatches.length,
+      participantsCount: tournamentData.value.participants.length
+    });
+
+  } catch (err) {
+    console.error("[DEBUG] Supabase Fetch Critical Error:", err);
+    throw new Error(`Supabase Error: ${err.message}`);
+  }
+}
+
+// --- SHARED CSV PARSING FUNCTION ---
 async function fetchAndParseSheet(url, isInfoTab = false) {
   if (!url) throw new Error("No URL provided to fetchAndParseSheet");
   try {
     const response = await fetch(url);
-    if (!response.ok) throw new Error(`Network error: ${response.status} - ${response.statusText} for URL: ${url}`);
+    if (!response.ok) throw new Error(`Network error: ${response.status}`);
 
     const csvText = await response.text();
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== ''); // Filter empty lines
+    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
 
-    if (lines.length === 0) return isInfoTab ? {} : []; // No lines at all
+    if (lines.length === 0) return isInfoTab ? {} : [];
 
-    // Info Tab Logic (expects headers + 1 data row)
     if (isInfoTab) {
-      if (lines.length < 2) {
-          console.warn(`Info tab at ${url} seems to have only headers or is empty.`);
-          return {}; // Need headers and at least one data row
-      }
+      if (lines.length < 2) return {};
       const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-      const values = lines[1].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); // Use robust split for the value row
+      const values = lines[1].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
       const infoObject = {};
       headers.forEach((header, index) => {
-        if (header) { // Ensure header is not empty
+        if (header) {
           infoObject[header] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : '';
         }
       });
-      return infoObject; // Return the single object based on headers
+      return infoObject;
     }
 
-    // Standard CSV parsing for SheetIndex and other data tabs
-    if (lines.length < 2) return []; // Only headers, no data
-
+    if (lines.length < 2) return [];
     const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
     const data = lines.slice(1).map(line => {
       const rowObject = {};
       const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
       headers.forEach((header, index) => {
-        // Ensure header is not empty before assigning
-        if(header){
-             rowObject[header] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : '';
-        }
+        if(header) rowObject[header] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : '';
       });
       return rowObject;
     });
     return data;
-
   } catch (e) {
-    console.error(`Failed to fetch or parse sheet data from ${url}:`, e);
     throw e;
   }
 }
 
-// --- MAIN DATA FETCHING LOGIC (Revised for SheetIndex) ---
+// --- MAIN DATA FETCHING LOGIC ---
 onMounted(() => {
   fetchGenericTournamentData();
 });
@@ -218,100 +244,85 @@ async function fetchGenericTournamentData() {
   try {
     isLoading.value = true;
     error.value = null;
-    // Reset data object for safety
+    
+    // Reset state
     Object.keys(tournamentData.value).forEach(key => {
         tournamentData.value[key] = key === 'info' ? {} : [];
     });
 
-
     // 1. Fetch Master List
+    console.log("[DEBUG] Fetching Master Tournament List...");
     allTournaments.value = await fetchAndParseSheet(MASTER_TOURNAMENT_LIST_URL);
 
-    // 2. Find Current Tournament in Master List
+    // 2. Find Current Tournament
     const currentTournament = allTournaments.value.find(t => t.TournamentID === props.id);
-    if (!currentTournament) throw new Error(`Tournament ID "${props.id}" not found in Master List.`);
+    if (!currentTournament) throw new Error(`Tournament ID "${props.id}" not found.`);
 
-    // 3. Get Template Type & Update Title
-    templateType.value = currentTournament.TemplateType;
-    if (!templateType.value) throw new Error(`No TemplateType for tournament ID "${props.id}".`);
-    document.title = currentTournament.TournamentName || 'Tournament Details';
+    console.log(`[DEBUG] Tournament Found. Source: ${currentTournament.DataSource || 'Google Sheets'}`);
 
-    // 4. Handle MultiStageEvent separately (no SheetIndex needed)
-    if (templateType.value === 'MultiStageEvent') {
+    // --- BRANCHING LOGIC: SUPABASE vs GOOGLE SHEETS ---
+    if (currentTournament.DataSource === 'Supabase') {
+      await fetchFromSupabase(props.id);
+      templateType.value = currentTournament.TemplateType;
+      document.title = currentTournament.TournamentName || 'Tournament Details';
+      
+      // Fallback for Title from Master List if Supabase Info is empty
+      if (!tournamentData.value.info.TournamentName) {
+          tournamentData.value.info.TournamentName = currentTournament.TournamentName;
+      }
+      
       isLoading.value = false;
-      return; // Done for this type
+      return; 
     }
 
-    // 5. Get SheetIndex URL and Fetch Index Data
-    const sheetIndexUrl = currentTournament.SheetURL; // This URL now points to the SheetIndex tab
-    if (!sheetIndexUrl) throw new Error(`No SheetURL (SheetIndex Tab URL) for tournament ID "${props.id}".`);
-    // Fetch Index data using standard CSV parsing
-    const sheetIndexData = await fetchAndParseSheet(sheetIndexUrl);
+    // --- DEFAULT: GOOGLE SHEETS LOGIC ---
+    templateType.value = currentTournament.TemplateType;
+    document.title = currentTournament.TournamentName || 'Tournament Details';
 
-    // 6. Create URL Map from SheetIndex Data
+    if (templateType.value === 'MultiStageEvent') {
+      isLoading.value = false;
+      return;
+    }
+
+    const sheetIndexUrl = currentTournament.SheetURL;
+    if (!sheetIndexUrl) throw new Error(`No SheetURL for tournament ID "${props.id}".`);
+    
+    const sheetIndexData = await fetchAndParseSheet(sheetIndexUrl);
     const urlMap = new Map();
     sheetIndexData.forEach(row => {
-        // Using your column names: SheetName and CSV_URL
-        if (row.SheetName && row.CSV_URL) {
-            urlMap.set(row.SheetName, row.CSV_URL);
-        } else {
-             console.warn(`Skipping invalid row in SheetIndex for tournament ${props.id}:`, row);
-        }
+        if (row.SheetName && row.CSV_URL) urlMap.set(row.SheetName, row.CSV_URL);
     });
 
-    // 7. Get Required Sheet Names for this Template
     const requiredNames = REQUIRED_SHEET_NAMES[templateType.value];
-    if (!requiredNames) throw new Error(`No required sheet names defined for template: "${templateType.value}"`);
+    if (!requiredNames) throw new Error(`No requirements for template: "${templateType.value}"`);
 
-    // 8. Build Fetch Promises using URLs from the urlMap
     const fetchPromises = [];
-    const dataKeys = []; // To store the keys like 'info', 'documents', etc.
+    const dataKeys = [];
 
     for (const sheetName of requiredNames) {
-      // sheetName = 'Info', 'Documents', etc.
       const specificTabUrl = urlMap.get(sheetName);
-      const dataKey = DATA_KEY_MAP[sheetName]; // Get corresponding key like 'info', 'documents'
+      const dataKey = DATA_KEY_MAP[sheetName];
 
       if (specificTabUrl && dataKey) {
-        // Fetch 'Info' using special parsing, others normally
         fetchPromises.push(fetchAndParseSheet(specificTabUrl, sheetName === 'Info'));
         dataKeys.push(dataKey);
-      } else {
-         if (!dataKey) {
-             console.error(`Data key mapping missing for SheetName: "${sheetName}"`);
-         }
-         if (!specificTabUrl) {
-            console.warn(`URL for SheetName "${sheetName}" not found in SheetIndex data for tournament ${props.id}. Skipping fetch.`);
-            // Set default empty value for missing data
-            tournamentData.value[dataKey || sheetName] = (dataKey === 'info') ? {} : [];
-         }
       }
     }
 
-    // 9. Fetch all data in parallel
     if (fetchPromises.length > 0) {
         const allTabData = await Promise.all(fetchPromises);
-
-        // 10. Store fetched data
         allTabData.forEach((data, index) => {
-          const key = dataKeys[index];
-          tournamentData.value[key] = data; // Store fetched data (object for 'info', arrays otherwise)
+          tournamentData.value[dataKeys[index]] = data;
         });
-    } else {
-        // If no promises were created (e.g., empty index or missing required URLs), ensure info isn't empty if possible
-         if (!tournamentData.value.info.TournamentName && currentTournament.TournamentName) {
-            tournamentData.value.info.TournamentName = currentTournament.TournamentName;
-         }
+        console.log("[DEBUG] Google Sheets Data Loaded Successfully");
     }
 
-     // Ensure TournamentName is present in info (fallback from master list if needed)
-     if (!tournamentData.value.info.TournamentName && currentTournament.TournamentName) {
-        tournamentData.value.info.TournamentName = currentTournament.TournamentName;
-     }
-
+    if (!tournamentData.value.info.TournamentName && currentTournament.TournamentName) {
+      tournamentData.value.info.TournamentName = currentTournament.TournamentName;
+    }
 
   } catch (e) {
-    console.error("Error in fetchGenericTournamentData:", e);
+    console.error("[DEBUG] GenericTournament Fetch Error:", e);
     error.value = e.message;
   } finally {
     isLoading.value = false;
@@ -320,7 +331,6 @@ async function fetchGenericTournamentData() {
 </script>
 
 <style scoped>
-/* Styles remain unchanged */
 .generic-tournament-page {
   background: #111;
   color: #eee;
