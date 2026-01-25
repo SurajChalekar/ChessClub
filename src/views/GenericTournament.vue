@@ -1,7 +1,7 @@
 <template>
   <div class="generic-tournament-page py-5">
     <div class="container">
-      
+
       <div v-if="isLoading" class="text-center py-5">
         <div class="spinner-border text-warning" style="width: 3rem; height: 3rem;" role="status">
           <span class="visually-hidden">Loading...</span>
@@ -15,73 +15,35 @@
       </div>
 
       <div v-else class="tournament-content">
-        
-        <TeamLeagueTemplate 
-          v-if="templateType === 'TeamLeague'"
-          :info="tournamentData.info"
-          :TournamentsList="allTournaments"
-          :documents="tournamentData.documents"
-          :gallery="tournamentData.gallery"
-          :teams-players="tournamentData.teamsPlayers"
-          :team-matches="tournamentData.teamMatches"
-          :individual-games="tournamentData.individualGames"
-        />
 
-        <TeamSwissTemplate 
-          v-else-if="templateType === 'TeamSwiss'"
-          :info="tournamentData.info"
-          :TournamentsList="allTournaments"
-          :documents="tournamentData.documents"
-          :gallery="tournamentData.gallery"
-          :teams-players="tournamentData.teamsPlayers"
-          :team-matches="tournamentData.teamMatches"
-          :individual-games="tournamentData.individualGames"
-        />
+        <TeamLeagueTemplate v-if="templateType === 'TeamLeague'" :info="tournamentData.info"
+          :TournamentsList="allTournaments" :documents="tournamentData.documents" :gallery="tournamentData.gallery"
+          :teams-players="tournamentData.teamsPlayers" :team-matches="tournamentData.teamMatches"
+          :individual-games="tournamentData.individualGames" />
 
-        <IndividualSwissTemplate 
-          v-else-if="templateType === 'IndividualSwiss'"
-          :info="tournamentData.info"
-          :TournamentsList="allTournaments"
-          :documents="tournamentData.documents"
-          :gallery="tournamentData.gallery"
-          :players="tournamentData.players"
-          :pairings-results="tournamentData.pairingsResults"
-        />
+        <TeamSwissTemplate v-else-if="templateType === 'TeamSwiss'" :info="tournamentData.info"
+          :TournamentsList="allTournaments" :documents="tournamentData.documents" :gallery="tournamentData.gallery"
+          :teams-players="tournamentData.teamsPlayers" :team-matches="tournamentData.teamMatches"
+          :individual-games="tournamentData.individualGames" />
 
-        <IndividualSwissTeamArenaTemplate
-          v-else-if="templateType === 'IndividualSwissTeamArena'"
-          :info="tournamentData.info"
-          :documents="tournamentData.documents"
-          :gallery="tournamentData.gallery"
-          :players-teams="tournamentData.playersTeams"       
-          :pairings-results="tournamentData.pairingsResults"
-         />
+        <IndividualSwissTemplate v-else-if="templateType === 'IndividualSwiss'" :info="tournamentData.info"
+          :TournamentsList="allTournaments" :documents="tournamentData.documents" :gallery="tournamentData.gallery"
+          :players="tournamentData.players" :pairings-results="tournamentData.pairingsResults" />
 
-        <IndividualRoundRobinTemplate
-          v-else-if="templateType === 'IndividualRoundRobin'"
-          :info="tournamentData.info"
-          :TournamentsList="allTournaments"
-          :documents="tournamentData.documents"
-          :gallery="tournamentData.gallery"
-          :players="tournamentData.players"
-          :pairings-results="tournamentData.pairingsResults"
-        />
+        <IndividualSwissTeamArenaTemplate v-else-if="templateType === 'IndividualSwissTeamArena'"
+          :info="tournamentData.info" :documents="tournamentData.documents" :gallery="tournamentData.gallery"
+          :players-teams="tournamentData.playersTeams" :pairings-results="tournamentData.pairingsResults" />
 
-        <KnockoutTemplate 
-          v-else-if="templateType === 'Knockout'"
-          :info="tournamentData.info"
-          :TournamentsList="allTournaments"
-          :documents="tournamentData.documents"
-          :gallery="tournamentData.gallery"
-          :participants="tournamentData.participants"
-          :bracket-matches="tournamentData.bracketMatches"
-          @refresh="fetchFromSupabase(props.id)"
-        />
-        <MultiStageEventTemplate 
-          v-else-if="templateType === 'MultiStageEvent'"
-          :parent-id="props.id"
-          :all-tournaments="allTournaments"
-        />
+        <IndividualRoundRobinTemplate v-else-if="templateType === 'IndividualRoundRobin'" :info="tournamentData.info"
+          :TournamentsList="allTournaments" :documents="tournamentData.documents" :gallery="tournamentData.gallery"
+          :players="tournamentData.players" :pairings-results="tournamentData.pairingsResults" />
+
+        <KnockoutTemplate v-else-if="templateType === 'Knockout'" :info="tournamentData.info"
+          :TournamentsList="allTournaments" :documents="tournamentData.documents" :gallery="tournamentData.gallery"
+          :participants="tournamentData.participants" :bracket-matches="tournamentData.bracketMatches"
+          @refresh="fetchFromSupabase(props.id)" />
+        <MultiStageEventTemplate v-else-if="templateType === 'MultiStageEvent'" :parent-id="props.id"
+          :all-tournaments="allTournaments" />
 
         <div v-else class="alert alert-warning">
           Could not find a matching template for type: {{ templateType }}
@@ -111,7 +73,7 @@ const props = defineProps({ id: String });
 const isLoading = ref(true);
 const error = ref(null);
 const templateType = ref(null);
-const allTournaments = ref([]); 
+const allTournaments = ref([]);
 const tournamentData = ref({
   info: {},
   documents: [],
@@ -121,7 +83,7 @@ const tournamentData = ref({
   individualGames: [],
   players: [],
   pairingsResults: [],
-  playersTeams: [], 
+  playersTeams: [],
   participants: [],
   bracketMatches: []
 });
@@ -139,17 +101,17 @@ const REQUIRED_SHEET_NAMES = {
 };
 
 const DATA_KEY_MAP = {
-    'Info': 'info',
-    'Documents': 'documents',
-    'Gallery': 'gallery',
-    'Teams_Players': 'teamsPlayers',
-    'Team_Matches': 'teamMatches',
-    'Individual_Games': 'individualGames',
-    'Players': 'players',
-    'Pairings_Results': 'pairingsResults',
-    'Players_Teams': 'playersTeams',
-    'Participants': 'participants',
-    'Bracket_Matches': 'bracketMatches'
+  'Info': 'info',
+  'Documents': 'documents',
+  'Gallery': 'gallery',
+  'Teams_Players': 'teamsPlayers',
+  'Team_Matches': 'teamMatches',
+  'Individual_Games': 'individualGames',
+  'Players': 'players',
+  'Pairings_Results': 'pairingsResults',
+  'Players_Teams': 'playersTeams',
+  'Participants': 'participants',
+  'Bracket_Matches': 'bracketMatches'
 };
 
 // --- HYBRID FETCHING: SUPABASE LOGIC ---
@@ -168,7 +130,7 @@ async function fetchFromSupabase(tournamentId) {
     // 2. Fetch the rest in parallel
     const [matchesReq, participantsReq, galleryReq] = await Promise.all([
       supabase.from('matches').select('*').eq('tournament_id', tournamentId).order('round', { ascending: true }),
-      supabase.from('participants').select('*'), // Currently global, add .eq() if you added tournament_id to participants
+      supabase.from('participants').select('*').eq('tournament_id', tournamentId),
       supabase.from('gallery').select('*').eq('tournament_id', tournamentId)
     ]);
 
@@ -225,7 +187,7 @@ async function fetchAndParseSheet(url, isInfoTab = false) {
       const rowObject = {};
       const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
       headers.forEach((header, index) => {
-        if(header) rowObject[header] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : '';
+        if (header) rowObject[header] = values[index] ? values[index].trim().replace(/^"|"$/g, '') : '';
       });
       return rowObject;
     });
@@ -244,10 +206,10 @@ async function fetchGenericTournamentData() {
   try {
     isLoading.value = true;
     error.value = null;
-    
+
     // Reset state
     Object.keys(tournamentData.value).forEach(key => {
-        tournamentData.value[key] = key === 'info' ? {} : [];
+      tournamentData.value[key] = key === 'info' ? {} : [];
     });
 
     // 1. Fetch Master List
@@ -265,14 +227,14 @@ async function fetchGenericTournamentData() {
       await fetchFromSupabase(props.id);
       templateType.value = currentTournament.TemplateType;
       document.title = currentTournament.TournamentName || 'Tournament Details';
-      
+
       // Fallback for Title from Master List if Supabase Info is empty
       if (!tournamentData.value.info.TournamentName) {
-          tournamentData.value.info.TournamentName = currentTournament.TournamentName;
+        tournamentData.value.info.TournamentName = currentTournament.TournamentName;
       }
-      
+
       isLoading.value = false;
-      return; 
+      return;
     }
 
     // --- DEFAULT: GOOGLE SHEETS LOGIC ---
@@ -286,11 +248,11 @@ async function fetchGenericTournamentData() {
 
     const sheetIndexUrl = currentTournament.SheetURL;
     if (!sheetIndexUrl) throw new Error(`No SheetURL for tournament ID "${props.id}".`);
-    
+
     const sheetIndexData = await fetchAndParseSheet(sheetIndexUrl);
     const urlMap = new Map();
     sheetIndexData.forEach(row => {
-        if (row.SheetName && row.CSV_URL) urlMap.set(row.SheetName, row.CSV_URL);
+      if (row.SheetName && row.CSV_URL) urlMap.set(row.SheetName, row.CSV_URL);
     });
 
     const requiredNames = REQUIRED_SHEET_NAMES[templateType.value];
@@ -310,11 +272,11 @@ async function fetchGenericTournamentData() {
     }
 
     if (fetchPromises.length > 0) {
-        const allTabData = await Promise.all(fetchPromises);
-        allTabData.forEach((data, index) => {
-          tournamentData.value[dataKeys[index]] = data;
-        });
-        console.log("[DEBUG] Google Sheets Data Loaded Successfully");
+      const allTabData = await Promise.all(fetchPromises);
+      allTabData.forEach((data, index) => {
+        tournamentData.value[dataKeys[index]] = data;
+      });
+      console.log("[DEBUG] Google Sheets Data Loaded Successfully");
     }
 
     if (!tournamentData.value.info.TournamentName && currentTournament.TournamentName) {

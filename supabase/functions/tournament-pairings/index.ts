@@ -65,15 +65,45 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     )
 
-    if (action === 'START') {
+    if (action === 'GENERATE_SEEDS') {
+      log('[DEBUG] Action: GENERATE_SEEDS')
+
+      // Fetch players
+      const { data: rawPlayers, error: pError } = await supabase
+        .from('participants')
+        .select('*')
+        .eq('tournament_id', tournament_id)
+
+      if (pError || !rawPlayers) throw new Error("Failed to fetch participants")
+
+      // Auto-Seed: Rating High -> Low
+      const players = rawPlayers.sort((a, b) => (Number(b.rating) || 0) - (Number(a.rating) || 0))
+        .map((p, index) => ({
+          ...p,
+          seed: index + 1
+        }))
+
+      // Check if there are any players to seed
+      if (players.length === 0) throw new Error("No players found to seed.");
+
+      // Save
+      const { error: seedError } = await supabase.from('participants').upsert(players)
+      if (seedError) throw seedError
+
+      log('[DEBUG] Seeds generated and saved.')
+      return new Response(JSON.stringify({ message: 'Seeds generated', debug: debugLog }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
+
+    } else if (action === 'START') {
       log('[DEBUG] Action: START - Creating Round 1 matches')
 
-      // Fetch players for THIS tournament
+      // Fetch participants ORDERED BY SEED
       const { data: players, error: pError } = await supabase
         .from('participants')
         .select('*')
         .eq('tournament_id', tournament_id)
-        .order('seed', { ascending: true })
+        .order('seed', { ascending: true }) // CRITICAL: Pairing depends on this order
 
       if (pError) {
         log(`[ERROR] Failed to fetch participants: ${pError.message}`)
@@ -89,6 +119,8 @@ Deno.serve(async (req) => {
       const n = players.length
       const bracketSize = Math.pow(2, Math.ceil(Math.log2(n)))
       log(`[DEBUG] n=${n}, bracketSize=${bracketSize}, creating ${bracketSize / 2} matches`)
+
+
 
       // Standard Tournament Seeding Sequence Logic
       const getSeedingOrder = (size: number): number[] => {
