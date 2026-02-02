@@ -17,8 +17,7 @@
         <p class="tournament-subtitle">{{ info.format || info.Format || 'Tournament Details' }}</p>
       </div>
 
-      <div v-if="isManager && lifecycleStatus !== 'LOCKED'"
-        class="organizer-panel p-3 mb-4 rounded border border-warning bg-dark shadow">
+      <div v-if="isManager && lifecycleStatus !== 'LOCKED'" class="organizer-panel p-3 mb-4 rounded shadow">
         <h5 class="text-warning border-bottom border-secondary pb-2 mb-3">Organizer Controls</h5>
         <div class="d-flex flex-wrap gap-2 justify-content-center">
           <button v-if="lifecycleStatus === 'START' && isManager" @click="generateSeeds" :disabled="isProcessing"
@@ -675,11 +674,38 @@ const handleLogout = async () => { await supabase.auth.signOut(); location.reloa
   border-bottom: 2px solid #FFD700;
 }
 
-.tab-content {
-  background-color: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 215, 0, 0.2);
-  border-radius: 0 0 15px 15px;
+/* --- GLASSMORPHISM & THEME --- */
+.admin-auth-bar,
+.organizer-panel,
+.tab-content,
+.matchup,
+.modal-container,
+.login-modal {
+  background: rgba(20, 20, 35, 0.6) !important;
+  /* Dark Glass */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 215, 0, 0.15) !important;
+  /* Gold tinge border */
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
 }
+
+.admin-auth-bar {
+  border-radius: 8px;
+  margin-bottom: 10px;
+  padding: 5px 15px;
+}
+
+.tab-content {
+  border-radius: 0 0 15px 15px;
+  border-top: none !important;
+}
+
+/* Override existing background colors for glass effect */
+.matchup {
+  border-radius: 8px;
+}
+
 
 .tab-title,
 .details-subtitle {
