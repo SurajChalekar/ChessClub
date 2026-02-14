@@ -206,9 +206,9 @@
 
 <script setup>
 import { onMounted, ref } from 'vue'
-
 import { auth, provider } from '@/firebase'
 import { signInWithPopup, signOut } from 'firebase/auth'
+
 
 const errorMessage = ref('')
 const userEmail = ref('')
@@ -230,11 +230,13 @@ const loginWithGoogle = async () => {
     userEmail.value = user.email
     alert(`Welcome ${user.displayName || user.email}!`)
   } catch (error) {
-    console.error(error)
-    errorMessage.value = 'Login failed. Please try again.'
+    console.error('Login error:', error)
+    errorMessage.value = `Login failed: ${error.message || error.code || 'Please try again.'}`
+    alert(errorMessage.value)
   }
 }
-// Page effects
+
+
 onMounted(() => {
   document.title = 'IISER-TVM Chess Club'
 

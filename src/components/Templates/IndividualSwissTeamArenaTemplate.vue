@@ -93,8 +93,9 @@
               <tbody>
                 <tr v-for="player in individualStandings" :key="player.PlayerID">
                   <td>{{ player.rank }}</td>
-                  <td class="clickable-name">{{ player.PlayerName }}</td>
-                  <td>{{ player.TeamName }}</td> <td>{{ player.points.toFixed(1) }}</td>
+                  <td @click="showPlayerRecords(player)" class="clickable-name">{{ player.PlayerName }}</td>
+                  <td>{{ player.TeamName }}</td>
+                  <td>{{ player.points.toFixed(1) }}</td>
                 </tr>
               </tbody>
             </table>
@@ -146,6 +147,37 @@
         </div>
       </div>
     </div>
+
+    <div v-if="showRecordModal" class="modal-backdrop" @click.self="closeModal">
+      <div class="modal-container">
+        <div class="modal-header">
+          <h5 class="modal-title">{{ modalTitle }}</h5>
+          <button @click="closeModal" type="button" class="btn-close btn-close-white"></button>
+        </div>
+        <div class="modal-body">
+          <p v-if="modalRecords.length === 0" class="text-center">No match data available.</p>
+          <table v-else class="table table-dark table-sm table-striped">
+            <thead>
+              <tr>
+                <th>Round</th>
+                <th>Opponent</th>
+                <th>Color</th>
+                <th>Result</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="record in modalRecords" :key="record.id">
+                <td>{{ record.round }}</td>
+                <td>{{ record.opponentName }}</td>
+                <td>{{ record.color }}</td>
+                <td>{{ record.result }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -164,6 +196,12 @@ const props = defineProps({
 // --- STATE ---
 const activeStandingsView = ref('team'); // Default view is team standings
 const selectedRound = ref(1);
+
+const showRecordModal = ref(false);
+const modalTitle = ref('');
+const modalRecords = ref([]);
+const isPlayerRecord = ref(false);
+const isTeamRecord = ref(false);
 
 // --- COMPUTED: UTILITY ---
 const getPlayerDetails = (playerId) => {
@@ -260,6 +298,47 @@ const pairingsForSelectedRound = computed(() => {
     .sort((a, b) => parseInt(a.Board) - parseInt(b.Board)); // Sort by board number
 });
 
+// --- MODAL FUNCTIONS ---
+const showPlayerRecords = (player) => {
+  modalTitle.value = `Match History: ${player.PlayerName}`;
+  modalRecords.value = props.pairingsResults
+    .filter(game => game.White_PlayerID === player.PlayerID || game.Black_PlayerID === player.PlayerID)
+    .map(game => {
+      const isWhite = game.White_PlayerID === player.PlayerID;
+      const opponentID = isWhite ? game.Black_PlayerID : game.White_PlayerID;
+      const opponent = getPlayerDetails(opponentID);
+
+      let gameOutcome = '-';
+      if (game.Result === '1/2-1/2' || game.Result === '0.5-0.5') gameOutcome = 'Draw';
+      else if ((isWhite && game.Result === '1-0') || (!isWhite && game.Result === '0-1'))
+        gameOutcome = 'Win';
+      else if ((isWhite && game.Result === '0-1') || (!isWhite && game.Result === '1-0'))
+        gameOutcome = 'Loss';
+
+      return {
+        id: game.PairingID,
+        round: game.Round,
+        opponentName: opponent.PlayerName,
+        color: isWhite ? 'White' : 'Black',
+        result: gameOutcome,
+      };
+    })
+    .sort((a, b) => {
+      const roundA = parseInt(a.round);
+      const roundB = parseInt(b.round);
+      if (!isNaN(roundA) && !isNaN(roundB)) return roundA - roundB;
+      return String(a.round).localeCompare(String(b.round));
+    });
+
+  isPlayerRecord.value = true;
+  isTeamRecord.value = false;
+  showRecordModal.value = true;
+};
+
+const closeModal = () => {
+  showRecordModal.value = false;
+};
+
 </script>
 
 <style scoped>
@@ -287,8 +366,8 @@ const pairingsForSelectedRound = computed(() => {
 .list-group-item:hover { background-color: rgba(255, 215, 0, 0.1); color: #FFD700; }
 .table thead { background: linear-gradient(45deg, #FFD700, #e6b200); color: #1a1a1a; }
 .table tbody tr:hover { background-color: rgba(255, 215, 0, 0.1); }
-.clickable-name { cursor: pointer; text-decoration: underline dotted rgba(255, 215, 0, 0.5); }
-.clickable-name:hover { color: #FFD700; }
+.clickable-name { cursor: pointer; text-decoration: underline dotted rgba(255, 215, 0, 0.5); transition: all 0.2s ease; }
+.clickable-name:hover { color: #FFD700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.7); transform: scale(1.05); }
 .pairing-table td { padding: 0.8rem 0.5rem; vertical-align: middle; }
 .pairing-table small { font-size: 0.8em; }
 .photo-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
@@ -297,4 +376,27 @@ const pairingsForSelectedRound = computed(() => {
   background-color: #FFD700; color: #0a0a0a; font-weight: 700;
   box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
 }
+
+/* Modal Styles */
+@keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes modal-fade-in { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+.modal-backdrop {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background-color: rgba(0, 0, 0, 0.8); backdrop-filter: blur(5px);
+  display: flex; justify-content: center; align-items: center; z-index: 1050;
+  animation: fade-in-up 0.3s ease;
+}
+.modal-container {
+  background: #212529; border: 1px solid #FFD700; border-radius: 10px; color: #e0e0e0;
+  width: 90%; max-width: 600px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(255, 215, 0, 0.3);
+  animation: modal-fade-in 0.4s ease-out;
+}
+.modal-header {
+  display: flex; justify-content: space-between; align-items: center; padding: 1rem;
+  background: linear-gradient(45deg, rgba(255, 215, 0, 0.1), transparent);
+  border-bottom: 1px solid #FFD700;
+}
+.modal-title { color: #FFD700; margin-bottom: 0; text-shadow: 0 0 5px rgba(255, 215, 0, 0.5); }
+.modal-body { padding: 1rem; max-height: 70vh; overflow-y: auto; }
 </style>

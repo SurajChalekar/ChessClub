@@ -8,13 +8,8 @@
       </router-link>
 
       <!-- Mobile Toggle -->
-      <button
-        class="navbar-toggler custom-toggler"
-        type="button"
-        @click="menuOpen = !menuOpen"
-        :aria-expanded="menuOpen.toString()"
-        aria-label="Toggle navigation"
-      >
+      <button class="navbar-toggler custom-toggler" type="button" @click="menuOpen = !menuOpen"
+        :aria-expanded="menuOpen.toString()" aria-label="Toggle navigation">
         <span class="toggler-line"></span>
         <span class="toggler-line"></span>
         <span class="toggler-line"></span>
@@ -24,45 +19,28 @@
       <div :class="['collapse navbar-collapse', { show: menuOpen }]">
         <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
           <li class="nav-item">
-            <router-link
-              to="/"
-              class="nav-link nav-link-custom"
-              active-class="active"
-              exact-active-class="active"
-              @click="menuOpen = false"
-            >Home</router-link>
+            <router-link to="/" class="nav-link nav-link-custom" active-class="active" exact-active-class="active"
+              @click="menuOpen = false">Home</router-link>
           </li>
           <li class="nav-item">
-            <router-link
-              to="/anouncements"
-              class="nav-link nav-link-custom"
-              active-class="active"
-              @click="menuOpen = false"
-            >Announcements</router-link>
+            <router-link to="/profile" class="nav-link nav-link-custom" active-class="active"
+              @click="menuOpen = false">Profile</router-link>
           </li>
           <li class="nav-item">
-            <router-link
-              to="/tournament"
-              class="nav-link nav-link-custom"
-              active-class="active"
-              @click="menuOpen = false"
-            >Tournaments</router-link>
+            <router-link to="/anouncements" class="nav-link nav-link-custom" active-class="active"
+              @click="menuOpen = false">Announcements</router-link>
           </li>
           <li class="nav-item">
-            <router-link
-              to="/bot"
-              class="nav-link nav-link-custom"
-              active-class="active"
-              @click="menuOpen = false"
-            >Bot</router-link>
+            <router-link to="/tournament" class="nav-link nav-link-custom" active-class="active"
+              @click="menuOpen = false">Tournaments</router-link>
           </li>
           <li class="nav-item">
-            <router-link
-              to="/puzzles"
-              class="nav-link nav-link-custom"
-              active-class="active"
-              @click="menuOpen = false"
-            >Puzzle</router-link>
+            <router-link to="/analysis" class="nav-link nav-link-custom" active-class="active"
+              @click="menuOpen = false">Analysis</router-link>
+          </li>
+          <li class="nav-item">
+            <router-link to="/puzzles" class="nav-link nav-link-custom" active-class="active"
+              @click="menuOpen = false">Puzzle</router-link>
           </li>
         </ul>
 
@@ -102,8 +80,8 @@ const loginWithGoogle = async () => {
     }
     alert(`Welcome ${user.displayName || user.email}!`)
   } catch (e) {
-    console.error(e)
-    alert('Login failed.')
+    console.error('Login error:', e)
+    alert(`Login failed: ${e.message || e.code || 'Unknown error'}`)
   }
 }
 
@@ -388,10 +366,13 @@ const logout = async () => {
 
 /* Animations */
 @keyframes crownPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     text-shadow: 0 0 15px rgba(255, 193, 7, 0.7);
   }
+
   50% {
     transform: scale(1.05);
     text-shadow: 0 0 25px rgba(255, 193, 7, 0.9), 0 0 35px rgba(255, 107, 53, 0.5);

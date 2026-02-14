@@ -3,7 +3,7 @@
     <!-- Sidebar Navigation -->
     <nav class="sidebar" :class="{ 'sidebar-open': isSidebarOpen }">
       <div class="sidebar-backdrop"></div>
-      
+
       <!-- Brand/Logo -->
       <div class="sidebar-header">
         <router-link to="/" class="sidebar-brand">
@@ -24,8 +24,14 @@
           </router-link>
         </li>
         <li class="nav-item">
+          <router-link to="/profile" class="nav-link-custom" active-class="active">
+            <span class="nav-text">Profile</span>
+            <div class="nav-glow"></div>
+          </router-link>
+        </li>
+        <li class="nav-item">
           <router-link to="/anouncements" class="nav-link-custom" active-class="active">
-            <span class="nav-text">Announcements</span> 
+            <span class="nav-text">Announcements</span>
             <div class="nav-glow"></div>
           </router-link>
         </li>
@@ -36,11 +42,12 @@
           </router-link>
         </li>
         <li class="nav-item">
-          <router-link to="/bot" class="nav-link-custom" active-class="active">
-            <span class="nav-text">Bot</span>
+          <router-link to="/analysis" class="nav-link-custom" active-class="active">
+            <span class="nav-text">Analysis</span>
             <div class="nav-glow"></div>
           </router-link>
         </li>
+
         <li class="nav-item">
           <router-link to="/puzzles" class="nav-link-custom" active-class="active">
             <span class="nav-text">Puzzle</span>
@@ -112,7 +119,7 @@ const loginWithGoogle = async () => {
   try {
     const result = await signInWithPopup(auth, provider)
     const user = result.user
-    
+
     if (!user.email.endsWith('@iisertvm.ac.in')) {
       alert('Only IISER TVM emails are allowed.')
       errorMessage.value = 'Only IISER TVM emails are allowed.'
@@ -476,10 +483,13 @@ const closeSidebar = () => {
 
 /* Animations */
 @keyframes crownPulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
     text-shadow: 0 0 15px rgba(255, 193, 7, 0.7);
   }
+
   50% {
     transform: scale(1.05);
     text-shadow: 0 0 25px rgba(255, 193, 7, 0.9), 0 0 35px rgba(255, 107, 53, 0.5);
@@ -490,6 +500,7 @@ const closeSidebar = () => {
   0% {
     background-position: 50% 0%;
   }
+
   100% {
     background-position: 50% 100%;
   }
